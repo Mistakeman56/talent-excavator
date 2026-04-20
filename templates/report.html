@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}个人天赋使用说明书 + 人类3.0发展诊断报告{% endblock %}
+
+{% block content %}
+<div class="report-container">
+    <header class="report-header">
+        <div class="report-header-inner">
+            <a href="{{ url_for('index') }}" class="btn-back">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                返回首页
+            </a>
+            <h1>个人天赋使用说明书</h1>
+            <p class="report-subtitle">人类3.0发展诊断报告</p>
+            <div class="report-meta">
+                <span>生成时间：{{ now }}</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="report-body">
+        <article class="report-content markdown-body" id="reportContent" data-markdown="{{ report|forceescape }}">
+            {{ report|e }}
+        </article>
+    </main>
+
+    <footer class="report-footer">
+        <div class="report-actions-bottom">
+            <button class="btn-print" onclick="window.print()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 6 2 18 2 18 9"/>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                    <rect x="6" y="14" width="12" height="8"/>
+                </svg>
+                打印 / 保存PDF
+            </button>
+            <a href="{{ url_for('index') }}" class="btn-restart">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="1 4 1 10 7 10"/>
+                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                </svg>
+                重新测评
+            </a>
+        </div>
+        <p class="report-copyright">个人天赋发掘测评系统 · 毕业设计项目</p>
+    </footer>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var el = document.getElementById('reportContent');
+    if (el && typeof marked !== 'undefined') {
+        var md = el.getAttribute('data-markdown');
+        var textarea = document.createElement('textarea');
+        textarea.innerHTML = md;
+        el.innerHTML = marked.parse(textarea.value);
+    }
+});
+</script>
+{% endblock %}
