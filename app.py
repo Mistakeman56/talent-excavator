@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 from config import Config
 from services.ai_service import AIService
 import uuid
+import random
 from datetime import datetime
 
 app = Flask(__name__)
@@ -29,9 +30,20 @@ def start_assessment():
     session['messages'] = []
     session['round'] = 0
     session['history'] = []  # 存储解析后的结构化历史
+    session['asked_questions'] = []  # 记录AI已问过的问题
+    session['covered_directions'] = []  # 记录已覆盖的方向(A-H)
     
-    # 第一轮：获取AI开场白
-    result = ai_service.chat([], round_num=0)
+    # 初始化方向队列：随机打乱A-H，后端硬控制每轮方向
+    directions = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+    random.shuffle(directions)
+    session['remaining_directions'] = directions
+    
+    # 第一轮：取出第一个方向
+    assigned = directions.pop(0) if directions else None
+    session['remaining_directions'] = directions
+    
+    # 第一轮：获取AI开场白（围绕指定方向）
+    result = ai_service.chat([], round_num=0, asked_questions=[], covered_directions=[], assigned_direction=assigned)
     
     if result['type'] == 'error':
         return jsonify({"success": False, "error": result.get('message', 'AI服务异常')})
@@ -43,6 +55,14 @@ def start_assessment():
     }
     session['messages'].append(ai_msg)
     session['round'] = 1
+    # 记录第一轮方向为已覆盖
+    if assigned:
+        session['covered_directions'] = [assigned]
+    
+    # 记录AI问的问题
+    question_text = result.get('question', result.get('raw', ''))
+    session['asked_questions'] = [question_text]
+    
     session['history'].append({
         "round": 1,
         "role": "ai",
@@ -54,7 +74,8 @@ def start_assessment():
         "success": True,
         "data": result,
         "round": 1,
-        "can_report": False
+        "can_report": False,
+        "assigned_direction": assigned
     })
 
 @app.route('/api/chat', methods=['POST'])
@@ -80,19 +101,40 @@ def chat():
         "content": user_answer
     })
     
-    # 调用AI
+    # 取出本轮指定方向
+    remaining_directions = session.get('remaining_directions', [])
+    assigned = remaining_directions.pop(0) if remaining_directions else None
+    session['remaining_directions'] = remaining_directions
+    
+    # 调用AI（传入指定方向）
     next_round = current_round + 1
-    result = ai_service.chat(messages, round_num=next_round)
+    asked_questions = session.get('asked_questions', [])
+    covered_directions = session.get('covered_directions', [])
+    result = ai_service.chat(messages, round_num=next_round, asked_questions=asked_questions, covered_directions=covered_directions, assigned_direction=assigned)
     
     if result['type'] == 'error':
-        # 回滚用户消息
+        # 回滚用户消息和方向
         messages.pop()
         session['history'].pop()
+        if assigned:
+            remaining_directions.insert(0, assigned)
+            session['remaining_directions'] = remaining_directions
         return jsonify({"success": False, "error": result.get('message', 'AI服务异常')})
     
     # 记录AI回复
     messages.append({"role": "assistant", "content": result['raw']})
     session['round'] = next_round
+    
+    # 记录AI问的问题（防止重复）
+    question_text = result.get('question', result.get('raw', ''))
+    asked_questions.append(question_text)
+    session['asked_questions'] = asked_questions
+    
+    # 更新方向覆盖状态（以指定方向为准，确保准确）
+    if assigned and assigned not in covered_directions:
+        covered_directions.append(assigned)
+    session['covered_directions'] = covered_directions
+    
     session['history'].append({
         "round": next_round,
         "role": "ai",
@@ -115,7 +157,8 @@ def chat():
         "round": next_round,
         "can_report": can_report,
         "suggest_report": suggest_report,
-        "force_report": force_report
+        "force_report": force_report,
+        "assigned_direction": assigned
     })
 
 @app.route('/api/report', methods=['POST'])
