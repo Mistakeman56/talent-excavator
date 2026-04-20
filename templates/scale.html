@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}天赋维度筛查量表{% endblock %}
+
+{% block content %}
+<div class="app-container">
+    <header class="app-header">
+        <div class="brand">
+            <span class="brand-icon">◈</span>
+            <h1>天赋维度筛查量表</h1>
+        </div>
+        <a href="{{ url_for('index') }}" class="btn-back" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;">
+            ← 返回AI访谈
+        </a>
+    </header>
+
+    <main class="main-content">
+        <!-- 欢迎页 -->
+        <div class="welcome-screen" id="scaleWelcome">
+            <div class="welcome-card">
+                <div class="welcome-icon">◈</div>
+                <h2>发现你的天赋维度</h2>
+                <p class="welcome-subtitle">标准化量表 · 20题 · 约5分钟</p>
+                <div class="welcome-divider"></div>
+                <div class="welcome-desc">
+                    <p>这个量表不同于AI深度访谈。</p>
+                    <p>AI访谈是"定性"——像心理咨询师一样挖掘你的故事；</p>
+                    <p>量表是"定量"——像体检一样用标准化题目测量你的倾向。</p>
+                    <p>两者结合，才能更全面地发现你的底层天赋。</p>
+                </div>
+                <div class="welcome-features">
+                    <div class="feature-item">
+                        <span class="feature-num">01</span>
+                        <span>5大天赋维度</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-num">02</span>
+                        <span>雷达图可视化</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-num">03</span>
+                        <span>二级深度锁定</span>
+                    </div>
+                </div>
+                <button class="btn-start" id="btnStartScale">
+                    <span>开始量表测评</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- 量表答题页 -->
+        <div class="scale-screen" id="scaleScreen" style="display:none;">
+            <div class="scale-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="scaleProgressFill"></div>
+                </div>
+                <span class="progress-text" id="progressText">1 / 20</span>
+            </div>
+
+            <div class="question-card" id="questionCard">
+                <div class="question-number" id="questionNumber">第 1 题</div>
+                <h3 class="question-text" id="questionText">加载中...</h3>
+                
+                <div class="options-list" id="optionsList">
+                    <!-- 选项动态生成 -->
+                </div>
+                
+                <div class="scale-nav">
+                    <button class="btn-nav" id="btnPrev" style="visibility: hidden;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                        上一题
+                    </button>
+                    <button class="btn-nav btn-nav-primary" id="btnNext">
+                        下一题
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 提交中 -->
+        <div class="loading-overlay" id="submitLoading" style="display:none;">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">正在分析你的天赋维度...</p>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <p>个人天赋发掘测评系统 · 毕业设计项目</p>
+    </footer>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/scale.js') }}"></script>
+{% endblock %}

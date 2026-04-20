@@ -1,14 +1,23 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from config import Config
 from services.ai_service import AIService
+from models import db, ScaleResult, UserProfile, HumanDictionary
 import uuid
 import random
+import json
 from datetime import datetime
 
 app = Flask(__name__)
 app.config.from_object(Config)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///talent_assessment.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db.init_app(app)
 
 ai_service = AIService()
+
+with app.app_context():
+    db.create_all()
 
 @app.route('/')
 def index():
@@ -200,6 +209,237 @@ def reset():
     """重置会话"""
     session.clear()
     return jsonify({"success": True})
+
+
+# ============================================================
+# Human词典初始化
+# ============================================================
+
+def init_dictionary():
+    """首次启动时导入词典数据"""
+    from dictionary_data import DICTIONARY_ENTRIES
+    if HumanDictionary.query.first() is None:
+        for entry in DICTIONARY_ENTRIES:
+            db.session.add(HumanDictionary(**entry))
+        db.session.commit()
+        print(f"[Dictionary] Imported {len(DICTIONARY_ENTRIES)} entries")
+
+with app.app_context():
+    db.create_all()
+    init_dictionary()
+
+# ============================================================
+# 量表模块路由
+# ============================================================
+
+@app.route('/dictionary')
+def dictionary():
+    """Human词典页面"""
+    return render_template('dictionary.html')
+
+@app.route('/api/dictionary')
+def get_dictionary():
+    """获取词典词条（支持分类筛选和搜索）"""
+    category = request.args.get('category', '')
+    keyword = request.args.get('keyword', '')
+    
+    query = HumanDictionary.query
+    
+    if category:
+        query = query.filter_by(category=category)
+    
+    if keyword:
+        query = query.filter(
+            db.or_(
+                HumanDictionary.term.contains(keyword),
+                HumanDictionary.definition.contains(keyword)
+            )
+        )
+    
+    entries = query.order_by(HumanDictionary.category, HumanDictionary.term).all()
+    
+    # 获取所有分类
+    categories = db.session.query(HumanDictionary.category).distinct().all()
+    categories = [c[0] for c in categories]
+    
+    return jsonify({
+        "success": True,
+        "categories": categories,
+        "entries": [
+            {
+                "id": e.id,
+                "term": e.term,
+                "category": e.category,
+                "definition": e.definition,
+                "example": e.example,
+                "related_terms": e.related_terms
+            }
+            for e in entries
+        ]
+    })
+
+@app.route('/api/dictionary/<int:entry_id>')
+def get_dictionary_entry(entry_id):
+    """获取单个词条详情"""
+    entry = HumanDictionary.query.get_or_404(entry_id)
+    return jsonify({
+        "success": True,
+        "entry": {
+            "id": entry.id,
+            "term": entry.term,
+            "category": entry.category,
+            "definition": entry.definition,
+            "example": entry.example,
+            "related_terms": entry.related_terms
+        }
+    })
+
+@app.route('/scale')
+def scale_page():
+    """量表测评页面"""
+    return render_template('scale.html')
+
+@app.route('/scale/result')
+def scale_result_page():
+    """量表结果页面"""
+    return render_template('scale_result.html')
+
+@app.route('/api/scale/questions')
+def get_scale_questions():
+    """获取一级量表题目"""
+    from scale_data import PRIMARY_SCALE
+    return jsonify({
+        "success": True,
+        "data": PRIMARY_SCALE
+    })
+
+@app.route('/api/scale/submit', methods=['POST'])
+def submit_scale():
+    """提交一级量表答案，计算得分"""
+    from scale_data import PRIMARY_SCALE
+    
+    data = request.get_json()
+    answers = data.get('answers', {})
+    
+    if not answers:
+        return jsonify({"success": False, "error": "没有提交答案"})
+    
+    # 计算各维度得分
+    scores = {}
+    for dim_key, dim_data in PRIMARY_SCALE['dimensions'].items():
+        total = 0
+        count = 0
+        for q in dim_data['questions']:
+            qid = q['id']
+            if qid in answers:
+                score = answers[qid]
+                if q.get('reverse'):
+                    score = 6 - score  # 反向计分
+                total += score
+                count += 1
+        scores[dim_key] = {
+            "name": dim_data['name'],
+            "description": dim_data['description'],
+            "score": round(total / count, 1) if count > 0 else 0,
+            "max_score": 5,
+            "raw_total": total
+        }
+    
+    # 排序找出Top维度
+    sorted_dims = sorted(scores.items(), key=lambda x: x[1]['score'], reverse=True)
+    top_dimensions = [
+        {"key": k, "name": v["name"], "score": v["score"]} 
+        for k, v in sorted_dims[:3]
+    ]
+    
+    # 保存到数据库
+    session_id = str(uuid.uuid4())
+    result = ScaleResult(
+        session_id=session_id,
+        scale_type='primary',
+        answers=json.dumps(answers),
+        scores=json.dumps(scores),
+        top_dimensions=json.dumps(top_dimensions)
+    )
+    db.session.add(result)
+    db.session.commit()
+    
+    return jsonify({
+        "success": True,
+        "session_id": session_id,
+        "scores": scores,
+        "top_dimensions": top_dimensions
+    })
+
+@app.route('/api/scale/secondary/questions', methods=['POST'])
+def get_secondary_questions():
+    """获取二级量表题目（基于一级量表Top维度）"""
+    from scale_data import SECONDARY_SCALE
+    
+    data = request.get_json()
+    dimension = data.get('dimension')
+    
+    if not dimension or dimension not in SECONDARY_SCALE:
+        return jsonify({"success": False, "error": "无效维度"})
+    
+    scale_data = SECONDARY_SCALE[dimension]
+    return jsonify({
+        "success": True,
+        "dimension_name": scale_data['name'],
+        "types": {k: v for k, v in scale_data['types'].items()},
+        "questions": scale_data['questions']
+    })
+
+@app.route('/api/scale/secondary/submit', methods=['POST'])
+def submit_secondary_scale():
+    """提交二级量表答案，计算天赋类型"""
+    from scale_data import SECONDARY_SCALE
+    
+    data = request.get_json()
+    dimension = data.get('dimension')
+    answers = data.get('answers', {})
+    primary_session_id = data.get('primary_session_id')
+    
+    if not dimension or dimension not in SECONDARY_SCALE:
+        return jsonify({"success": False, "error": "无效维度"})
+    
+    scale_data = SECONDARY_SCALE[dimension]
+    
+    # 计算各类型得分
+    type_scores = {t: 0 for t in scale_data['types'].keys()}
+    
+    for q in scale_data['questions']:
+        qid = q['id']
+        if qid in answers:
+            score = answers[qid]
+            for t, weight in q['mapping'].items():
+                type_scores[t] += score * weight
+    
+    # 找出最高分的类型
+    best_type = max(type_scores, key=type_scores.get)
+    talent_info = scale_data['types'][best_type]
+    
+    # 保存到数据库
+    session_id = str(uuid.uuid4())
+    result = ScaleResult(
+        session_id=session_id,
+        scale_type='secondary',
+        answers=json.dumps(answers),
+        scores=json.dumps(type_scores),
+        talent_type=talent_info['name']
+    )
+    db.session.add(result)
+    db.session.commit()
+    
+    return jsonify({
+        "success": True,
+        "session_id": session_id,
+        "talent_type": talent_info['name'],
+        "talent_description": talent_info['description'],
+        "type_scores": type_scores,
+        "dimension": scale_data['name']
+    })
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

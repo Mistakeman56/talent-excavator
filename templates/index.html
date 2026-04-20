@@ -45,11 +45,30 @@
                     </div>
                 </div>
                 <button class="btn-start" id="btnStart">
-                    <span>开始测评</span>
+                    <span>开始AI深度访谈</span>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M5 12h14M12 5l7 7-7 7"/>
                     </svg>
                 </button>
+                
+                <div class="nav-entries">
+                    <a href="{{ url_for('scale_page') }}" class="nav-card">
+                        <div class="nav-icon">📊</div>
+                        <div class="nav-info">
+                            <h3>天赋维度筛查量表</h3>
+                            <p>20题标准化测评，快速识别你的5大天赋维度</p>
+                        </div>
+                        <span class="nav-arrow">›</span>
+                    </a>
+                    <a href="{{ url_for('dictionary') }}" class="nav-card">
+                        <div class="nav-icon">📖</div>
+                        <div class="nav-info">
+                            <h3>Human词典</h3>
+                            <p>核心概念速查手册：天赋类型、HUMAN3.0概念、评估术语</p>
+                        </div>
+                        <span class="nav-arrow">›</span>
+                    </a>
+                </div>
             </div>
         </div>
 

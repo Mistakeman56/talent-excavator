@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Human词典{% endblock %}
+
+{% block content %}
+<div class="app-container">
+    <header class="app-header">
+        <div class="brand">
+            <span class="brand-icon">◈</span>
+            <h1>Human词典</h1>
+        </div>
+        <a href="{{ url_for('index') }}" class="btn-back" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;">
+            ← 返回首页
+        </a>
+    </header>
+
+    <main class="main-content">
+        <!-- 搜索区 -->
+        <div class="dict-search-section">
+            <div class="search-box">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-muted); flex-shrink: 0;">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" id="searchInput" placeholder="搜索词条、概念、定义..." autocomplete="off">
+            </div>
+            
+            <div class="category-tags" id="categoryTags">
+                <button class="tag active" data-category="">全部</button>
+                <!-- 动态生成分类标签 -->
+            </div>
+        </div>
+
+        <!-- 词条列表 -->
+        <div class="dict-entries" id="dictEntries">
+            <!-- 动态生成词条卡片 -->
+        </div>
+
+        <!-- 空状态 -->
+        <div class="dict-empty" id="dictEmpty" style="display:none;">
+            <div class="welcome-icon" style="font-size: 40px; margin-bottom: 12px;">🔍</div>
+            <p>没有找到匹配的词条</p>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">试试其他关键词或分类</p>
+        </div>
+    </main>
+
+    <!-- 词条详情弹窗 -->
+    <div class="dict-modal" id="dictModal" style="display:none;">
+        <div class="dict-modal-overlay" onclick="closeModal()"></div>
+        <div class="dict-modal-content">
+            <button class="dict-modal-close" onclick="closeModal()">✕</button>
+            <div class="dict-modal-body" id="modalBody">
+                <!-- 动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        <p>个人天赋发掘测评系统 · 毕业设计项目</p>
+    </footer>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dictionary.js') }}"></script>
+{% endblock %}

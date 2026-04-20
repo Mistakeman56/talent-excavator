@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}量表结果 - 天赋维度分析{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="app-container">
+    <header class="app-header">
+        <div class="brand">
+            <span class="brand-icon">◈</span>
+            <h1>你的天赋维度报告</h1>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="result-screen" id="resultScreen">
+            <!-- 雷达图 -->
+            <div class="result-section">
+                <h2 class="result-title">五维天赋雷达图</h2>
+                <div id="radarChart" style="width: 100%; height: 360px;"></div>
+            </div>
+
+            <!-- Top3 维度 -->
+            <div class="result-section">
+                <h2 class="result-title">你的 Top 3 天赋维度</h2>
+                <div class="top-dimensions" id="topDimensions">
+                    <!-- 动态生成 -->
+                </div>
+            </div>
+
+            <!-- 所有维度得分 -->
+            <div class="result-section">
+                <h2 class="result-title">各维度详细得分</h2>
+                <div class="score-bars" id="scoreBars">
+                    <!-- 动态生成 -->
+                </div>
+            </div>
+
+            <!-- 二级量表入口 -->
+            <div class="result-section secondary-cta" id="secondaryCta" style="display:none;">
+                <h2 class="result-title">想更精确地锁定你的天赋类型？</h2>
+                <p class="result-desc">二级量表将在你最突出的维度内，进一步识别你的具体天赋 subtype。</p>
+                <button class="btn-start" id="btnSecondary">
+                    <span>进入二级深度量表</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- 二级结果展示 -->
+            <div class="result-section" id="secondaryResult" style="display:none;">
+                <h2 class="result-title">你的精准天赋类型</h2>
+                <div class="talent-type-card" id="talentTypeCard">
+                    <!-- 动态生成 -->
+                </div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="result-actions">
+                <a href="{{ url_for('scale_page') }}" class="btn-restart">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="1 4 1 10 7 10"/>
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                    </svg>
+                    重新测评
+                </a>
+                <a href="{{ url_for('index') }}" class="btn-print">
+                    返回首页
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <p>个人天赋发掘测评系统 · 毕业设计项目</p>
+    </footer>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/scale_result.js') }}"></script>
+{% endblock %}
