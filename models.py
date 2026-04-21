@@ -1,4 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
 from datetime import datetime
 
 db = SQLAlchemy()
@@ -15,6 +17,22 @@ class ScaleResult(db.Model):
     top_dimensions = db.Column(db.Text)  # JSON格式存储Top维度
     talent_type = db.Column(db.String(100))  # 二级量表锁定的天赋类型
     created_at = db.Column(db.DateTime, default=datetime.now)
+
+class User(UserMixin, db.Model):
+    """用户账户"""
+    __tablename__ = 'users'
+
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
 
 class UserProfile(db.Model):
     """用户背景信息（用于关联性分析）"""

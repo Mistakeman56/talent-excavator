@@ -8,6 +8,22 @@
             <span class="brand-icon">◈</span>
             <h1>个人天赋发掘测评系统</h1>
         </div>
+        <div class="header-right">
+            {% if current_user.is_authenticated %}
+            <div class="user-menu">
+                <span class="username">{{ current_user.username }}</span>
+                <div class="dropdown">
+                    <a href="{{ url_for('auth.logout') }}">退出登录</a>
+                </div>
+            </div>
+            {% else %}
+            <div class="auth-links">
+                <a href="{{ url_for('auth.login') }}">登录</a>
+                <span class="auth-divider">/</span>
+                <a href="{{ url_for('auth.register') }}">注册</a>
+            </div>
+            {% endif %}
+        </div>
         <div class="session-info" id="sessionInfo" style="display:none;">
             <span class="round-badge">第 <strong id="roundNum">0</strong> 轮</span>
             <div class="progress-bar">
@@ -52,7 +68,7 @@
                 </button>
                 
                 <div class="nav-entries">
-                    <a href="{{ url_for('scale_page') }}" class="nav-card">
+                    <a href="{{ url_for('scale.scale_page') }}" class="nav-card">
                         <div class="nav-icon">📊</div>
                         <div class="nav-info">
                             <h3>天赋维度筛查量表</h3>
@@ -60,7 +76,7 @@
                         </div>
                         <span class="nav-arrow">›</span>
                     </a>
-                    <a href="{{ url_for('dictionary') }}" class="nav-card">
+                    <a href="{{ url_for('dictionary.dictionary') }}" class="nav-card">
                         <div class="nav-icon">📖</div>
                         <div class="nav-info">
                             <h3>Human词典</h3>

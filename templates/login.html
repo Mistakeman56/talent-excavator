@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}登录{% endblock %}
+
+{% block content %}
+<div class="app-container">
+    <header class="app-header">
+        <div class="brand">
+            <span class="brand-icon">◈</span>
+            <h1>个人天赋发掘测评系统</h1>
+        </div>
+        <a href="{{ url_for('main.index') }}" class="btn-back" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;">
+            ← 返回首页
+        </a>
+    </header>
+
+    <main class="main-content">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="welcome-icon">◈</div>
+                <h2>欢迎回来</h2>
+                <p class="auth-subtitle">登录后继续你的天赋探索之旅</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form class="auth-form" method="POST" action="{{ url_for('auth.login', next=request.args.get('next')) }}">
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" name="username" placeholder="请输入用户名" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" name="password" placeholder="请输入密码" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn-auth">登录</button>
+            </form>
+
+            <div class="auth-footer">
+                <p>还没有账号？<a href="{{ url_for('auth.register', next=request.args.get('next')) }}">立即注册</a></p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <p>个人天赋发掘测评系统 · 毕业设计项目</p>
+    </footer>
+</div>
+{% endblock %}

@@ -137,8 +137,20 @@ function escapeHtml(text) {
 
 // ===== API 调用 =====
 async function apiStart() {
+    // 检查登录状态
+    try {
+        const authRes = await fetch('/api/auth/check');
+        const authData = await authRes.json();
+        if (!authData.authenticated) {
+            window.location.href = '/login?next=/';
+            return;
+        }
+    } catch (err) {
+        // 网络错误继续尝试
+    }
+
     showLoading('正在准备访谈...');
-    
+
     try {
         const res = await fetch('/api/start', { method: 'POST' });
         const data = await res.json();

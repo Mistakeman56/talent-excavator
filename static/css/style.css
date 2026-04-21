@@ -1546,3 +1546,215 @@ body {
         font-size: 16px;
     }
 }
+
+/* ===== 用户认证 ===== */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.auth-links {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.88rem;
+}
+
+.auth-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 4px 10px;
+    border-radius: 14px;
+    transition: var(--transition);
+}
+
+.auth-links a:hover {
+    color: var(--accent-color);
+    background: rgba(212, 168, 83, 0.08);
+}
+
+.auth-divider {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.user-menu {
+    position: relative;
+    cursor: pointer;
+}
+
+.user-menu .username {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    padding: 4px 12px;
+    border-radius: 14px;
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.user-menu:hover .username {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+}
+
+.user-menu .dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 6px;
+    min-width: 120px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: var(--transition);
+    z-index: 100;
+}
+
+.user-menu:hover .dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.user-menu .dropdown a {
+    display: block;
+    padding: 8px 12px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.85rem;
+    border-radius: 6px;
+    transition: var(--transition);
+}
+
+.user-menu .dropdown a:hover {
+    background: rgba(212, 168, 83, 0.08);
+    color: var(--accent-color);
+}
+
+/* 认证页面 */
+.auth-card {
+    max-width: 400px;
+    margin: 40px auto;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 36px 32px;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.auth-header .welcome-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+}
+
+.auth-header h2 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.auth-subtitle {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.form-group input {
+    padding: 10px 14px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    outline: none;
+    transition: var(--transition);
+}
+
+.form-group input:focus {
+    border-color: var(--accent-color);
+}
+
+.form-group input::placeholder {
+    color: var(--text-muted);
+}
+
+.btn-auth {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent-gradient);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 4px;
+}
+
+.btn-auth:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.auth-footer a {
+    color: var(--accent-color);
+    text-decoration: none;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Flash 消息 */
+.flash-message {
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+}
+
+.flash-error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.flash-success {
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+}
