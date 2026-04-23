@@ -1,10 +1,52 @@
 from flask import Blueprint, request, jsonify, session, current_app, url_for
 from flask_login import current_user
 from services.ai_service import AIService
-import uuid
+from models import db, InterviewSession
+import json
 
 interview_bp = Blueprint('interview', __name__)
 ai_service = AIService()
+
+
+def _get_or_create_interview(user_id):
+    """获取或创建用户的访谈会话"""
+    interview = InterviewSession.query.filter_by(user_id=user_id).first()
+    if not interview:
+        interview = InterviewSession(
+            user_id=user_id,
+            messages=json.dumps([]),
+            stage=0,
+            answers=json.dumps({})
+        )
+        db.session.add(interview)
+        db.session.commit()
+    return interview
+
+
+def _extract_question(text):
+    """从AI输出中提取问题部分"""
+    if not text:
+        return ''
+    if '---下一题---' in text:
+        return text.split('---下一题---')[-1].strip()
+    return text.strip()
+
+
+def _is_repeat(new_q, messages):
+    """检测新问题是否与最近3轮重复（前缀匹配，对中文高效）"""
+    last_questions = []
+    for msg in reversed(messages):
+        if msg.get('role') == 'assistant':
+            last_questions.append(_extract_question(msg.get('content', '')))
+        if len(last_questions) >= 3:
+            break
+    for q in last_questions:
+        if not q:
+            continue
+        prefix = new_q[:20]
+        if prefix and (prefix in q or q[:20] in new_q):
+            return True
+    return False
 
 
 @interview_bp.route('/api/start', methods=['POST'])
@@ -12,43 +54,40 @@ def start_assessment():
     """开始测评：初始化会话并获取AI开场白"""
     if not current_user.is_authenticated:
         return jsonify({"success": False, "error": "未登录", "need_login": True})
-    session.clear()
-    session['session_id'] = str(uuid.uuid4())
-    session['messages'] = []
-    session['round'] = 0
-    session['history'] = []
-    session['asked_questions'] = []  # 记录AI已问过的问题
-    session['covered_directions'] = []  # 记录已覆盖的方向(A-H)
 
-    # 第一轮：获取AI开场白
-    result = ai_service.chat([], round_num=0, asked_questions=[], covered_directions=[])
+    # 清除旧会话（确保每次重新开始都是新局）
+    InterviewSession.query.filter_by(user_id=current_user.id).delete()
+    db.session.commit()
+    session.clear()
+
+    # 创建新会话
+    interview = InterviewSession(
+        user_id=current_user.id,
+        messages=json.dumps([]),
+        stage=0,
+        answers=json.dumps({})
+    )
+    db.session.add(interview)
+    db.session.commit()
+
+    # 第一轮：获取AI开场白，方向固定为A
+    result = ai_service.chat(
+        [],
+        round_num=0,
+        current_direction='A',
+        is_first_round=True
+    )
 
     if result['type'] == 'error':
+        db.session.delete(interview)
+        db.session.commit()
         return jsonify({"success": False, "error": result.get('message', 'AI服务异常')})
 
-    # 记录AI的回复到历史
-    ai_msg = {
-        "role": "assistant",
-        "content": result['raw']
-    }
-    session['messages'].append(ai_msg)
-    session['round'] = 1
-
-    # 记录AI问的问题
-    question_text = result.get('question', result.get('raw', ''))
-    session['asked_questions'] = [question_text]
-
-    # 检测第一轮实际方向并记录
-    detected_dir = ai_service.detect_direction(question_text)
-    if detected_dir:
-        session['covered_directions'] = [detected_dir]
-
-    session['history'].append({
-        "round": 1,
-        "role": "ai",
-        **result
-    })
-    session.modified = True
+    # 记录AI回复
+    messages = [{"role": "assistant", "content": result['raw']}]
+    interview.messages = json.dumps(messages)
+    interview.stage = 1  # 已完成A方向，推进到B
+    db.session.commit()
 
     return jsonify({
         "success": True,
@@ -63,91 +102,73 @@ def chat():
     """用户提交回答，获取AI下一题"""
     if not current_user.is_authenticated:
         return jsonify({"success": False, "error": "未登录", "need_login": True})
+
     data = request.get_json()
     user_answer = data.get('message', '').strip()
 
     if not user_answer:
         return jsonify({"success": False, "error": "请输入内容"})
 
-    if 'messages' not in session:
-        return jsonify({"success": False, "error": "会话已过期，请重新开始"})
+    interview = _get_or_create_interview(current_user.id)
+    messages = json.loads(interview.messages)
 
-    current_round = session.get('round', 0)
-    messages = session['messages']
+    if not messages:
+        return jsonify({"success": False, "error": "会话已过期，请重新开始"})
 
     # 添加用户消息
     messages.append({"role": "user", "content": user_answer})
-    session['history'].append({
-        "round": current_round,
-        "role": "user",
-        "content": user_answer
-    })
 
-    # 调用AI（后端不再干预方向选择）
+    # 确定当前方向
+    current_direction = ai_service.INTERVIEW_FLOW[interview.stage]
+
+    # 计算轮数
+    current_round = len([m for m in messages if m['role'] == 'assistant'])
     next_round = current_round + 1
-    asked_questions = session.get('asked_questions', [])
-    covered_directions = session.get('covered_directions', [])
+
+    # 调用AI
     result = ai_service.chat(
-        messages, round_num=next_round,
-        asked_questions=asked_questions,
-        covered_directions=covered_directions
+        messages,
+        round_num=next_round,
+        current_direction=current_direction,
+        is_first_round=False
     )
 
     if result['type'] == 'error':
         # 回滚用户消息
         messages.pop()
-        session['history'].pop()
         return jsonify({"success": False, "error": result.get('message', 'AI服务异常')})
 
     # 记录AI回复
     messages.append({"role": "assistant", "content": result['raw']})
-    session['round'] = next_round
 
-    # 记录AI问的问题
-    question_text = result.get('question', result.get('raw', ''))
-    asked_questions.append(question_text)
-    session['asked_questions'] = asked_questions
-
-    # ========== 防重复兜底：如果问题与历史重复，重试一次 ==========
-    is_duplicate = False
-    for q in asked_questions[:-1]:  # 排除刚加入的当前问题
-        if ai_service._is_similar_question(question_text, q):
-            is_duplicate = True
-            break
-
-    if is_duplicate:
-        # 添加提醒消息，使用临时消息列表重试（不污染session中的messages）
+    # 防重复检测与重试
+    new_q = _extract_question(result.get('question', result.get('raw', '')))
+    if _is_repeat(new_q, messages):
         retry_messages = messages + [
-            {"role": "system",
-             "content": "注意：你刚才的问题与之前重复。请换一个全新的问题，从未覆盖的方向中选择。"}
+            {"role": "system", "content": "你刚刚的问题与之前重复，请换一个全新的角度提问。"}
         ]
         retry_result = ai_service.chat(
-            retry_messages, round_num=next_round,
-            asked_questions=asked_questions,
-            covered_directions=covered_directions
+            retry_messages,
+            round_num=next_round,
+            current_direction=current_direction,
+            is_first_round=False
         )
-
         if retry_result['type'] != 'error':
-            # 用重试结果替换当前结果
             result = retry_result
-            # 更新 messages 中最后一条AI消息
             messages[-1] = {"role": "assistant", "content": result['raw']}
-            # 更新 asked_questions 中最后一条问题
-            asked_questions[-1] = result.get('question', result.get('raw', ''))
-            session['asked_questions'] = asked_questions
 
-    # 检测AI实际方向并更新覆盖记录（被动记录，不干预）
-    detected_dir = ai_service.detect_direction(question_text)
-    if detected_dir and detected_dir not in covered_directions:
-        covered_directions.append(detected_dir)
-        session['covered_directions'] = covered_directions
+    # 推进阶段
+    if interview.stage < 7:
+        interview.stage += 1
 
-    session['history'].append({
-        "round": next_round,
-        "role": "ai",
-        **result
-    })
-    session.modified = True
+    # 结构化存储当前方向的用户回答
+    answers = json.loads(interview.answers or '{}')
+    answers[current_direction] = user_answer
+    interview.answers = json.dumps(answers)
+
+    # 持久化对话历史
+    interview.messages = json.dumps(messages)
+    db.session.commit()
 
     # 判断是否达到生成报告条件
     min_q = current_app.config['MIN_QUESTIONS']
@@ -173,17 +194,19 @@ def generate_report():
     """生成最终报告"""
     if not current_user.is_authenticated:
         return jsonify({"success": False, "error": "未登录", "need_login": True})
-    if 'messages' not in session:
+
+    interview = InterviewSession.query.filter_by(user_id=current_user.id).first()
+    if not interview:
         return jsonify({"success": False, "error": "会话已过期"})
 
-    current_round = session.get('round', 0)
+    messages = json.loads(interview.messages)
+    current_round = len([m for m in messages if m['role'] == 'assistant'])
+
     if current_round < current_app.config['MIN_QUESTIONS']:
         return jsonify({
             "success": False,
             "error": f"至少完成{current_app.config['MIN_QUESTIONS']}轮对话才能生成报告"
         })
-
-    messages = session['messages']
 
     # 添加生成报告的指令
     messages.append({
@@ -197,9 +220,9 @@ def generate_report():
         messages.pop()  # 回滚
         return jsonify({"success": False, "error": result.get('message', '报告生成失败')})
 
-    # 保存报告
-    session['report_content'] = result['content']
-    session.modified = True
+    # 保存报告到数据库
+    interview.report_content = result['content']
+    db.session.commit()
 
     return jsonify({
         "success": True,
@@ -211,5 +234,8 @@ def generate_report():
 @interview_bp.route('/api/reset', methods=['POST'])
 def reset():
     """重置会话"""
+    if current_user.is_authenticated:
+        InterviewSession.query.filter_by(user_id=current_user.id).delete()
+        db.session.commit()
     session.clear()
     return jsonify({"success": True})

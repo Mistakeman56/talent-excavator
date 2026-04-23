@@ -15,51 +15,53 @@ class AIService:
         return self.client
     
     DIRECTION_KEYWORDS = {
-        'A': ['16岁', '童年', '小时候', '拆', '缺点', '批评', '顽固', '父母逼', '沉进去', '没人逼',
-              '年幼', '少年', '成长过程', '本性', '天性', '小的时候', '初中', '小学'],
-        'B': ['很明显', '这也要学', '别人觉得难', '无意识胜任', '不需要学', '天生会', '别人普遍',
-              '自然而然', '本能', '直觉', '没学过', '无师自通', '这也要教', '别人做不到'],
-        'C': ['身体累', '精神亢奋', '能量', '疲惫', '兴奋', '累但', '做完后累', '极度亢奋',
-              '疲惫但', '充电', '耗电', '燃', '倦怠', '心流', 'flow', '沉浸', '忘时间', '时间消失'],
-        'D': ['嫉妒', '羡慕', '嫉妒过', '哪种人', '哪种能力', '生活状态', '压抑', '未被允许',
-              '想成为', '渴望成为', '眼红', '不甘心', '为什么他能', '凭什么', '向往'],
-        'E': ['来找你', '别人', '朋友', '同事', '找你', '社会优势', '可见优势', '他人眼中', '为什么来',
-              '求助', '请教', '口碑', '认可', '信任', '依赖', ' reputation ', '口碑'],
-        'F': ['痛苦', '受伤', '执着', '反复', '主题', '创伤', '阴影', '最反复', '最执着',
-              '循环', '逃不掉', '放不下', '刻骨铭心', '内心戏', '挣扎', '纠结', '过不去', '坎',
-              '卡住', '早年的', '童年的', '原生家庭', '期待', '被期待', '父母期望', '别人的眼光',
-              '记忆', '最早', '最清晰', '当时发生了什么', '具体场景', '反应'],
-        'G': ['越做越空', '伪擅长', '空虚', '做得不错', '越做越', '空泛', '没感觉', '越做越没',
-              '麻木', '倦怠', '无意义', '机械', '重复', '熟练但', '擅长但', '没有成就感'],
-        'H': ['没赚到钱', '眼睛发亮', '兴趣', '一聊起来', '发亮', '热情', '谈到', '不赚钱', '眼睛亮',
-              '热爱', '痴迷', '着迷', '停不下来', '自发', '自愿', '业余时间', '周末', '空闲时',
-              '忍不住', '着迷', '着迷于']
+        'A': ['16\u5c81', '\u7ae5\u5e74', '\u5c0f\u65f6\u5019', '\u62c6', '\u7f3a\u70b9', '\u6279\u8bc4', '\u987d\u56fa', '\u7236\u6bcd\u903c', '\u6c89\u8fdb\u53bb', '\u6ca1\u4eba\u903c',
+              '\u5e74\u5e7c', '\u5c11\u5e74', '\u6210\u957f\u8fc7\u7a0b', '\u672c\u6027', '\u5929\u6027', '\u5c0f\u7684\u65f6\u5019', '\u521d\u4e2d', '\u5c0f\u5b66'],
+        'B': ['\u5f88\u660e\u663e', '\u8fd9\u4e5f\u8981\u5b66', '\u522b\u4eba\u89c9\u5f97\u96be', '\u65e0\u610f\u8bc6\u80dc\u4efb', '\u4e0d\u9700\u8981\u5b66', '\u5929\u751f\u4f1a', '\u522b\u4eba\u666e\u904d',
+              '\u81ea\u7136\u800c\u7136', '\u672c\u80fd', '\u76f4\u89c9', '\u6ca1\u5b66\u8fc7', '\u65e0\u5e08\u81ea\u901a', '\u8fd9\u4e5f\u8981\u6559', '\u522b\u4eba\u505a\u4e0d\u5230'],
+        'C': ['\u8eab\u4f53\u7d2f', '\u7cbe\u795e\u4ea2\u594b', '\u80fd\u91cf', '\u75b2\u60eb', '\u5174\u594b', '\u7d2f\u4f46', '\u505a\u5b8c\u540e\u7d2f', '\u6781\u5ea6\u4ea2\u594b',
+              '\u75b2\u60eb\u4f46', '\u5145\u7535', '\u8017\u7535', '\u71c3', '\u5026\u6020', '\u5fc3\u6d41', 'flow', '\u6c89\u6d78', '\u5fd8\u65f6\u95f4', '\u65f6\u95f4\u6d88\u5931'],
+        'D': ['\u5ac9\u5992', '\u7fa1\u6155', '\u5ac9\u5992\u8fc7', '\u54ea\u79cd\u4eba', '\u54ea\u79cd\u80fd\u529b', '\u751f\u6d3b\u72b6\u6001', '\u538b\u6291', '\u672a\u88ab\u5141\u8bb8',
+              '\u60f3\u6210\u4e3a', '\u6e34\u671b\u6210\u4e3a', '\u773c\u7ea2', '\u4e0d\u7518\u5fc3', '\u4e3a\u4ec0\u4e48\u4ed6\u80fd', '\u51ed\u4ec0\u4e48', '\u5411\u5f80'],
+        'E': ['\u6765\u627e\u4f60', '\u522b\u4eba', '\u670b\u53cb', '\u540c\u4e8b', '\u627e\u4f60', '\u793e\u4f1a\u4f18\u52bf', '\u53ef\u89c1\u4f18\u52bf', '\u4ed6\u4eba\u773c\u4e2d', '\u4e3a\u4ec0\u4e48\u6765',
+              '\u6c42\u52a9', '\u8bf7\u6559', '\u53e3\u7891', '\u8ba4\u53ef', '\u4fe1\u4efb', '\u4f9d\u8d56', ' reputation ', '\u53e3\u7891'],
+        'F': ['\u75db\u82e6', '\u53d7\u4f24', '\u6267\u7740', '\u53cd\u590d', '\u4e3b\u9898', '\u521b\u4f24', '\u9634\u5f71', '\u6700\u53cd\u590d', '\u6700\u6267\u7740',
+              '\u5faa\u73af', '\u9003\u4e0d\u6389', '\u653e\u4e0d\u4e0b', '\u523b\u9aa8\u94ed\u5fc3', '\u5185\u5fc3\u620f', '\u6323\u624e', '\u7ea0\u7ed3', '\u8fc7\u4e0d\u53bb', '\u574e',
+              '\u5361\u4f4f', '\u65e9\u5e74\u7684', '\u7ae5\u5e74\u7684', '\u539f\u751f\u5bb6\u5ead', '\u671f\u5f85', '\u88ab\u671f\u5f85', '\u7236\u6bcd\u671f\u671b', '\u522b\u4eba\u7684\u773c\u5149',
+              '\u8bb0\u5fc6', '\u6700\u65e9', '\u6700\u6e05\u6670', '\u5f53\u65f6\u53d1\u751f\u4e86\u4ec0\u4e48', '\u5177\u4f53\u573a\u666f', '\u53cd\u5e94'],
+        'G': ['\u8d8a\u505a\u8d8a\u7a7a', '\u4f2a\u64c5\u957f', '\u7a7a\u865a', '\u505a\u5f97\u4e0d\u9519', '\u8d8a\u505a\u8d8a', '\u7a7a\u6cdb', '\u6ca1\u611f\u89c9', '\u8d8a\u505a\u8d8a\u6ca1',
+              '\u9ebb\u6728', '\u5026\u6020', '\u65e0\u610f\u4e49', '\u673a\u68b0', '\u91cd\u590d', '\u719f\u7ec3\u4f46', '\u64c5\u957f\u4f46', '\u6ca1\u6709\u6210\u5c31\u611f'],
+        'H': ['\u6ca1\u8d5a\u5230\u94b1', '\u773c\u775b\u53d1\u4eae', '\u5174\u8da3', '\u4e00\u804a\u8d77\u6765', '\u53d1\u4eae', '\u70ed\u60c5', '\u8c08\u5230', '\u4e0d\u8d5a\u94b1', '\u773c\u775b\u4eae',
+              '\u70ed\u7231', '\u75f4\u8ff7', '\u7740\u8ff7', '\u505c\u4e0d\u4e0b\u6765', '\u81ea\u53d1', '\u81ea\u613f', '\u4e1a\u4f59\u65f6\u95f4', '\u5468\u672b', '\u7a7a\u95f2\u65f6',
+              '\u5fcd\u4e0d\u4f4f', '\u7740\u8ff7', '\u7740\u8ff7\u4e8e']
     }
     
     DIRECTION_DESCRIPTIONS = {
-        'A': '【A-童年/顽固缺点】16岁之前没人逼你也会沉进去做的事，或从小常被批评的"顽固缺点"',
-        'B': '【B-无意识胜任区】成年后别人觉得很难但你觉得很自然、"这不是很明显吗"的事',
-        'C': '【C-能量审计】做完后身体累但精神极度亢奋、充满能量的事',
-        'D': '【D-嫉妒/压抑】强烈嫉妒过的人、能力、生活状态——识别被压抑的天赋',
-        'E': '【E-社会可见优势】别人通常为什么来找你——他人眼中的你',
-        'F': '【F-深层痛苦】最反复痛苦/受伤/执着的主题——深层驱动力和阴影',
-        'G': '【G-伪擅长区】做得不错但越做越空、没有成就感的事',
-        'H': '【H-真兴趣】没赚到钱但一谈起来眼睛发亮、充满生命力的事'
+        'A': '\u3010A-\u7ae5\u5e74/\u987d\u56fa\u7f3a\u70b9\u301116\u5c81\u4e4b\u524d\u6ca1\u4eba\u903c\u4f60\u4e5f\u4f1a\u6c89\u8fdb\u53bb\u505a\u7684\u4e8b\uff0c\u6216\u4ece\u5c0f\u5e38\u88ab\u6279\u8bc4\u7684"\u987d\u56fa\u7f3a\u70b9"',
+        'B': '\u3010B-\u65e0\u610f\u8bc6\u80dc\u4efb\u533a\u3011\u6210\u5e74\u540e\u522b\u4eba\u89c9\u5f97\u5f88\u96be\u4f46\u4f60\u89c9\u5f97\u5f88\u81ea\u7136\u3001"\u8fd9\u4e0d\u662f\u5f88\u660e\u663e\u5417"\u7684\u4e8b',
+        'C': '\u3010C-\u80fd\u91cf\u5ba1\u8ba1\u3011\u505a\u5b8c\u540e\u8eab\u4f53\u7d2f\u4f46\u7cbe\u795e\u6781\u5ea6\u4ea2\u594b\u3001\u5145\u6ee1\u80fd\u91cf\u7684\u4e8b',
+        'D': '\u3010D-\u5ac9\u5992/\u538b\u6291\u3011\u5f3a\u70c8\u5ac9\u5992\u8fc7\u7684\u4eba\u3001\u80fd\u529b\u3001\u751f\u6d3b\u72b6\u6001\u2014\u2014\u8bc6\u522b\u88ab\u538b\u6291\u7684\u5929\u8d4b',
+        'E': '\u3010E-\u793e\u4f1a\u53ef\u89c1\u4f18\u52bf\u3011\u522b\u4eba\u901a\u5e38\u4e3a\u4ec0\u4e48\u6765\u627e\u4f60\u2014\u2014\u4ed6\u4eba\u773c\u4e2d\u7684\u4f60',
+        'F': '\u3010F-\u6df1\u5c42\u75db\u82e6\u3011\u6700\u53cd\u590d\u75db\u82e6/\u53d7\u4f24/\u6267\u7740\u7684\u4e3b\u9898\u2014\u2014\u6df1\u5c42\u9a71\u52a8\u529b\u548c\u9634\u5f71',
+        'G': '\u3010G-\u4f2a\u64c5\u957f\u533a\u3011\u505a\u5f97\u4e0d\u9519\u4f46\u8d8a\u505a\u8d8a\u7a7a\u3001\u6ca1\u6709\u6210\u5c31\u611f\u7684\u4e8b',
+        'H': '\u3010H-\u771f\u5174\u8da3\u3011\u6ca1\u8d5a\u5230\u94b1\u4f46\u4e00\u8c08\u8d77\u6765\u773c\u775b\u53d1\u4eae\u3001\u5145\u6ee1\u751f\u547d\u529b\u7684\u4e8b'
     }
     
     DIRECTION_QUESTIONS = {
-        'A': '16岁之前，没人逼你也会沉进去做的事是什么？或者你从小常被批评的"顽固缺点"是什么？',
-        'B': '成年后，什么事情你会觉得："这不是很明显吗？这也要学？"但别人普遍觉得很难？',
-        'C': '什么事情做完后身体累，但精神极度亢奋？',
-        'D': '你强烈嫉妒过哪种人、哪种能力、哪种生活状态？',
-        'E': '别人通常为什么来找你？',
-        'F': '你最反复痛苦/受伤/执着的主题是什么？',
-        'G': '哪些事情你做得不错，但越做越空？',
-        'H': '哪些事情你没赚到钱，但一谈起来就眼睛发亮？'
+        'A': '16\u5c81\u4e4b\u524d\uff0c\u6ca1\u4eba\u903c\u4f60\u4e5f\u4f1a\u6c89\u8fdb\u53bb\u505a\u7684\u4e8b\u662f\u4ec0\u4e48\uff1f\u6216\u8005\u4f60\u4ece\u5c0f\u5e38\u88ab\u6279\u8bc4\u7684"\u987d\u56fa\u7f3a\u70b9"\u662f\u4ec0\u4e48\uff1f',
+        'B': '\u6210\u5e74\u540e\uff0c\u4ec0\u4e48\u4e8b\u60c5\u4f60\u4f1a\u89c9\u5f97\uff1a"\u8fd9\u4e0d\u662f\u5f88\u660e\u663e\u5417\uff1f\u8fd9\u4e5f\u8981\u5b66\uff1f"\u4f46\u522b\u4eba\u666e\u904d\u89c9\u5f97\u5f88\u96be\uff1f',
+        'C': '\u4ec0\u4e48\u4e8b\u60c5\u505a\u5b8c\u540e\u8eab\u4f53\u7d2f\uff0c\u4f46\u7cbe\u795e\u6781\u5ea6\u4ea2\u594b\uff1f',
+        'D': '\u4f60\u5f3a\u70c8\u5ac9\u5992\u8fc7\u54ea\u79cd\u4eba\u3001\u54ea\u79cd\u80fd\u529b\u3001\u54ea\u79cd\u751f\u6d3b\u72b6\u6001\uff1f',
+        'E': '\u522b\u4eba\u901a\u5e38\u4e3a\u4ec0\u4e48\u6765\u627e\u4f60\uff1f',
+        'F': '\u4f60\u6700\u53cd\u590d\u75db\u82e6/\u53d7\u4f24/\u6267\u7740\u7684\u4e3b\u9898\u662f\u4ec0\u4e48\uff1f',
+        'G': '\u54ea\u4e9b\u4e8b\u60c5\u4f60\u505a\u5f97\u4e0d\u9519\uff0c\u4f46\u8d8a\u505a\u8d8a\u7a7a\uff1f',
+        'H': '\u54ea\u4e9b\u4e8b\u60c5\u4f60\u6ca1\u8d5a\u5230\u94b1\uff0c\u4f46\u4e00\u8c08\u8d77\u6765\u5c31\u773c\u775b\u53d1\u4eae\uff1f'
     }
+
+    INTERVIEW_FLOW = ["A", "B", "C", "D", "E", "F", "G", "H"]
     
     def detect_direction(self, question):
-        """通过关键词匹配判断问题属于哪个方向(A-H)"""
+        """\u901a\u8fc7\u5173\u952e\u8bcd\u5339\u914d\u5224\u65ad\u95ee\u9898\u5c5e\u4e8e\u54ea\u4e2a\u65b9\u5411(A-H)"""
         if not question:
             return None
         q = question.lower()
@@ -73,7 +75,7 @@ class AIService:
         return max(scores, key=scores.get)
     
     def _is_similar_question(self, q1, q2, threshold=0.65):
-        """判断两个问题是否相似（用于后端硬拦截重复）"""
+        """\u5224\u65ad\u4e24\u4e2a\u95ee\u9898\u662f\u5426\u76f8\u4f3c\uff08\u7528\u4e8e\u540e\u7aef\u786c\u62e6\u622a\u91cd\u590d\uff09"""
         if not q1 or not q2:
             return False
         
@@ -84,15 +86,15 @@ class AIService:
         
         c1, c2 = clean(q1), clean(q2)
         
-        # 短问题直接比较
+        # \u77ed\u95ee\u9898\u76f4\u63a5\u6bd4\u8f83
         if len(c1) < 15 or len(c2) < 15:
             return c1 == c2 or c1 in c2 or c2 in c1
         
-        # 包含关系
+        # \u5305\u542b\u5173\u7cfb
         if c1 in c2 or c2 in c1:
             return True
         
-        # Jaccard相似度（按字符）
+        # Jaccard\u76f8\u4f3c\u5ea6\uff08\u6309\u5b57\u7b26\uff09
         chars1 = set(c1)
         chars2 = set(c2)
         if not chars1 or not chars2:
@@ -101,16 +103,26 @@ class AIService:
         if jaccard >= threshold:
             return True
         
-        # 按词比较
+        # \u6309\u8bcd\u6bd4\u8f83
         words1 = set(c1.split())
         words2 = set(c2.split())
         if not words1 or not words2:
             return False
         word_jaccard = len(words1 & words2) / len(words1 | words2)
         return word_jaccard >= threshold
-    
-    def get_system_prompt(self, round_num=0, max_rounds=20, is_report=False, asked_questions=None, covered_directions=None):
-        """构建精简版系统提示词——后端不再干预方向，完全交给AI自主选择"""
+
+    @staticmethod
+    def extract_question(text):
+        """\u4eceAI\u56db\u6bb5\u5f0f\u8f93\u51fa\u4e2d\u63d0\u53d6'---\u4e0b\u4e00\u9898---'\u4e4b\u540e\u7684\u5185\u5bb9"""
+        if not text:
+            return ''
+        if '---\u4e0b\u4e00\u9898---' in text:
+            return text.split('---\u4e0b\u4e00\u9898---')[-1].strip()
+        return text.strip()
+    def get_system_prompt(self, round_num=0, max_rounds=20, is_report=False,
+                          asked_questions=None, covered_directions=None,
+                          current_direction=None, is_first_round=False):
+        """构建系统提示词——后端控制方向，AI只负责表达"""
         if is_report:
             return """你是一位人类3.0天赋发掘测评师。现在访谈已结束，请根据之前的所有对话，输出最终的《个人天赋使用说明书+人类3.0发展诊断报告》。
 
@@ -135,37 +147,12 @@ class AIService:
 14. 一段真正打到用户心里的、诚实但有力量的结语
 
 请用Markdown格式输出，层次清晰。"""
-        
-        status_text = ""
-        if round_num == 0:
-            status_text = "这是开场阶段，请进行温暖专业的开场白，并提问第一个问题。"
-        elif round_num < 8:
-            status_text = "还在信息收集早期阶段，请继续深入提问。"
-        elif round_num < 12:
-            status_text = "已收集到较多信息，可以继续追问或开始整合观察。"
-        else:
-            status_text = "信息已较充分，如果感觉足够可以准备收尾，否则继续追问关键缺失点。"
-        
-        # 构建方向覆盖状态文本
-        all_dirs = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
-        covered = covered_directions or []
-        uncovered = [d for d in all_dirs if d not in covered]
-        
-        coverage_text = ""
-        if covered:
-            coverage_text += f"已覆盖方向：{', '.join(covered)}\n"
-        if uncovered:
-            coverage_text += f"未覆盖方向：{', '.join(uncovered)}"
-        else:
-            coverage_text += "所有8个方向均已覆盖，现在可以做深入追问或整合观察。"
-        
-        # 已提问记录（简短列出最近5个）
-        asked_text = ""
-        if asked_questions:
-            recent = asked_questions[-5:]
-            asked_text = "\n\n【你已问过的问题 - 禁止重复】\n" + "\n".join(f"{i+1}. {q[:60]}..." if len(q) > 60 else f"{i+1}. {q}" for i, q in enumerate(recent))
-        
-        return f"""你现在不是普通聊天助手。
+
+        dir_desc = self.DIRECTION_DESCRIPTIONS.get(current_direction, '')
+        dir_question = self.DIRECTION_QUESTIONS.get(current_direction, '')
+
+        if is_first_round:
+            return f"""你现在不是普通聊天助手。
 你要扮演一位"深度天赋挖掘师 + HUMAN 3.0 发展诊断师"，综合以下视角：
 1. 30年经验的资深生涯咨询师
 2. 30年经验的组织发展专家
@@ -177,7 +164,10 @@ class AIService:
 
 你的真正任务：通过多轮深度访谈，挖掘用户被遮蔽的底层天赋，同时评估这些天赋目前卡在哪个发展象限、哪种生活方式中，最终输出《个人天赋使用说明书 + HUMAN 3.0 发展诊断报告》。
 
-【当前对话状态】第 {round_num} 轮（计划共 {max_rounds} 轮）。{status_text}
+【当前对话状态】第 {round_num} 轮（计划共 {max_rounds} 轮）。这是开场阶段，请进行温暖专业的开场白，并提问第一个问题。
+
+【当前访谈方向】{current_direction}（{dir_desc}）
+参考问题：{dir_question}
 
 【核心理念】
 1. 反宿命论：天赋不是固定标签，是可迁移的底层能力结构
@@ -198,7 +188,7 @@ class AIService:
 2. 采用苏格拉底式深挖：为什么？具体例子？当时什么感觉？你到底做对了什么？
 3. 风格：温暖而犀利、不灌鸡汤、有共情但不纵容自我欺骗
 
-【8个必须覆盖的方向 - 全部覆盖前不要重复问同一方向的初始问题】
+【8个必须覆盖的方向】
 A. 16岁之前没人逼你也会沉进去做的事，或从小常被批评的"顽固缺点"
 B. 成年后别人觉得很难但你觉得很自然的事——无意识胜任区
 C. 做完后身体累但精神极度亢奋的事——能量审计
@@ -208,20 +198,31 @@ F. 最反复痛苦/受伤/执着的主题——深层驱动力和阴影
 G. 做得不错但越做越空的事——伪擅长区
 H. 没赚到钱但一谈起来眼睛发亮的事——真兴趣
 
-【方向覆盖状态 - 参考】
-{coverage_text}{asked_text}
-
-【防重复规则 - 绝对禁止】
-- 绝对不能重复之前问过的问题，不要换一种措辞重复同一问题
-- 8个方向全部覆盖前，不要重复问同一方向的"初始问题"
-- 如果还有未覆盖方向，优先从未覆盖方向中选择下一个问题
-- 你可以根据对话节奏自然追问，但不要借用户提到的某个词跳回已覆盖方向重问
-
 【注意】
 - 严格使用四部分格式输出
 - 每轮只问一个问题
-- 根据用户回答灵活追问，不要机械走流程
 - 第一轮请做温暖专业的开场白
+- 绝对禁止重复之前的问题
+"""
+
+        # 非首轮：精简 Prompt，避免反复开场
+        return f"""你正在继续访谈，不需要重复开场说明，也不要再做自我介绍。直接基于用户回答继续分析并提问。
+
+【当前访谈方向】{current_direction}（{dir_desc}）
+请严格围绕该方向提问。可以参考：{dir_question}
+
+【每轮输出格式 - 严格遵守】
+---关键信号---（刚听到的关键信息，简要提炼）
+---天赋假设---（当前初步天赋假设）
+---HUMAN 3.0 判断---（四象限判断，可初步）
+---下一题---（一次只问一个主问题）
+
+【要求】
+1. 一次只问一个主问题，不要一次抛多个
+2. 采用苏格拉底式深挖：为什么？具体例子？当时什么感觉？你到底做对了什么？
+3. 风格：温暖而犀利、不灌鸡汤、有共情但不纵容自我欺骗
+4. 绝对禁止重复之前问过的问题，不要换一种措辞重复同一问题
+5. 不要借用户提到的某个词跳回已覆盖方向重问
 """
     
     def parse_response(self, content):
@@ -252,16 +253,19 @@ H. 没赚到钱但一谈起来眼睛发亮的事——真兴趣
         
         return result
     
-    def chat(self, messages, round_num=0, is_report=False, asked_questions=None, covered_directions=None):
-        """调用AI API进行对话——后端不再干预方向选择"""
+    def chat(self, messages, round_num=0, is_report=False, asked_questions=None,
+             covered_directions=None, current_direction=None, is_first_round=False):
+        """调用AI API进行对话——后端控制方向"""
         client = self._get_client()
         model = current_app.config['AI_MODEL']
         max_rounds = current_app.config['MAX_QUESTIONS']
         
         covered_directions = covered_directions or []
         
-        # 构建精简版系统提示词
-        system_prompt = self.get_system_prompt(round_num, max_rounds, is_report, asked_questions, covered_directions)
+        system_prompt = self.get_system_prompt(
+            round_num, max_rounds, is_report, asked_questions, covered_directions,
+            current_direction=current_direction, is_first_round=is_first_round
+        )
         
         full_messages = [{"role": "system", "content": system_prompt}] + messages
         

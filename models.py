@@ -61,3 +61,17 @@ class HumanDictionary(db.Model):
     example = db.Column(db.Text)
     related_terms = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.now)
+
+
+class InterviewSession(db.Model):
+    """AI访谈会话（服务端持久化，替代session存messages）"""
+    __tablename__ = 'interview_sessions'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    messages = db.Column(db.Text, default='[]')           # JSON序列化对话历史
+    stage = db.Column(db.Integer, default=0)              # 当前方向索引 0-7（对应A-H）
+    answers = db.Column(db.Text, default='{}')            # JSON，结构化存储各方向用户回答
+    report_content = db.Column(db.Text)                   # 最终生成的报告Markdown
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
