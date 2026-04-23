@@ -55,10 +55,9 @@ def start_assessment():
     if not current_user.is_authenticated:
         return jsonify({"success": False, "error": "未登录", "need_login": True})
 
-    # 清除旧会话（确保每次重新开始都是新局）
+    # 清除旧访谈记录（确保每次重新开始都是新局）
     InterviewSession.query.filter_by(user_id=current_user.id).delete()
     db.session.commit()
-    session.clear()
 
     # 创建新会话
     interview = InterviewSession(
@@ -83,8 +82,11 @@ def start_assessment():
         db.session.commit()
         return jsonify({"success": False, "error": result.get('message', 'AI服务异常')})
 
-    # 记录AI回复
-    messages = [{"role": "assistant", "content": result['raw']}]
+    # 记录AI回复（增加前置 user 消息，保持 user->assistant 交替模式）
+    messages = [
+        {"role": "user", "content": "开始访谈"},
+        {"role": "assistant", "content": result['raw']}
+    ]
     interview.messages = json.dumps(messages)
     interview.stage = 1  # 已完成A方向，推进到B
     db.session.commit()
@@ -138,12 +140,10 @@ def chat():
         messages.pop()
         return jsonify({"success": False, "error": result.get('message', 'AI服务异常')})
 
-    # 记录AI回复
-    messages.append({"role": "assistant", "content": result['raw']})
-
-    # 防重复检测与重试
+    # 防重复检测与重试（注意：此时 assistant 回复尚未写入 messages）
     new_q = _extract_question(result.get('question', result.get('raw', '')))
     if _is_repeat(new_q, messages):
+        # 构造临时重试消息列表，system 消息只存在于本次调用，绝不写回数据库
         retry_messages = messages + [
             {"role": "system", "content": "你刚刚的问题与之前重复，请换一个全新的角度提问。"}
         ]
@@ -155,7 +155,9 @@ def chat():
         )
         if retry_result['type'] != 'error':
             result = retry_result
-            messages[-1] = {"role": "assistant", "content": result['raw']}
+
+    # 只有最终确认的结果才写入数据库历史
+    messages.append({"role": "assistant", "content": result['raw']})
 
     # 推进阶段
     if interview.stage < 7:
@@ -237,5 +239,4 @@ def reset():
     if current_user.is_authenticated:
         InterviewSession.query.filter_by(user_id=current_user.id).delete()
         db.session.commit()
-    session.clear()
     return jsonify({"success": True})

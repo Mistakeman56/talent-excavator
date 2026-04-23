@@ -203,6 +203,12 @@ H. 没赚到钱但一谈起来眼睛发亮的事——真兴趣
 - 每轮只问一个问题
 - 第一轮请做温暖专业的开场白
 - 绝对禁止重复之前的问题
+
+【绝对禁止】
+- 讲你自己的故事、经历、案例
+- 编造"我曾经…""我记得…""有一次…"等虚构场景
+- 使用第一人称分享个人经验
+- 你的任务是分析用户并提问，不是展示你自己
 """
 
         # 非首轮：精简 Prompt，避免反复开场
@@ -223,6 +229,12 @@ H. 没赚到钱但一谈起来眼睛发亮的事——真兴趣
 3. 风格：温暖而犀利、不灌鸡汤、有共情但不纵容自我欺骗
 4. 绝对禁止重复之前问过的问题，不要换一种措辞重复同一问题
 5. 不要借用户提到的某个词跳回已覆盖方向重问
+
+【绝对禁止】
+- 讲你自己的故事、经历、案例
+- 编造"我曾经…""我记得…""有一次…"等虚构场景
+- 使用第一人称分享个人经验
+- 你的任务是分析用户并提问，不是展示你自己
 """
     
     def parse_response(self, content):
@@ -251,8 +263,21 @@ H. 没赚到钱但一谈起来眼睛发亮的事——真兴趣
         if not result['question']:
             result['question'] = content.strip()
         
+        # 长度截断，防止整段分析/案例混入下一题
+        if result['question'] and len(result['question']) > 200:
+            result['question'] = result['question'][:200] + '...'
+        
         return result
     
+    # 讲故事/编造经历的关键词拦截列表
+    STORY_KEYWORDS = ['我记得', '当时我', '我曾经', '有一次']
+
+    def _contains_story(self, text):
+        """检测 AI 输出是否开始讲自己的故事/案例"""
+        if not text:
+            return False
+        return any(kw in text for kw in self.STORY_KEYWORDS)
+
     def chat(self, messages, round_num=0, is_report=False, asked_questions=None,
              covered_directions=None, current_direction=None, is_first_round=False):
         """调用AI API进行对话——后端控制方向"""
@@ -269,19 +294,42 @@ H. 没赚到钱但一谈起来眼睛发亮的事——真兴趣
         
         full_messages = [{"role": "system", "content": system_prompt}] + messages
         
+        # 调试日志：打印最终发给 API 的消息结构
         try:
-            response = client.chat.completions.create(
+            import json as _json
+            print("\n[AI DEBUG] full_messages sent to API:")
+            print(_json.dumps(full_messages, ensure_ascii=False, indent=2))
+            print("[AI DEBUG] total messages:", len(full_messages))
+        except Exception:
+            pass
+        
+        def _call_api(msgs):
+            """内部封装：调用 API 并解析"""
+            resp = client.chat.completions.create(
                 model=model,
-                messages=full_messages,
+                messages=msgs,
                 temperature=0.85,
                 max_tokens=4000
             )
-            content = response.choices[0].message.content
+            return resp.choices[0].message.content
+        
+        try:
+            content = _call_api(full_messages)
             
             if is_report:
                 return {"type": "report", "content": content}
             
             parsed = self.parse_response(content)
+            
+            # 异常拦截：检测 AI 是否开始讲自己的故事
+            if self._contains_story(parsed.get('raw', '')):
+                print("[AI DEBUG] Story detected, triggering retry...")
+                retry_messages = full_messages + [
+                    {"role": "system", "content": "你刚才开始讲自己的案例或经历，这是绝对不允许的。你的任务是分析用户并提问，不是展示你自己。请重新输出。"}
+                ]
+                content = _call_api(retry_messages)
+                parsed = self.parse_response(content)
+            
             return {
                 "type": "chat",
                 **parsed
