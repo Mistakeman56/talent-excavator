@@ -83,30 +83,45 @@ python app.py
 
 ```
 .
-├── app.py                  # 主应用入口：Flask 路由、会话管理、API 端点
-├── config.py               # 配置类：AI 提供商切换、测评参数、API 密钥
-├── models.py               # SQLAlchemy 模型：ScaleResult, UserProfile, HumanDictionary
-├── scale_data.py           # 量表题目数据（一级 / 二级量表）
-├── dictionary_data.py      # Human 词典种子数据
+├── app.py                  # 主应用入口：创建 Flask 实例、初始化扩展、注册 Blueprint、自动建表
+├── config.py               # 配置类：AI 提供商切换、测评流程参数、API 密钥
+├── models.py               # SQLAlchemy 模型：User, InterviewSession, ScaleResult, UserProfile, HumanDictionary
+├── scale_data.py           # 量表题目数据：PRIMARY_SCALE, SECONDARY_SCALE（常量字典）
+├── dictionary_data.py      # Human 词典种子数据：DICTIONARY_ENTRIES（常量列表）
 ├── requirements.txt        # Python 依赖
-├── services/
+├── test_simple.py          # 临时调试脚本
+├── test_chinese.py         # 临时调试脚本
+├── test_long.py            # 临时调试脚本
+├── test_quotes.py          # 临时调试脚本
+├── services/               # 服务端逻辑包
+│   ├── __init__.py
 │   └── ai_service.py       # AI 服务封装：System Prompt 构建、API 调用、四段式解析
+├── routes/                 # Flask Blueprint 路由包
+│   ├── __init__.py         # 统一导出所有 Blueprint
+│   ├── auth.py             # 认证路由：注册、登录、登出、登录状态检查
+│   ├── main.py             # 主页、报告展示页
+│   ├── interview.py        # AI 访谈 API：开始、聊天、生成报告、重置
+│   ├── scale.py            # 量表 API：获取题目、提交答案、二级量表
+│   └── dictionary.py       # 词典 API：列表查询、分类筛选、单条详情、首次导入
 ├── templates/              # Jinja2 模板
-│   ├── base.html
-│   ├── index.html          # AI 访谈首页
-│   ├── report.html         # 报告展示页
+│   ├── base.html           # 基础模板（暗色主题、CDN 资源引入）
+│   ├── index.html          # 首页 / AI 访谈主界面（含登录状态展示）
+│   ├── login.html          # 登录页
+│   ├── register.html       # 注册页
+│   ├── report.html         # 报告展示页（marked.js 渲染 Markdown）
 │   ├── scale.html          # 量表测评页
-│   ├── scale_result.html   # 量表结果页
+│   ├── scale_result.html   # 量表结果页（ECharts 雷达图）
 │   └── dictionary.html     # Human 词典页
 ├── static/
-│   ├── css/style.css       # 全局暗色主题样式
+│   ├── css/
+│   │   └── style.css       # 全局暗色主题样式（CSS 变量 + 金色强调色）
 │   └── js/
-│       ├── main.js         # AI 访谈交互
-│       ├── scale.js        # 量表测评逻辑
-│       ├── scale_result.js # 量表结果与雷达图
-│       └── dictionary.js   # 词典页交互
+│       ├── main.js         # AI 访谈页交互逻辑
+│       ├── scale.js        # 量表测评页逻辑
+│       ├── scale_result.js # 量表结果页逻辑（雷达图渲染 + 二级量表内嵌答题）
+│       └── dictionary.js   # 词典页交互逻辑
 └── instance/
-    └── talent_assessment.db # SQLite 数据库（运行时自动生成）
+    └── talent_assessment.db # SQLite 数据库（运行时自动生成；被 .gitignore 忽略）
 ```
 
 ---
@@ -151,7 +166,8 @@ python app.py
 
 - **后端方向硬控制**：8 个访谈方向由后端队列管理，即使 AI 偏离也会被检测并修正，确保访谈覆盖完整性
 - **四段式输出解析**：AI 每轮回复强制分为「关键信号 / 天赋假设 / HUMAN 3.0 判断 / 下一题」，结构化提取信息
-- **无用户登录**：基于 Flask Session 的匿名测评，数据本地存储
+- **用户登录系统**：基于 Flask-Login 的认证体系，AI 访谈与报告生成需登录后使用；量表与词典无需登录
+- **服务端会话持久化**：AI 访谈数据存储在 `InterviewSession` 表中（对话历史、阶段、答案、报告），不再依赖客户端 Cookie
 - **数据热加载**：量表题目、词典词条以 Python 常量形式维护，修改后重启即可生效
 
 ---
