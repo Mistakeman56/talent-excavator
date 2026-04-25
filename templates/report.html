@@ -21,7 +21,9 @@
     </header>
 
     <main class="report-body">
-        <article class="report-content markdown-body" id="reportContent" data-markdown="{{ report|forceescape }}">
+        <!-- 报告原文通过隐藏的 textarea 传递，避免 data-attribute 长度限制 -->
+        <textarea id="reportRaw" style="display:none;">{{ report|e }}</textarea>
+        <article class="report-content markdown-body" id="reportContent">
             {{ report|e }}
         </article>
     </main>
@@ -53,12 +55,11 @@
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    var el = document.getElementById('reportContent');
-    if (el && typeof marked !== 'undefined') {
-        var md = el.getAttribute('data-markdown');
-        var textarea = document.createElement('textarea');
-        textarea.innerHTML = md;
-        el.innerHTML = marked.parse(textarea.value);
+    var rawEl = document.getElementById('reportRaw');
+    var contentEl = document.getElementById('reportContent');
+    if (rawEl && contentEl && typeof marked !== 'undefined') {
+        var md = rawEl.value;
+        contentEl.innerHTML = marked.parse(md);
     }
 });
 </script>

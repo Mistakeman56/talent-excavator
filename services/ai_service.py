@@ -299,18 +299,22 @@ H. 没赚到钱但一谈起来眼睛发亮的事——真兴趣
         except Exception:
             pass
         
-        def _call_api(msgs):
+        def _call_api(msgs, is_report=False):
             """内部封装：调用 API 并解析"""
             resp = client.chat.completions.create(
                 model=model,
                 messages=msgs,
                 temperature=0.85,
-                max_tokens=4000
+                max_tokens=8192 if is_report else 4000
             )
-            return resp.choices[0].message.content
+            content = resp.choices[0].message.content
+            # 报告生成时检测输出是否被截断
+            if is_report and resp.choices[0].finish_reason != 'stop':
+                content += '\n\n---\n\n> ⚠️ 报告内容较长，可能未完全生成。如需更完整的报告，建议重新测评或联系管理员。'
+            return content
         
         try:
-            content = _call_api(full_messages)
+            content = _call_api(full_messages, is_report=is_report)
             
             if is_report:
                 return {"type": "report", "content": content}
