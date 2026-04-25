@@ -69,8 +69,8 @@
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/Mistakeman56/mistakeman-Graduation-Project.git
-cd mistakeman-Graduation-Project
+git clone https://github.com/Mistakeman56/talent-excavator.git
+cd talent-excavator
 ```
 
 ### 2. 创建虚拟环境
