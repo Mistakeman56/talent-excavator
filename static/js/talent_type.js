@@ -64,15 +64,18 @@
             const btn = document.createElement('button');
             btn.className = 'tt-option' + (selected === opt.key ? ' selected' : '');
             btn.innerHTML = '<span class="tt-option-letter">' + opt.key.toUpperCase() + '</span>' + opt.text;
+            // 单击 = 选中（不跳转）
             btn.addEventListener('click', () => {
                 answers[q.id] = opt.key;
                 renderQuestion();
-                // 自动跳到下一题（最后一题除外，留给用户确认后手动提交）
+            });
+            // 双击 = 选中并跳到下一题（最后一题双击不跳转，留给用户手动提交）
+            btn.addEventListener('dblclick', () => {
+                answers[q.id] = opt.key;
+                renderQuestion();
                 if (currentIndex < questions.length - 1) {
-                    setTimeout(() => {
-                        currentIndex++;
-                        renderQuestion();
-                    }, 250);
+                    currentIndex++;
+                    renderQuestion();
                 }
             });
             optionsEl.appendChild(btn);
@@ -153,17 +156,11 @@
         if (screen.style.display === 'none') return;
         const q = questions[currentIndex];
         if (!q) return;
-        // 数字键选选项（自动跳转，跟量表逻辑一致）
+        // 数字键选选项（仅选中，不跳转）
         const optIndex = parseInt(e.key) - 1;
         if (optIndex >= 0 && optIndex < q.options.length) {
             answers[q.id] = q.options[optIndex].key;
             renderQuestion();
-            if (currentIndex < questions.length - 1) {
-                setTimeout(() => {
-                    currentIndex++;
-                    renderQuestion();
-                }, 250);
-            }
             return;
         }
         // Enter 跳到下一题 / 提交
