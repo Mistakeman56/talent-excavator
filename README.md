@@ -1,178 +1,197 @@
-# 个人天赋发掘测评系统
+<div align="center">
 
-> 毕业设计项目 · 基于 AI 深度访谈与标准化量表的人才识别系统
+# ◈ 个人天赋发掘测评系统
+
+**毕业设计项目 · 基于 AI 深度访谈与标准化量表的人才识别系统**
+
+[![Python](https://img.shields.io/badge/Python-3.14-blue?logo=python)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/Flask-3.x-black?logo=flask)](https://flask.palletsprojects.com/)
+[![DeepSeek](https://img.shields.io/badge/AI-DeepSeek%20V4-5b8ff9)](https://platform.deepseek.com/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+</div>
+
+> **这不是测试题，也不是快速贴标签。**
+> 
+> 我们通过 AI 驱动的多轮深度访谈，挖出你真正的底层天赋，同时看清——你现在的生活结构，究竟是在放大它，还是在压住它。
 
 ---
 
-## 项目简介
+## ✨ 功能概览
 
-**个人天赋发掘测评系统**是一个基于 Flask 的 Web 应用，通过 **AI 驱动的多轮深度访谈** 结合 **标准化天赋量表**，帮助用户识别自身底层天赋，并生成一份个性化的《个人天赋使用说明书 + 人类 3.0 发展诊断报告》。
-
-系统核心理念：**这不是测试题，也不是快速贴标签。** 我们通过逐轮深度问题，挖出你真正的底层天赋，同时看清——你现在的生活结构，究竟是在放大它，还是在压住它。
-
----
-
-## 核心功能
-
-### 1. AI 深度访谈（人类 3.0 诊断）
+### 🤖 AI 深度访谈（人类 3.0 诊断）
 
 - **8~20 轮** 渐进式深度对话，模拟人类学家的田野调查方法
-- 后端强制控制 **8 个访谈方向**（A-H），确保覆盖全面：
-  - **A** 童年模式 / 顽固缺点　　**B** 无意识胜任区　　**C** 能量审计　　**D** 嫉妒与压抑
-  - **E** 社会可见优势　　　　　**F** 深层痛苦　　　　**G** 伪擅长区　　**H** 真实兴趣
+- 后端强制控制 **8 个访谈方向**（A-H），确保覆盖全面
 - 每轮输出包含：**关键信号提取**、**天赋假设更新**、**HUMAN 3.0 四象限判断**、**下一道深度问题**
-- 达到 8 轮后可生成 **14 章节 Markdown 报告**，包含天赋画像、四象限诊断、发展建议
+- 达到 8 轮后可生成 **14 章节 Markdown 报告**
 
-### 2. 天赋维度筛查量表
+| 方向 | 主题 | 核心问题 |
+|:----:|:-----|:---------|
+| A | 童年模式 / 顽固缺点 | 16岁前没人逼你也会沉进去做的事 |
+| B | 无意识胜任区 | 别人觉得难但你觉得很自然的事 |
+| C | 能量审计 | 做完身体累但精神极度亢奋的事 |
+| D | 嫉妒与压抑 | 强烈嫉妒过的人/能力/生活状态 |
+| E | 社会可见优势 | 别人通常为什么来找你 |
+| F | 深层痛苦 | 最反复痛苦/受伤/执着的主题 |
+| G | 伪擅长区 | 做得不错但越做越空的事 |
+| H | 真实兴趣 | 没赚到钱但一谈起来眼睛发亮的事 |
 
-- **一级量表**：20 题标准化测评，5 大维度（认知 / 创造 / 社交 / 系统 / 身体），雷达图可视化
-- **二级量表**：针对 Top 维度深入 10 题，锁定具体天赋子类型（如"系统架构师型""模式捕手型"等）
-- 每种子类型附带**职业路径映射**，连接天赋与现实选择
+### 📊 天赋维度筛查量表
 
-### 3. Human 词典
+- **一级量表**：20 题标准化测评，5 大维度，**雷达图可视化**
+- **二级量表**：针对 Top 维度深入 10 题，锁定具体天赋子类型
+- 每种子类型附带**职业路径映射**
 
-- 项目核心概念速查手册，涵盖 **天赋类型**、**HUMAN 3.0 框架**、**评估术语**、**心理学概念**、**AI 时代风险**
+### 📖 Human 词典
+
+- 项目核心概念速查手册，涵盖天赋类型、HUMAN 3.0 框架、评估术语
 - 支持分类筛选与关键词搜索，点击词条查看详细定义、例子与相关概念
 
 ---
 
-## 技术栈
+## 🛠 技术栈
 
 | 层级 | 技术 |
-|------|------|
-| 后端框架 | Flask 3.x (Python) |
-| ORM | Flask-SQLAlchemy 3.1.x |
+|:-----|:-----|
+| 后端框架 | Flask 3.x + Flask-Login + Flask-SQLAlchemy |
 | 数据库 | SQLite |
-| AI 调用 | OpenAI Python SDK（兼容 DeepSeek / Moonshot 等 OpenAI 格式 API） |
+| AI SDK | OpenAI Python SDK（兼容 DeepSeek / Moonshot）|
 | 前端模板 | Jinja2 |
-| 前端样式 | 原生 CSS（暗色主题，金色强调色） |
-| 前端交互 | 原生 JavaScript + ECharts（雷达图） |
+| 前端样式 | 原生 CSS（暗色主题 · 金色强调色 `#d4a853`）|
+| 图表 | ECharts 5.x（雷达图）|
+| Markdown | marked.js |
 
 ---
 
-## 快速开始
+## 🚀 快速开始
 
-### 环境准备
+### 1. 克隆项目
 
-```powershell
-# 进入项目目录
-cd "d:\graduation project"
-
-# 激活虚拟环境（Windows）
-.\.venv\Scripts\Activate.ps1
-
-# 若虚拟环境不存在，可新建
-# python -m venv .venv
-# .\.venv\Scripts\Activate.ps1
-# pip install -r requirements.txt
+```bash
+git clone https://github.com/Mistakeman56/mistakeman-Graduation-Project.git
+cd mistakeman-Graduation-Project
 ```
 
-### 启动服务
+### 2. 创建虚拟环境
 
-```powershell
+```bash
+python3 -m venv .venv
+source .venv/bin/activate        # macOS / Linux
+# .\.venv\Scripts\Activate.ps1  # Windows
+```
+
+### 3. 安装依赖
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. 配置环境变量
+
+```bash
+cp .env.example .env
+```
+
+编辑 `.env` 文件，填入你的 API 密钥：
+
+```env
+# Flask 安全密钥（生产环境必须替换为强随机字符串）
+SECRET_KEY=your-strong-secret-key
+
+# AI 提供商: deepseek | kimi
+PROVIDER=deepseek
+
+# DeepSeek API 密钥（默认使用）
+DEEPSEEK_API_KEY=sk-your-deepseek-key
+
+# Moonshot (Kimi) API 密钥（可选）
+KIMI_API_KEY=sk-your-kimi-key
+```
+
+> 🔑 密钥申请地址：
+> - [DeepSeek](https://platform.deepseek.com/) · [Moonshot](https://platform.moonshot.cn/)
+
+### 5. 启动服务
+
+```bash
 python app.py
 ```
 
-服务默认在 `http://127.0.0.1:5000` 启动，Flask debug 模式已开启。
-
-浏览器访问 `http://127.0.0.1:5000` 即可开始使用。
+服务默认在 `http://127.0.0.1:5001` 启动，浏览器访问即可开始使用。
 
 ---
 
-## 项目结构
+## 📁 项目结构
 
 ```
 .
-├── app.py                  # 主应用入口：创建 Flask 实例、初始化扩展、注册 Blueprint、自动建表
-├── config.py               # 配置类：AI 提供商切换、测评流程参数、API 密钥
-├── models.py               # SQLAlchemy 模型：User, InterviewSession, ScaleResult, UserProfile, HumanDictionary
-├── scale_data.py           # 量表题目数据：PRIMARY_SCALE, SECONDARY_SCALE（常量字典）
-├── dictionary_data.py      # Human 词典种子数据：DICTIONARY_ENTRIES（常量列表）
+├── app.py                  # Flask 应用入口：初始化扩展、注册 Blueprint、自动建表
+├── config.py               # 配置中心：环境变量读取、AI 提供商切换、测评参数
+├── models.py               # SQLAlchemy 数据模型
+├── scale_data.py           # 量表题目数据（常量字典）
+├── dictionary_data.py      # Human 词典种子数据（常量列表）
 ├── requirements.txt        # Python 依赖
-├── test_simple.py          # 临时调试脚本
-├── test_chinese.py         # 临时调试脚本
-├── test_long.py            # 临时调试脚本
-├── test_quotes.py          # 临时调试脚本
-├── services/               # 服务端逻辑包
-│   ├── __init__.py
-│   └── ai_service.py       # AI 服务封装：System Prompt 构建、API 调用、四段式解析
-├── routes/                 # Flask Blueprint 路由包
-│   ├── __init__.py         # 统一导出所有 Blueprint
-│   ├── auth.py             # 认证路由：注册、登录、登出、登录状态检查
-│   ├── main.py             # 主页、报告展示页
-│   ├── interview.py        # AI 访谈 API：开始、聊天、生成报告、重置
-│   ├── scale.py            # 量表 API：获取题目、提交答案、二级量表
-│   └── dictionary.py       # 词典 API：列表查询、分类筛选、单条详情、首次导入
+├── .env.example            # 环境变量模板
+├── services/
+│   └── ai_service.py       # AI 服务封装：Prompt 构建、API 调用、四段式解析
+├── routes/                 # Flask Blueprint 路由
+│   ├── auth.py             # 用户认证（注册 / 登录 / 登出）
+│   ├── interview.py        # AI 访谈 API（开始 / 聊天 / 报告 / 重置）
+│   ├── scale.py            # 量表 API（题目 / 提交 / 二级量表）
+│   ├── dictionary.py       # 词典 API（列表 / 筛选 / 详情 / 导入）
+│   └── main.py             # 主页、报告展示页
 ├── templates/              # Jinja2 模板
-│   ├── base.html           # 基础模板（暗色主题、CDN 资源引入）
-│   ├── index.html          # 首页 / AI 访谈主界面（含登录状态展示）
-│   ├── login.html          # 登录页
-│   ├── register.html       # 注册页
-│   ├── report.html         # 报告展示页（marked.js 渲染 Markdown）
-│   ├── scale.html          # 量表测评页
-│   ├── scale_result.html   # 量表结果页（ECharts 雷达图）
-│   └── dictionary.html     # Human 词典页
+│   ├── base.html
+│   ├── index.html          # AI 访谈主界面
+│   ├── scale.html / scale_result.html
+│   ├── dictionary.html
+│   ├── report.html
+│   ├── login.html / register.html
+│   └── ...
 ├── static/
-│   ├── css/
-│   │   └── style.css       # 全局暗色主题样式（CSS 变量 + 金色强调色）
-│   └── js/
-│       ├── main.js         # AI 访谈页交互逻辑
-│       ├── scale.js        # 量表测评页逻辑
-│       ├── scale_result.js # 量表结果页逻辑（雷达图渲染 + 二级量表内嵌答题）
-│       └── dictionary.js   # 词典页交互逻辑
-└── instance/
-    └── talent_assessment.db # SQLite 数据库（运行时自动生成；被 .gitignore 忽略）
+│   ├── css/style.css       # 全局暗色主题样式
+│   └── js/                 # 各页面交互逻辑
+└── instance/               # SQLite 数据库（运行时生成，已加入 .gitignore）
 ```
 
 ---
 
-## 配置说明
+## ⚙️ 配置说明
 
-编辑 `config.py` 可调整以下关键参数：
+编辑 `.env` 或系统环境变量可调整以下参数：
 
-| 配置项 | 默认值 | 说明 |
-|--------|--------|------|
+| 环境变量 | 默认值 | 说明 |
+|:---------|:-------|:-----|
+| `PROVIDER` | `deepseek` | AI 提供商：`deepseek` 或 `kimi` |
 | `MIN_QUESTIONS` | 8 | 最少完成轮数才能生成报告 |
 | `SUGGEST_REPORT_AT` | 12 | 建议生成报告的轮数 |
 | `MAX_QUESTIONS` | 20 | 强制生成报告的最大轮数 |
-| `PROVIDER` | `deepseek` | AI 提供商：`deepseek` 或 `kimi` |
 
-AI 提供商切换：
+AI 模型切换（`config.py`）：
 
-```powershell
-# 使用 DeepSeek（默认）
-python app.py
+```python
+# DeepSeek V4-Flash（默认，性价比高）
+AI_MODEL = 'deepseek-v4-flash'
 
-# 使用 Moonshot (Kimi)
-$env:PROVIDER="kimi"
-python app.py
+# DeepSeek V4-Pro（推理更深，贵约 12 倍）
+# AI_MODEL = 'deepseek-v4-pro'
 ```
 
-> ⚠️ 生产环境请通过环境变量注入 API 密钥，不要依赖代码中的硬编码 fallback。
-
 ---
 
-## 使用流程
+## 🧠 核心机制亮点
 
-1. **进入首页** → 选择"开始 AI 深度访谈"或"天赋维度筛查量表"
-2. **AI 访谈模式**：逐轮回答问题，每轮 AI 会提取关键信号并更新天赋假设
-3. **量表模式**：20 题快速筛查 → 查看雷达图与 Top 维度 → 可选深入二级量表
-4. **生成报告**：访谈达到 8 轮后，点击"生成天赋报告"获取完整诊断
-5. **随时查词**：点击导航进入 Human 词典，查阅项目中的核心概念
-
----
-
-## 核心机制亮点
-
-- **后端方向硬控制**：8 个访谈方向由后端队列管理，即使 AI 偏离也会被检测并修正，确保访谈覆盖完整性
+- **后端方向硬控制**：8 个访谈方向由后端队列管理，AI 偏离时自动检测并修正，确保访谈覆盖完整性
 - **四段式输出解析**：AI 每轮回复强制分为「关键信号 / 天赋假设 / HUMAN 3.0 判断 / 下一题」，结构化提取信息
-- **用户登录系统**：基于 Flask-Login 的认证体系，AI 访谈与报告生成需登录后使用；量表与词典无需登录
-- **服务端会话持久化**：AI 访谈数据存储在 `InterviewSession` 表中（对话历史、阶段、答案、报告），不再依赖客户端 Cookie
-- **数据热加载**：量表题目、词典词条以 Python 常量形式维护，修改后重启即可生效
+- **用户登录系统**：基于 Flask-Login 的认证体系，AI 访谈与报告生成需登录后使用
+- **服务端会话持久化**：AI 访谈数据存储在 SQLite 中（对话历史、阶段、答案、报告），不依赖客户端 Cookie
+- **对话式交互界面**：AI 提问在左、用户回答在右，左侧金色小球跳动动画模拟大模型思考过程
+- **Sticky 进度条**：滚动对话时轮次徽章与进度条始终吸顶可见
 
 ---
 
-## 作者
+## 👤 作者
 
 毕业设计项目
 
