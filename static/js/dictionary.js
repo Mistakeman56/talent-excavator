@@ -152,7 +152,7 @@ function openModal(entryId) {
         ` : ''}
     `;
     
-    els.dictModal.style.display = 'block';
+    els.dictModal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
 }
 
