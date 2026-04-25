@@ -24,7 +24,7 @@ class Config:
         # 申请地址: https://platform.deepseek.com/
         AI_API_KEY = os.environ.get('DEEPSEEK_API_KEY') or 'YOUR_DEEPSEEK_API_KEY'
         AI_BASE_URL = 'https://api.deepseek.com/v1'
-        AI_MODEL = 'deepseek-chat'  # 可换 'deepseek-reasoner' (R1推理模型, 更深度但慢)
+        AI_MODEL = 'deepseek-v4-flash'  # 或 'deepseek-v4-pro'（推理更深但贵12倍）
     else:
         # Kimi (Moonshot) 配置
         # 优点: 上下文窗口大(128k), 中文语料丰富
