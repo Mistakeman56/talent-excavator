@@ -322,8 +322,11 @@ AI 被强制要求每轮输出分为四个部分：
 
 ---
 
-## 外部依赖与 API
+## Git 提交规范
 
-- **DeepSeek API**: `https://api.deepseek.com/v1`
-- **Moonshot (Kimi) API**: `https://api.moonshot.cn/v1`
-- 两者均通过 OpenAI 兼容接口调用，模型名称和密钥在 `config.py` 中配置。
+- **每次修改完代码后，必须立即执行 `git add`、`git commit` 和 `git push`**。
+- Commit message 必须清晰描述本次修改的内容，格式示例：
+  - `fix: 修复登录页面样式错位`
+  - `feat: 在量表结果页增加二级量表入口`
+  - `chore: 将开发服务器端口从 5000 改为 5001`
+- 提交前无需额外询问用户确认，直接执行。
