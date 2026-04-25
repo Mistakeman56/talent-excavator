@@ -1,7 +1,7 @@
-# AGENTS.md — 个人天赋发掘测评系统
+<!-- AGENTS.md — 个人天赋发掘测评系统 -->
 
 > 本文档供 AI 编程助手阅读。读者被假设为对该项目一无所知。
-> 项目自然语言：**中文**（代码注释、文档、UI 文本均使用中文）。
+> 项目自然语言：**中文**（代码注释、文档字符串、UI 文本均使用中文）。
 
 ---
 
@@ -9,12 +9,13 @@
 
 本项目是一个基于 Flask 的 Web 应用，名为**"个人天赋发掘测评系统"**（毕业设计项目）。
 
-核心功能是通过 **AI 驱动的多轮深度访谈**，结合**标准化量表测评**，帮助用户识别底层天赋，并生成一份《个人天赋使用说明书 + 人类3.0发展诊断报告》。
+核心功能是通过 **AI 驱动的多轮深度访谈**，结合**标准化量表测评**与**天赋类型学测评（类似 MBTI）**，帮助用户识别底层天赋，并生成一份《个人天赋使用说明书 + 人类3.0发展诊断报告》。
 
-系统包含三大模块：
+系统包含四大模块：
 1. **AI 深度访谈** — 8~20 轮对话，围绕 8 个访谈方向（A-H）展开，最终生成 Markdown 报告
 2. **天赋维度筛查量表** — 一级量表（20题，5维度，雷达图可视化）+ 二级量表（10题/维度，锁定具体天赋子类型）
-3. **Human 词典** — 项目核心概念速查，首次启动自动导入 SQLite
+3. **天赋类型学测评** — 40 道情境迫选题，输出 4 字母类型代码（类似 MBTI），附带详细解读报告
+4. **Human 词典** — 项目核心概念速查，首次启动自动导入 SQLite
 
 ---
 
@@ -22,16 +23,17 @@
 
 | 层级 | 技术 | 版本/说明 |
 |------|------|----------|
-| Python | CPython | 3.14.0（从 `.venv/pyvenv.cfg` 和 `__pycache__/*.cpython-314.pyc` 确认） |
+| Python | CPython | 3.14.0 |
 | 后端框架 | Flask | `>=3.0.0` |
 | ORM | Flask-SQLAlchemy | `>=3.1.0` |
 | 认证 | Flask-Login | 0.6.3（已安装但未在 `requirements.txt` 中显式列出） |
 | 数据库 | SQLite | `instance/talent_assessment.db` |
 | AI SDK | OpenAI Python SDK | `>=1.12.0`（兼容 DeepSeek / Moonshot API） |
+| 环境变量 | python-dotenv | `>=1.0.0`（`app.py` 启动时调用 `load_dotenv()`） |
 | 前端模板 | Jinja2 | Flask 内置 |
 | 前端样式 | 原生 CSS | 暗色主题，金色强调色 `#d4a853` |
-| 前端图表 | ECharts 5.x | CDN 引入 (`cdn.jsdelivr.net/npm/echarts@5.4.3`) |
-| 前端 Markdown | marked.js | CDN 引入 (`cdn.jsdelivr.net/npm/marked/marked.min.js`) |
+| 前端图表 | ECharts 5.x | CDN 引入 |
+| 前端 Markdown | marked.js | CDN 引入 |
 | 前端交互 | 原生 JavaScript | 无框架，按页面拆分文件 |
 
 ---
@@ -41,21 +43,24 @@
 ```
 .
 ├── app.py                  # 主应用入口：创建 Flask 实例、初始化扩展、注册 Blueprint、自动建表
-├── config.py               # 配置类：AI 提供商切换、测评流程参数、API 密钥
-├── models.py               # SQLAlchemy 模型：User, InterviewSession, ScaleResult, UserProfile, HumanDictionary
+├── config.py               # 配置类：从环境变量读取 AI 密钥、测评流程参数
+├── models.py               # SQLAlchemy 模型：User, InterviewSession, ScaleResult, TalentTypeResult, UserProfile, HumanDictionary
 ├── scale_data.py           # 量表题目数据：PRIMARY_SCALE, SECONDARY_SCALE（纯 Python 字典常量）
+├── talent_type_data.py     # 天赋类型学数据：40 道题、计分逻辑、类型解读报告（纯 Python 常量）
 ├── dictionary_data.py      # Human 词典种子数据：DICTIONARY_ENTRIES（纯 Python 列表常量）
 ├── requirements.txt        # Python 依赖（4 项，Flask-Login 未列出）
+├── .env.example            # 环境变量模板
 ├── services/
 │   ├── __init__.py         # 空包文件
 │   └── ai_service.py       # AI 服务封装：System Prompt 构建、API 调用、四段式解析、方向关键词库
 ├── routes/                 # Flask Blueprint 路由包
 │   ├── __init__.py         # 统一导出所有 Blueprint
 │   ├── auth.py             # 认证路由：注册、登录、登出、登录状态检查
-│   ├── main.py             # 主页、报告展示页
+│   ├── main.py             # 主页、报告展示页、天赋类型学页面入口
 │   ├── interview.py        # AI 访谈 API：开始、聊天、生成报告、重置
 │   ├── scale.py            # 量表 API：获取题目、提交答案、二级量表
-│   └── dictionary.py       # 词典 API：列表查询、分类筛选、单条详情、首次导入
+│   ├── dictionary.py       # 词典 API：列表查询、分类筛选、单条详情、首次导入
+│   └── talent_type.py      # 天赋类型学 API：获取题目、提交答案、查询结果
 ├── templates/              # Jinja2 模板
 │   ├── base.html           # 基础模板（暗色主题、引入 style.css）
 │   ├── index.html          # 首页 / AI 访谈主界面（含登录状态展示）
@@ -64,13 +69,17 @@
 │   ├── report.html         # 报告展示页（使用 marked.js 渲染 Markdown）
 │   ├── scale.html          # 量表测评页
 │   ├── scale_result.html   # 量表结果页（引入 ECharts CDN）
+│   ├── talent_type.html    # 天赋类型学测评页
+│   ├── talent_type_result.html # 天赋类型学结果页
 │   └── dictionary.html     # Human 词典页
 ├── static/
-│   ├── css/style.css       # 全局样式（暗色主题，约 1760 行）
+│   ├── css/style.css       # 全局样式（暗色主题）
 │   └── js/
 │       ├── main.js         # AI 访谈页交互逻辑
 │       ├── scale.js        # 量表测评页逻辑
 │       ├── scale_result.js # 量表结果页逻辑（雷达图渲染 + 二级量表内嵌答题）
+│       ├── talent_type.js      # 天赋类型学测评页逻辑
+│       ├── talent_type_result.js # 天赋类型学结果页逻辑
 │       └── dictionary.js   # 词典页逻辑
 ├── instance/
 │   └── talent_assessment.db # SQLite 数据库（运行时自动生成；被 .gitignore 忽略）
@@ -78,11 +87,11 @@
 ```
 
 **架构特点**：
-- 使用 **Flask Blueprint** 拆分路由，5 个 Blueprint 在 `app.py` 中统一注册。
-- 数据（量表题目、词典词条）以 Python 模块中的**常量形式硬编码**，而非数据库或外部配置文件。
+- 使用 **Flask Blueprint** 拆分路由，6 个 Blueprint 在 `app.py` 中统一注册。
+- 数据（量表题目、词典词条、天赋类型学题目）以 Python 模块中的**常量形式硬编码**，而非数据库或外部配置文件。
 - AI 服务层 (`services/ai_service.py`) 通过 OpenAI SDK 统一封装，支持切换不同 API 提供商。
-- **已添加用户登录系统**（基于 Flask-Login），AI 访谈和报告生成需要登录后才能使用；量表和词典无需登录。
-- AI 访谈数据**已迁移到服务端持久化**：`InterviewSession` 表存储完整对话历史、当前阶段、用户答案和报告内容，不再存放在客户端 Cookie 中。
+- **用户登录系统**基于 Flask-Login，AI 访谈和报告生成需要登录后才能使用；量表、天赋类型学测评和词典无需登录。
+- AI 访谈数据**存储在服务端**：`InterviewSession` 表存储完整对话历史、当前阶段、用户答案和报告内容，不再存放在客户端 Cookie 中。
 
 ---
 
@@ -92,27 +101,53 @@
 
 虚拟环境已存在于项目根目录的 `.venv/` 中：
 
-```powershell
+```bash
+# macOS / Linux
+source .venv/bin/activate
+
 # Windows PowerShell
 .\.venv\Scripts\Activate.ps1
 ```
 
 或新建环境：
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
 > 注意：`requirements.txt` 未列出 `flask-login`，若新建环境需手动安装：`pip install flask-login`
 
+### 配置环境变量
+
+复制模板文件并填写真实密钥：
+
+```bash
+cp .env.example .env
+```
+
+`.env` 文件需包含以下变量：
+
+```env
+SECRET_KEY=your-strong-secret-key
+PROVIDER=deepseek
+DEEPSEEK_API_KEY=sk-your-key
+KIMI_API_KEY=sk-your-key
+```
+
+- `SECRET_KEY`：Flask session 密钥，生产环境必须为强随机字符串
+- `PROVIDER`：`deepseek`（默认）或 `kimi`
+- `DEEPSEEK_API_KEY` / `KIMI_API_KEY`：对应 AI 提供商的 API 密钥
+
+**当前 `config.py` 不再包含任何硬编码 fallback 密钥**。若环境变量缺失，应用启动时会直接抛出 `ValueError`。
+
 ### 启动开发服务器
 
-```powershell
+```bash
 python app.py
 ```
 
-默认在 `http://0.0.0.0:5000` 启动，Flask debug 模式已开启。
+默认在 `http://0.0.0.0:5001` 启动，Flask debug 模式已开启。
 
 ### 依赖列表
 
@@ -120,7 +155,7 @@ python app.py
 - `flask>=3.0.0`
 - `flask-sqlalchemy>=3.1.0`
 - `openai>=1.12.0`
-- `python-dotenv>=1.0.0`（已安装但未在代码中调用 `load_dotenv()`）
+- `python-dotenv>=1.0.0`
 
 实际已安装但未列出的依赖：`flask-login`
 
@@ -128,33 +163,26 @@ python app.py
 
 ## 配置说明
 
-配置集中在 `config.py` 的 `Config` 类中。
+配置集中在 `config.py` 的 `Config` 类中，全部从环境变量读取。
 
 ### AI 提供商切换
 
 通过环境变量 `PROVIDER` 切换：
-- `deepseek`（默认）：使用 DeepSeek API
-- `kimi`：使用 Moonshot (Kimi) API
-
-```powershell
-$env:PROVIDER="kimi"
-python app.py
-```
+- `deepseek`（默认）：使用 DeepSeek API，`AI_MODEL = 'deepseek-v4-flash'`
+- `kimi`：使用 Moonshot (Kimi) API，`AI_MODEL = 'moonshot-v1-128k'`
 
 ### 关键配置项
 
 | 配置项 | 默认值 | 说明 |
 |--------|--------|------|
-| `SECRET_KEY` | 硬编码 dev key | Flask session 密钥 |
+| `SECRET_KEY` | 从 `SECRET_KEY` 环境变量读取 | Flask session 密钥 |
 | `MIN_QUESTIONS` | 8 | 最少完成轮数才能生成报告 |
 | `SUGGEST_REPORT_AT` | 12 | 建议生成报告的轮数 |
 | `MAX_QUESTIONS` | 20 | 强制生成报告的最大轮数 |
 | `REPORT_TITLE` | 个人天赋使用说明书 + 人类3.0发展诊断报告 | 报告标题 |
-| `AI_API_KEY` | 硬编码 fallback | AI 服务 API 密钥 |
+| `AI_API_KEY` | 根据 PROVIDER 自动选择 | AI 服务 API 密钥 |
 | `AI_BASE_URL` | 提供商对应地址 | OpenAI 兼容 API 基础地址 |
-| `AI_MODEL` | `deepseek-chat` / `moonshot-v1-128k` | 模型名称 |
-
-> 注意：当前 `config.py` 中存在硬编码的 API 密钥作为 fallback。修改配置时应注意不要意外将密钥提交到版本控制。
+| `AI_MODEL` | `deepseek-v4-flash` / `moonshot-v1-128k` | 模型名称 |
 
 ---
 
@@ -180,6 +208,13 @@ python app.py
 - `answers`, `scores`, `top_dimensions`：JSON 字符串存储
 - `talent_type`：二级量表锁定的天赋类型名称
 - 注意：`ScaleResult` 使用 `session_id` 而非 `user_id`，登录用户与量表结果之间**无关联**
+
+### TalentTypeResult（天赋类型学测评结果）
+- `session_id`：测评会话标识（UUID），带索引
+- `type_code`：4 字母类型代码，如 `"CDAM"`
+- `answers`, `scores`, `dimensions`, `report`：JSON 字符串存储
+- `created_at`
+- 注意：与 `ScaleResult` 一样，使用 `session_id` 而非 `user_id`
 
 ### UserProfile（用户背景）
 - 存储用户人口统计学信息（年龄、性别、城市类型、教育、专业、父母教养方式、是否独生、MBTI）
@@ -234,6 +269,18 @@ AI 被强制要求每轮输出分为四个部分：
 
 ---
 
+## 天赋类型学测评机制
+
+- 40 道情境迫选题，分 4 个模组（Module I~IV），每个模组对应不同的计分维度
+- Module I（t1-t12）：决定第 1 位字母（C/R/B/S），对应天赋信号（童年模式、无意识胜任区、社会可见优势）
+- Module II（t13-t22）：决定第 2 位字母（D/R/V），对应能量与学习方式
+- Module III（t23-t30）：决定第 3 位字母（A/H），对应驱动力来源
+- Module IV（t31-t40）：决定第 4 位字母（M/C/P），对应兴趣指向
+- 最终输出 4 字母类型代码（如 `CDAM`）及详细解读报告
+- 计分逻辑和类型解读全部硬编码在 `talent_type_data.py` 中
+
+---
+
 ## 代码风格与开发约定
 
 ### 语言与命名
@@ -252,26 +299,27 @@ AI 被强制要求每轮输出分为四个部分：
 - 模板继承 `base.html`，通过 `{% block %}` 注入页面级 CSS/JS。
 - 注意：`style.css` 中词典部分使用了不一致的变量名（`--card-bg`, `--accent-color` 等），这些变量在 `:root` 中**未定义**，可能导致词典样式异常。
 
-### 当前缺失的规范
-- **无测试框架**（未配置 pytest/unittest，无测试文件；根目录下 `test_*.py` 为临时调试脚本，非正式测试）。
-- **无代码格式化 / lint 工具**（未配置 black/ruff/flake8）。
-- **无 CI/CD 配置**。
-- **无部署配置**（如 Dockerfile、Gunicorn 配置、WSGI 入口等）。
-- **无 pyproject.toml / setup.py**。
+---
+
+## 测试策略
+
+- **无正式测试框架**。项目未配置 pytest、unittest 或其他测试工具。
+- 根目录下的 `test_*.py`（`test_simple.py`, `test_chinese.py`, `test_long.py`, `test_quotes.py`）为临时调试脚本，非正式测试，可安全删除。
+- 量表和天赋类型学的计分逻辑集中在各自的 `*_data.py` 中，修改后建议手动运行一遍完整答题流程验证结果正确性。
 
 ---
 
 ## 已知问题与运行注意事项
 
 ### 开发服务器警告
-`app.py` 使用 `app.run(debug=True, host='0.0.0.0')` 启动，这是 Flask 内置开发服务器，**不适合生产环境**。生产部署应使用 Gunicorn、uWSGI 等 WSGI 服务器。
+`app.py` 使用 `app.run(debug=True, host='0.0.0.0', port=5001)` 启动，这是 Flask 内置开发服务器，**不适合生产环境**。生产部署应使用 Gunicorn、uWSGI 等 WSGI 服务器。
 
 ### SQLAlchemy 2.0 兼容警告
-`models.py` 使用 `User.query.get(int(user_id))`，这是 SQLAlchemy 1.x 的 legacy API，在 2.0 中会触发 `LegacyAPIWarning`。
+`models.py` 和 `routes/` 中多处使用 `User.query.get(int(user_id))` 和 `Model.query.filter_by(...).first()` 等语法，这是 SQLAlchemy 1.x 的 legacy API，在 2.0 中会触发 `LegacyAPIWarning`。当前代码仍可正常运行，但未来升级 SQLAlchemy 时可能需要改写为 `db.session.get(User, int(user_id))` 等新 API。
 
 ### 依赖缺失
 - `flask-login` 已安装但未在 `requirements.txt` 中列出。
-- `python-dotenv` 已安装但代码中未调用 `load_dotenv()`。
+- `python-dotenv` 已安装并在 `app.py` 开头调用 `load_dotenv()`。
 
 ### 悬空模型
 `UserProfile` 表已定义但代码中无任何写入逻辑。
@@ -280,9 +328,9 @@ AI 被强制要求每轮输出分为四个部分：
 
 ## 安全注意事项
 
-1. **硬编码密钥**：`config.py` 包含硬编码的 AI API 密钥 fallback 值。生产环境应严格通过环境变量注入。
+1. **环境变量强制校验**：`config.py` 不再包含硬编码 API 密钥。若 `SECRET_KEY` 或对应提供商的 API 密钥未设置，应用启动即失败并抛出 `ValueError`。这避免了开发时不小心提交密钥，但也意味着**本地必须配置 `.env` 文件才能启动**。
 2. **Flask Debug 模式**：`app.py` 中 `app.run(debug=True, ...)` 在开发环境开启，生产部署必须关闭。
-3. **Session 安全**：`SECRET_KEY` 存在硬编码 fallback，生产环境必须替换为强随机密钥。
+3. **Session 安全**：`SECRET_KEY` 通过环境变量注入，开发时请勿使用弱密钥。
 4. **输入校验**：当前仅做了最基本的空值检查，未对用户输入做严格的 XSS/SQL 注入防护（SQLAlchemy ORM 提供了一定保护）。
 5. **XSS 风险**：
    - `report.html` 通过 `marked.parse()` 渲染 AI 生成的 Markdown 报告，虽然内容先经过 Jinja 的 `forceescape`，但最终通过 DOM 操作注入时 HTML 实体会被解码，存在潜在 XSS 风险。
@@ -305,6 +353,10 @@ AI 被强制要求每轮输出分为四个部分：
 - 编辑 `scale_data.py` 中的 `PRIMARY_SCALE` 或 `SECONDARY_SCALE` 字典。
 - 注意二级量表的 `mapping` 决定分数归属到哪个天赋子类型。
 
+### 修改天赋类型学测评
+- 编辑 `talent_type_data.py` 中的题目、选项分值、`DETAILED_REPORTS` 解读报告。
+- 计分核心在 `calculate_type_code()` 函数中。
+
 ### 修改词典词条
 - 编辑 `dictionary_data.py` 中的 `DICTIONARY_ENTRIES` 列表。
 - 修改后删除 SQLite 数据库文件或清空 `human_dictionary` 表，重启应用即可重新导入。
@@ -322,11 +374,8 @@ AI 被强制要求每轮输出分为四个部分：
 
 ---
 
-## Git 提交规范
+## 外部依赖与 API
 
-- **每次修改完代码后，必须立即执行 `git add`、`git commit` 和 `git push`**。
-- Commit message 必须清晰描述本次修改的内容，格式示例：
-  - `fix: 修复登录页面样式错位`
-  - `feat: 在量表结果页增加二级量表入口`
-  - `chore: 将开发服务器端口从 5000 改为 5001`
-- 提交前无需额外询问用户确认，直接执行。
+- **DeepSeek API**: `https://api.deepseek.com/v1`
+- **Moonshot (Kimi) API**: `https://api.moonshot.cn/v1`
+- 两者均通过 OpenAI 兼容接口调用，模型名称和密钥在 `config.py` 中根据 `PROVIDER` 环境变量自动选择。
