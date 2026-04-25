@@ -67,6 +67,13 @@
             btn.addEventListener('click', () => {
                 answers[q.id] = opt.key;
                 renderQuestion();
+                // 自动跳到下一题（最后一题除外，留给用户确认后手动提交）
+                if (currentIndex < questions.length - 1) {
+                    setTimeout(() => {
+                        currentIndex++;
+                        renderQuestion();
+                    }, 250);
+                }
             });
             optionsEl.appendChild(btn);
         });
@@ -146,13 +153,20 @@
         if (screen.style.display === 'none') return;
         const q = questions[currentIndex];
         if (!q) return;
-        // 数字键选选项
+        // 数字键选选项（自动跳转，跟量表逻辑一致）
         const optIndex = parseInt(e.key) - 1;
         if (optIndex >= 0 && optIndex < q.options.length) {
             answers[q.id] = q.options[optIndex].key;
             renderQuestion();
+            if (currentIndex < questions.length - 1) {
+                setTimeout(() => {
+                    currentIndex++;
+                    renderQuestion();
+                }, 250);
+            }
             return;
         }
+        // Enter 跳到下一题 / 提交
         if (e.key === 'Enter') {
             if (answers[q.id] && !btnNext.disabled) goNext();
         }
