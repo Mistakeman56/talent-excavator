@@ -93,18 +93,26 @@
             dimContainer.appendChild(card);
         });
 
-        // 解读报告
+        // 解读报告（5个段落全部展示）
         const reportEl = document.getElementById('reportSection');
         reportEl.innerHTML = `
-            <h3>完整解读</h3>
-            <div class="report-text">${report.report_text.replace(/\n/g, '<br>')}</div>
-            <div style="margin-top:1rem;">
-                <h3>可能适合的方向</h3>
-                <div class="report-text">${report.fit_directions.replace(/\n/g, '<br>')}</div>
+            <h3>核心优势</h3>
+            <div class="report-text">${report.strength.replace(/\n/g, '<br>')}</div>
+            <div style="margin-top:1.25rem;">
+                <h3>⚠️ 需要注意</h3>
+                <div class="report-text">${report.watch_out.replace(/\n/g, '<br>')}</div>
             </div>
-            <div style="margin-top:1rem;">
-                <h3>需要注意</h3>
-                <div class="report-text">${report.warnings.replace(/\n/g, '<br>')}</div>
+            <div style="margin-top:1.25rem;">
+                <h3>最适合的环境</h3>
+                <div class="report-text">${report.best_environment.replace(/\n/g, '<br>')}</div>
+            </div>
+            <div style="margin-top:1.25rem;">
+                <h3>Human 3.0 洞察</h3>
+                <div class="report-text">${report.human30_insight.replace(/\n/g, '<br>')}</div>
+            </div>
+            <div style="margin-top:1.25rem;">
+                <h3>发展建议</h3>
+                <div class="report-text">${report.development_advice.replace(/\n/g, '<br>')}</div>
             </div>
         `;
 
