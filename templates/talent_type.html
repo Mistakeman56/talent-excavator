@@ -1,0 +1,360 @@
+{% extends "base.html" %}
+
+{% block title %}天赋类型学测评 · Human 3.0 快速版{% endblock %}
+
+{% block extra_css %}
+<style>
+    .talent-type-container {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+
+    .tt-progress {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .tt-progress .progress-bar {
+        flex: 1;
+        height: 6px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    .tt-progress .progress-fill {
+        height: 100%;
+        background: var(--accent, #d4a853);
+        border-radius: 3px;
+        transition: width 0.3s;
+    }
+    .tt-progress .progress-text {
+        font-size: 0.85rem;
+        color: var(--text-muted, #888);
+        min-width: 3.5rem;
+        text-align: right;
+    }
+
+    .tt-question-card {
+        background: var(--card-bg, rgba(255,255,255,0.04));
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 16px;
+        padding: 2rem;
+        animation: fadeInUp 0.35s ease;
+    }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(16px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .tt-question-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.25rem;
+    }
+    .tt-question-dim {
+        font-size: 0.75rem;
+        color: var(--accent, #d4a853);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+    .tt-question-num {
+        font-size: 0.8rem;
+        color: var(--text-muted, #888);
+    }
+
+    .tt-question-text {
+        font-size: 1.15rem;
+        line-height: 1.7;
+        margin-bottom: 1.5rem;
+        color: var(--text-primary, #e0e0e0);
+    }
+
+    .tt-options {
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+    }
+    .tt-option {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.85rem 1.1rem;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: var(--text-primary, #e0e0e0);
+        font-size: 0.95rem;
+        line-height: 1.5;
+        text-align: left;
+        width: 100%;
+    }
+    .tt-option:hover {
+        background: rgba(212, 168, 83, 0.06);
+        border-color: rgba(212, 168, 83, 0.2);
+    }
+    .tt-option.selected {
+        background: rgba(212, 168, 83, 0.1);
+        border-color: var(--accent, #d4a853);
+        color: var(--accent, #d4a853);
+    }
+
+    .tt-option-letter {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        background: rgba(255,255,255,0.06);
+        font-weight: 600;
+        font-size: 0.8rem;
+        flex-shrink: 0;
+        color: var(--text-muted, #888);
+        transition: all 0.2s;
+    }
+    .tt-option.selected .tt-option-letter {
+        background: var(--accent, #d4a853);
+        color: var(--bg-primary, #111);
+    }
+
+    .tt-nav {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.75rem;
+    }
+    .tt-nav button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        padding: 0.7rem 1.4rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        font-family: inherit;
+    }
+    .tt-btn-prev {
+        background: rgba(255,255,255,0.04);
+        color: var(--text-secondary, #aaa);
+        border: 1px solid rgba(255,255,255,0.08) !important;
+    }
+    .tt-btn-prev:hover {
+        background: rgba(255,255,255,0.08);
+    }
+    .tt-btn-next {
+        background: var(--accent, #d4a853);
+        color: var(--bg-primary, #111);
+        font-weight: 600;
+        flex: 1;
+    }
+    .tt-btn-next:hover {
+        filter: brightness(1.1);
+    }
+    .tt-btn-next:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+    .tt-btn-submit {
+        background: linear-gradient(135deg, #d4a853, #e8c97a);
+        color: var(--bg-primary, #111);
+        font-weight: 700;
+        flex: 1;
+    }
+
+    .tt-welcome-card {
+        background: var(--card-bg, rgba(255,255,255,0.04));
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 20px;
+        padding: 2.5rem 2rem;
+        text-align: center;
+    }
+    .tt-welcome-card h2 {
+        font-size: 1.6rem;
+        margin-bottom: 0.5rem;
+    }
+    .tt-welcome-card .subtitle {
+        color: var(--accent, #d4a853);
+        font-size: 0.95rem;
+        margin-bottom: 1.25rem;
+    }
+    .tt-welcome-card .desc {
+        color: var(--text-secondary, #aaa);
+        font-size: 0.9rem;
+        line-height: 1.7;
+        margin-bottom: 1.5rem;
+    }
+    .tt-welcome-card .features {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 2rem;
+    }
+    .tt-feature {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.85rem;
+        color: var(--text-muted, #888);
+    }
+    .tt-feature .num {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: rgba(212, 168, 83, 0.15);
+        color: var(--accent, #d4a853);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+    .tt-btn-start {
+        background: var(--accent, #d4a853);
+        color: var(--bg-primary, #111);
+        border: none;
+        padding: 0.85rem 2.5rem;
+        border-radius: 10px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: filter 0.2s;
+    }
+    .tt-btn-start:hover {
+        filter: brightness(1.1);
+    }
+
+    .loading-overlay {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 4rem 0;
+    }
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255,255,255,0.1);
+        border-top-color: var(--accent, #d4a853);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-bottom: 1rem;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    .loading-text {
+        color: var(--text-muted, #888);
+        font-size: 0.9rem;
+    }
+
+    .tt-back-link {
+        display: block;
+        text-align: center;
+        margin-top: 1.5rem;
+        color: var(--text-muted, #888);
+        font-size: 0.85rem;
+        text-decoration: none;
+    }
+    .tt-back-link:hover {
+        color: var(--accent, #d4a853);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="app-container">
+    <header class="app-header">
+        <div class="brand">
+            <span class="brand-icon">◈</span>
+            <h1>天赋类型学测评</h1>
+        </div>
+        <span style="font-size: 0.8rem; color: var(--accent, #d4a853);">Human 3.0 快速版</span>
+    </header>
+
+    <main class="main-content">
+        <div class="talent-type-container" id="ttContainer">
+            <!-- 欢迎页 -->
+            <div class="tt-welcome-card" id="ttWelcome">
+                <div class="welcome-icon" style="font-size: 3rem; margin-bottom: 1rem;">◈</div>
+                <h2>发现你的天赋原型</h2>
+                <p class="subtitle">基于 Human 3.0 框架 · 40道选择题 · 约5分钟</p>
+                <div style="width: 40px; height: 2px; background: var(--accent, #d4a853); margin: 0 auto 1.25rem; opacity: 0.5;"></div>
+                <p class="desc">
+                    如果 AI 深度访谈像心理咨询——挖得深、聊得久；<br>
+                    那这个量表就像<strong>天赋基因检测</strong>——40道选择题，<br>
+                    用 Human 3.0 框架帮你快速锁定天赋方向。
+                </p>
+                <div class="features">
+                    <div class="tt-feature"><span class="num">1</span> 四维天赋模型</div>
+                    <div class="tt-feature"><span class="num">2</span> 4字母类型码</div>
+                    <div class="tt-feature"><span class="num">3</span> AI 深度解读入口</div>
+                </div>
+                <button class="tt-btn-start" id="ttBtnStart">
+                    <span>开始测评</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- 答题页 -->
+            <div id="ttScreen" style="display:none;">
+                <div class="tt-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="ttProgressFill"></div>
+                    </div>
+                    <span class="progress-text" id="ttProgressText">1 / 40</span>
+                </div>
+
+                <div class="tt-question-card" id="ttQuestionCard">
+                    <div class="tt-question-meta">
+                        <span class="tt-question-dim" id="ttDimLabel">认知模式</span>
+                        <span class="tt-question-num" id="ttQuestionNum">第 1 题</span>
+                    </div>
+                    <div class="tt-question-text" id="ttQuestionText">加载中...</div>
+                    <div class="tt-options" id="ttOptions"></div>
+                    <div class="tt-nav">
+                        <button class="tt-btn-prev" id="ttBtnPrev" style="visibility: hidden;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 12H5M12 19l-7-7 7-7"/>
+                            </svg>
+                            上一题
+                        </button>
+                        <button class="tt-btn-next" id="ttBtnNext" disabled>
+                            下一题
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 提交中 -->
+            <div class="loading-overlay" id="ttSubmitLoading" style="display:none;">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">正在计算你的天赋类型...</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <p>个人天赋发掘测评系统 · 毕业设计项目</p>
+    </footer>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/talent_type.js') }}"></script>
+{% endblock %}

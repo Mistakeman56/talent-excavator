@@ -5,6 +5,20 @@ from datetime import datetime
 
 db = SQLAlchemy()
 
+class TalentTypeResult(db.Model):
+    """天赋类型学测评结果（类似MBTI的4字母代码）"""
+    __tablename__ = 'talent_type_results'
+
+    id = db.Column(db.Integer, primary_key=True)
+    session_id = db.Column(db.String(64), nullable=False, index=True)
+    type_code = db.Column(db.String(4), nullable=False)  # 如 "CDAM"
+    answers = db.Column(db.Text, nullable=False)  # JSON: {"t1": "a", ...}
+    scores = db.Column(db.Text, nullable=False)   # JSON: 各维度原始得分
+    dimensions = db.Column(db.Text, nullable=False)  # JSON: 四维度详情
+    report = db.Column(db.Text, nullable=False)  # JSON: 完整解读报告
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+
 class ScaleResult(db.Model):
     """量表答题结果"""
     __tablename__ = 'scale_results'

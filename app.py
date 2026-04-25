@@ -1,11 +1,11 @@
+from dotenv import load_dotenv
+# 必须在导入 config 之前加载环境变量
+load_dotenv()
+
 from flask import Flask
 from config import Config
 from models import db
 from flask_login import LoginManager
-from dotenv import load_dotenv
-
-# 加载 .env 文件中的环境变量
-load_dotenv()
 
 # 创建 Flask 应用实例
 app = Flask(__name__)
@@ -28,13 +28,14 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # 注册 Blueprint
-from routes import main_bp, interview_bp, scale_bp, dictionary_bp
+from routes import main_bp, interview_bp, scale_bp, dictionary_bp, talent_type_bp
 from routes.auth import auth_bp
 
 app.register_blueprint(main_bp)
 app.register_blueprint(interview_bp)
 app.register_blueprint(scale_bp)
 app.register_blueprint(dictionary_bp)
+app.register_blueprint(talent_type_bp)
 app.register_blueprint(auth_bp)
 
 # 数据库初始化（创建表 + 导入词典数据）

@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block title %}你的天赋类型 · Human 3.0{% endblock %}
+
+{% block extra_css %}
+<style>
+    .result-container {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+
+    .result-card {
+        background: var(--card-bg, rgba(255,255,255,0.04));
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 20px;
+        padding: 2.5rem 2rem;
+        text-align: center;
+    }
+    .result-type-code {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+    .result-type-code .letter {
+        width: 64px;
+        height: 64px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(212, 168, 83, 0.2), rgba(212, 168, 83, 0.05));
+        border: 2px solid var(--accent, #d4a853);
+        color: var(--accent, #d4a853);
+        font-size: 2rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .result-name {
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    .result-tagline {
+        font-size: 1rem;
+        color: var(--text-secondary, #aaa);
+        font-style: italic;
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+
+    .result-divider {
+        width: 60px;
+        height: 2px;
+        background: var(--accent, #d4a853);
+        margin: 0 auto 1.5rem;
+        opacity: 0.5;
+    }
+
+    .dimension-details {
+        text-align: left;
+    }
+    .dim-card {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 12px;
+        padding: 1.25rem 1.2rem;
+        margin-bottom: 0.85rem;
+        transition: all 0.2s;
+    }
+    .dim-card:hover {
+        border-color: rgba(212, 168, 83, 0.2);
+        background: rgba(212, 168, 83, 0.03);
+    }
+    .dim-card-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.65rem;
+    }
+    .dim-card-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: rgba(212, 168, 83, 0.12);
+        color: var(--accent, #d4a853);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+    .dim-card-label {
+        font-size: 0.75rem;
+        color: var(--text-muted, #888);
+        margin-bottom: 0.15rem;
+    }
+    .dim-card-name {
+        font-size: 1rem;
+        font-weight: 600;
+    }
+    .dim-card-desc {
+        font-size: 0.85rem;
+        color: var(--text-secondary, #aaa);
+        line-height: 1.65;
+        margin-bottom: 0.6rem;
+    }
+    .dim-score-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+    .dim-score-label {
+        font-size: 0.75rem;
+        color: var(--text-muted, #888);
+        min-width: 3.5rem;
+    }
+    .dim-score-track {
+        flex: 1;
+        height: 4px;
+        background: rgba(255,255,255,0.06);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    .dim-score-fill {
+        height: 100%;
+        background: var(--accent, #d4a853);
+        border-radius: 2px;
+        transition: width 0.6s ease;
+    }
+    .dim-score-value {
+        font-size: 0.8rem;
+        color: var(--accent, #d4a853);
+        font-weight: 600;
+        min-width: 2.5rem;
+        text-align: right;
+    }
+
+    .report-section {
+        margin-top: 1.75rem;
+    }
+    .report-section h3 {
+        font-size: 1.1rem;
+        margin-bottom: 0.75rem;
+        color: var(--accent, #d4a853);
+    }
+    .report-text {
+        font-size: 0.9rem;
+        line-height: 1.8;
+        color: var(--text-secondary, #aaa);
+    }
+    .report-text p {
+        margin-bottom: 0.85rem;
+    }
+    .report-text strong {
+        color: var(--text-primary, #e0e0e0);
+    }
+
+    .cta-section {
+        margin-top: 2rem;
+        text-align: center;
+    }
+    .cta-section h3 {
+        font-size: 1.05rem;
+        margin-bottom: 0.75rem;
+    }
+    .cta-section p {
+        font-size: 0.85rem;
+        color: var(--text-muted, #888);
+        line-height: 1.7;
+        margin-bottom: 1rem;
+    }
+    .btn-ai-interview {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.85rem 2.2rem;
+        background: linear-gradient(135deg, #d4a853, #e8c97a);
+        color: var(--bg-primary, #111);
+        border: none;
+        border-radius: 10px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+        transition: filter 0.2s;
+    }
+    .btn-ai-interview:hover {
+        filter: brightness(1.1);
+    }
+    .btn-retake {
+        display: inline-block;
+        margin-top: 1rem;
+        color: var(--text-muted, #888);
+        font-size: 0.85rem;
+        text-decoration: none;
+    }
+    .btn-retake:hover {
+        color: var(--accent, #d4a853);
+    }
+
+    .result-loading {
+        text-align: center;
+        padding: 4rem 0;
+    }
+    .result-loading .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255,255,255,0.1);
+        border-top-color: var(--accent, #d4a853);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 1rem;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .result-error {
+        text-align: center;
+        padding: 4rem 0;
+        color: #e74c3c;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="app-container">
+    <header class="app-header">
+        <div class="brand">
+            <span class="brand-icon">◈</span>
+            <h1>天赋类型学测评</h1>
+        </div>
+        <span style="font-size: 0.8rem; color: var(--accent, #d4a853);">Human 3.0 快速版</span>
+    </header>
+
+    <main class="main-content">
+        <div class="result-container">
+            <!-- 加载中 -->
+            <div class="result-loading" id="resultLoading">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">正在加载结果...</p>
+            </div>
+
+            <!-- 错误 -->
+            <div class="result-error" id="resultError" style="display:none;">
+                <p>结果加载失败，请返回重试。</p>
+                <a href="{{ url_for('main.talent_type') }}" class="btn-retake">← 重新测评</a>
+            </div>
+
+            <!-- 结果内容 -->
+            <div id="resultContent" style="display:none;">
+                <div class="result-card">
+                    <div class="result-type-code" id="typeCodeLetters"></div>
+                    <h2 class="result-name" id="typeName"></h2>
+                    <p class="result-tagline" id="typeTagline"></p>
+                    <div class="result-divider"></div>
+
+                    <div class="dimension-details" id="dimensionDetails"></div>
+
+                    <div class="report-section" id="reportSection"></div>
+                </div>
+
+                <div class="cta-section">
+                    <h3>想要更深入的了解？</h3>
+                    <p>
+                        量表的结论是一个快照。真正的天赋探索，<br>
+                        需要 AI 对话像侦探一样一层层帮你剥开。<br>
+                        开启 AI 深度访谈，获得一份完整的《个人天赋使用说明书》。
+                    </p>
+                    <a href="{{ url_for('main.index') }}" class="btn-ai-interview">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M8 12l3 3 5-5"/>
+                        </svg>
+                        <span>开启 AI 深度访谈</span>
+                    </a>
+                    <br>
+                    <a href="{{ url_for('main.talent_type') }}" class="btn-retake">重新测评</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <p>个人天赋发掘测评系统 · 毕业设计项目</p>
+    </footer>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/talent_type_result.js') }}"></script>
+{% endblock %}
