@@ -24,12 +24,6 @@
             </div>
             {% endif %}
         </div>
-        <div class="session-info" id="sessionInfo" style="display:none;">
-            <span class="round-badge">第 <strong id="roundNum">0</strong> 轮</span>
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-        </div>
     </header>
 
     <!-- 主内容区 -->
@@ -90,6 +84,15 @@
 
         <!-- 对话区 -->
         <div class="chat-screen" id="chatScreen" style="display:none;">
+            <!-- Sticky 进度条 -->
+            <div class="chat-header" id="chatHeader" style="display:none;">
+                <div class="message-avatar ai">AI</div>
+                <span class="round-badge">第 <strong id="roundNum">0</strong> 轮</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
             <div class="chat-history" id="chatHistory">
                 <!-- 消息会动态插入这里 -->
             </div>
@@ -126,12 +129,6 @@
                     </button>
                 </div>
             </div>
-        </div>
-
-        <!-- 加载状态 -->
-        <div class="loading-overlay" id="loadingOverlay" style="display:none;">
-            <div class="loading-spinner"></div>
-            <p class="loading-text" id="loadingText">正在思考...</p>
         </div>
     </main>
 

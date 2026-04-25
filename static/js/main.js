@@ -12,7 +12,7 @@ const els = {
     welcomeScreen: document.getElementById('welcomeScreen'),
     chatScreen: document.getElementById('chatScreen'),
     chatHistory: document.getElementById('chatHistory'),
-    sessionInfo: document.getElementById('sessionInfo'),
+    chatHeader: document.getElementById('chatHeader'),
     roundNum: document.getElementById('roundNum'),
     progressFill: document.getElementById('progressFill'),
     userInput: document.getElementById('userInput'),
@@ -21,26 +21,37 @@ const els = {
     btnReport: document.getElementById('btnReport'),
     inputArea: document.getElementById('inputArea'),
     reportNotice: document.getElementById('reportNotice'),
-    reportActions: document.getElementById('reportActions'),
-    loadingOverlay: document.getElementById('loadingOverlay'),
-    loadingText: document.getElementById('loadingText')
+    reportActions: document.getElementById('reportActions')
 };
 
 // ===== 工具函数 =====
-function showLoading(text = '正在思考...') {
+function showLoading(text = 'AI 思考中...') {
     state.isLoading = true;
-    els.loadingText.textContent = text;
-    els.loadingOverlay.style.display = 'flex';
     els.userInput.disabled = true;
     els.btnSend.disabled = true;
+
+    const bubble = document.createElement('div');
+    bubble.className = 'thinking-bubble';
+    bubble.id = 'thinkingBubble';
+    bubble.innerHTML = `
+        <div class="message-avatar ai">AI</div>
+        <div class="thinking-dots">
+            <span></span><span></span><span></span>
+        </div>
+        <span class="thinking-text">${escapeHtml(text)}</span>
+    `;
+    els.chatHistory.appendChild(bubble);
+    scrollToBottom();
 }
 
 function hideLoading() {
     state.isLoading = false;
-    els.loadingOverlay.style.display = 'none';
     els.userInput.disabled = false;
     els.btnSend.disabled = false;
     els.userInput.focus();
+
+    const bubble = document.getElementById('thinkingBubble');
+    if (bubble) bubble.remove();
 }
 
 function updateProgress(round) {
@@ -57,13 +68,13 @@ function scrollToBottom() {
 // ===== 渲染函数 =====
 function renderAIMessage(data, round) {
     const block = document.createElement('div');
-    block.className = 'message-block';
-    
-    // 如果有解析到的分析部分
+    block.className = 'message-block ai-msg';
+
     const hasAnalysis = data.signal || data.hypothesis || data.judgment;
-    
+    const questionText = data.question || data.raw || '';
+
     let html = '';
-    
+
     // AI 分析卡片
     if (hasAnalysis) {
         html += `<div class="ai-analysis">`;
@@ -93,19 +104,20 @@ function renderAIMessage(data, round) {
         }
         html += `</div>`;
     }
-    
-    // AI 问题
-    const questionText = data.question || data.raw || '';
+
+    // AI 问题气泡（带左侧头像）
     html += `
-        <div class="ai-question">
-            <div class="question-header">
-                <div class="message-avatar ai">AI</div>
-                <span class="question-label">第 ${round} 轮</span>
+        <div class="message-row ai-row">
+            <div class="message-avatar ai">AI</div>
+            <div class="ai-question">
+                <div class="question-header">
+                    <span class="question-label">第 ${round} 轮</span>
+                </div>
+                <div class="question-text">${escapeHtml(questionText)}</div>
             </div>
-            <div class="question-text">${escapeHtml(questionText)}</div>
         </div>
     `;
-    
+
     block.innerHTML = html;
     els.chatHistory.appendChild(block);
     scrollToBottom();
@@ -113,18 +125,20 @@ function renderAIMessage(data, round) {
 
 function renderUserMessage(text) {
     const block = document.createElement('div');
-    block.className = 'message-block';
-    block.style.alignItems = 'flex-end';
-    
+    block.className = 'message-block user-msg';
+
     block.innerHTML = `
-        <div class="user-answer">
-            <div class="answer-header">
-                <span class="answer-label">你</span>
+        <div class="message-row user-row">
+            <div class="message-avatar user">你</div>
+            <div class="user-answer">
+                <div class="answer-header">
+                    <span class="answer-label">你</span>
+                </div>
+                <div class="answer-text">${escapeHtml(text)}</div>
             </div>
-            <div class="answer-text">${escapeHtml(text)}</div>
         </div>
     `;
-    
+
     els.chatHistory.appendChild(block);
     scrollToBottom();
 }
@@ -149,27 +163,27 @@ async function apiStart() {
         // 网络错误继续尝试
     }
 
+    // 切换界面
+    els.welcomeScreen.style.display = 'none';
+    els.chatScreen.style.display = 'flex';
+    els.chatHeader.style.display = 'flex';
+
     showLoading('正在准备访谈...');
 
     try {
         const res = await fetch('/api/start', { method: 'POST' });
         const data = await res.json();
-        
+
         if (!data.success) {
             alert('启动失败：' + data.error);
             hideLoading();
             return;
         }
-        
-        // 切换界面
-        els.welcomeScreen.style.display = 'none';
-        els.chatScreen.style.display = 'flex';
-        els.sessionInfo.style.display = 'flex';
-        
+
         state.round = data.round;
         updateProgress(data.round);
         renderAIMessage(data.data, data.round);
-        
+
     } catch (err) {
         alert('网络错误：' + err.message);
     } finally {
@@ -178,31 +192,31 @@ async function apiStart() {
 }
 
 async function apiChat(message) {
-    showLoading('AI正在分析你的回答...');
-    
+    showLoading('AI 正在分析你的回答...');
+
     try {
         const res = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message })
         });
-        
+
         const data = await res.json();
-        
+
         if (!data.success) {
             alert('发送失败：' + data.error);
             hideLoading();
             return;
         }
-        
+
         state.round = data.round;
         state.canReport = data.can_report;
         state.suggestReport = data.suggest_report;
         state.forceReport = data.force_report;
-        
+
         updateProgress(data.round);
         renderAIMessage(data.data, data.round);
-        
+
         // 更新报告按钮状态
         if (data.can_report) {
             els.reportActions.style.display = 'flex';
@@ -214,7 +228,7 @@ async function apiChat(message) {
             els.reportNotice.innerHTML = '<span>✦</span> 已达到最大对话轮数，请生成报告';
             els.reportNotice.style.background = 'linear-gradient(90deg, rgba(212,168,83,0.2), transparent)';
         }
-        
+
     } catch (err) {
         alert('网络错误：' + err.message);
     } finally {
@@ -224,19 +238,19 @@ async function apiChat(message) {
 
 async function apiReport() {
     showLoading('正在生成你的天赋报告，这可能需要一些时间...');
-    
+
     try {
         const res = await fetch('/api/report', { method: 'POST' });
         const data = await res.json();
-        
+
         if (!data.success) {
             alert('生成报告失败：' + data.error);
             hideLoading();
             return;
         }
-        
+
         window.location.href = data.redirect;
-        
+
     } catch (err) {
         alert('网络错误：' + err.message);
         hideLoading();
@@ -249,7 +263,7 @@ els.btnStart.addEventListener('click', apiStart);
 els.btnSend.addEventListener('click', () => {
     const text = els.userInput.value.trim();
     if (!text || state.isLoading) return;
-    
+
     els.userInput.value = '';
     renderUserMessage(text);
     apiChat(text);

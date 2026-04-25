@@ -263,10 +263,6 @@ H. 没赚到钱但一谈起来眼睛发亮的事——真兴趣
         if not result['question']:
             result['question'] = content.strip()
         
-        # 长度截断，防止整段分析/案例混入下一题
-        if result['question'] and len(result['question']) > 200:
-            result['question'] = result['question'][:200] + '...'
-        
         return result
     
     # 讲故事/编造经历的关键词拦截列表
