@@ -4,7 +4,7 @@ import json
 import uuid
 from flask import Blueprint, request, jsonify, session
 from models import db, TalentTypeResult
-from talent_type_data import ALL_QUESTIONS, calculate_type_code, DIMENSION_CONFIG
+from talent_type_data import ALL_QUESTIONS, calculate_type_code
 
 talent_type_bp = Blueprint('talent_type', __name__)
 
