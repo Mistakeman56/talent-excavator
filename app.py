@@ -2,6 +2,10 @@ from flask import Flask
 from config import Config
 from models import db
 from flask_login import LoginManager
+from dotenv import load_dotenv
+
+# 加载 .env 文件中的环境变量
+load_dotenv()
 
 # 创建 Flask 应用实例
 app = Flask(__name__)
