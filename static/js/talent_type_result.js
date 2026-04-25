@@ -9,6 +9,18 @@
         dim3: 'D',
         dim4: 'V'
     };
+    const DIM_LABELS = {
+        dim1: '天赋形态',
+        dim2: '能量模式',
+        dim3: '驱动来源',
+        dim4: '兴趣指向'
+    };
+    const DIM_HIGH_LABELS = {
+        dim1: '天赋信号强度',
+        dim2: '能量匹配度',
+        dim3: '驱动纯度',
+        dim4: '兴趣聚焦度'
+    };
 
     const loading = document.getElementById('resultLoading');
     const error = document.getElementById('resultError');
@@ -68,8 +80,11 @@
             const dim = dimensions[dimKey];
             if (!dim) return;
 
-            const maxScore = dim.info.max_scalable || 100;
-            const pct = Math.round((dim.score / maxScore) * 100);
+            // 从 scores 中计算该维度获胜选项的占比
+            const dimScores = scores[dimKey] || {};
+            const myScore = dimScores[dim.key] || 0;
+            const totalScore = Object.values(dimScores).reduce((a, b) => a + b, 0);
+            const pct = totalScore > 0 ? Math.round((myScore / totalScore) * 100) : 0;
 
             const card = document.createElement('div');
             card.className = 'dim-card';
@@ -77,13 +92,13 @@
                 <div class="dim-card-header">
                     <div class="dim-card-icon">${DIM_ICONS[dimKey]}</div>
                     <div>
-                        <div class="dim-card-label">${dim.info.label}</div>
+                        <div class="dim-card-label">${DIM_LABELS[dimKey]}</div>
                         <div class="dim-card-name">${dim.code} · ${dim.info.name}</div>
                     </div>
                 </div>
                 <div class="dim-card-desc">${dim.info.desc}</div>
                 <div class="dim-score-bar">
-                    <span class="dim-score-label">${dim.info.high_label}</span>
+                    <span class="dim-score-label">${DIM_HIGH_LABELS[dimKey]}</span>
                     <div class="dim-score-track">
                         <div class="dim-score-fill" style="width:${pct}%"></div>
                     </div>
