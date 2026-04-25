@@ -374,6 +374,62 @@ AI 被强制要求每轮输出分为四个部分：
 
 ---
 
+## Git 分支策略
+
+本项目采用**标准三件套分支模型**（Git Flow 轻量版）：
+
+### 分支说明
+
+| 分支 | 用途 | 规则 |
+|:-----|:-----|:-----|
+| `main` | 生产分支，稳定版本 | **保护分支**，只能通过 PR/Merge 从 `develop` 合并进入，禁止直接推送 |
+| `develop` | 开发主分支，日常集成 | 所有开发完成的功能先合并到这里，测试稳定后再进 `main` |
+| `feat/<功能名>` | 功能开发分支 | 从 `develop` 切出，开发完成后合并回 `develop`，然后删除 |
+| `fix/<bug名>` | Bug 修复分支 | 从 `develop` 切出（紧急 Bug 可从 `main` 切），修复后合并回来源分支 |
+| `docs/<内容>` | 文档更新分支 | 从 `develop` 切出，完成后合并回 `develop` |
+| `chore/<内容>` | 配置/依赖/杂项 | 从 `develop` 切出，完成后合并回 `develop` |
+
+### 日常开发流程
+
+```bash
+# 1. 确保在 develop 上且是最新的
+git checkout develop
+git pull origin develop
+
+# 2. 创建功能分支
+git checkout -b feat/xxx
+
+# 3. 开发、提交、推送
+git add .
+git commit -m "feat: xxx"
+git push -u origin feat/xxx
+
+# 4. 完成后合并回 develop
+git checkout develop
+git merge feat/xxx
+git push origin develop
+
+# 5. 删除本地和远程的功能分支
+git branch -d feat/xxx
+git push origin --delete feat/xxx
+
+# 6. develop 稳定后，合并到 main 发布
+git checkout main
+git merge develop
+git push origin main
+```
+
+### 命名规范
+
+- 功能分支：`feat/ai-interview-loading`、`feat/talent-type-72-names`
+- 修复分支：`fix/report-truncation`、`fix/naN-progress-bar`
+- 文档分支：`docs/readme-update`、`docs/agents-md`
+- 杂项分支：`chore/update-deps`、`chore/clean-test-files`
+
+> **当前默认工作分支为 `develop`**。每次接到新任务，先从 `develop` 切出对应的功能分支，不要直接在 `main` 或 `develop` 上修改代码。
+
+---
+
 ## 外部依赖与 API
 
 - **DeepSeek API**: `https://api.deepseek.com/v1`
