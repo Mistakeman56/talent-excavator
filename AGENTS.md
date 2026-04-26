@@ -36,6 +36,8 @@
 | 前端 Markdown | marked.js | CDN 引入 |
 | 前端交互 | 原生 JavaScript | 无框架，按页面拆分文件 |
 
+> **注意**：本项目**没有** `pyproject.toml`、`package.json`、`Cargo.toml` 或其他现代构建工具配置文件。依赖管理完全通过 `requirements.txt` 完成，前端无构建流程，JS/CSS 均为手写原生代码。
+
 ---
 
 ## 项目结构
