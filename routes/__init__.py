@@ -6,5 +6,6 @@ from .scale import scale_bp
 from .dictionary import dictionary_bp
 from .auth import auth_bp
 from .talent_type import talent_type_bp
+from .history import history_bp
 
-__all__ = ['main_bp', 'interview_bp', 'scale_bp', 'dictionary_bp', 'auth_bp', 'talent_type_bp']
+__all__ = ['main_bp', 'interview_bp', 'scale_bp', 'dictionary_bp', 'auth_bp', 'talent_type_bp', 'history_bp']

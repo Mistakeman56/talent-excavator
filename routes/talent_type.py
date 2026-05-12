@@ -3,6 +3,7 @@
 import json
 import uuid
 from flask import Blueprint, request, jsonify, session
+from flask_login import current_user
 from models import db, TalentTypeResult
 from talent_type_data import ALL_QUESTIONS, calculate_type_code
 
@@ -37,6 +38,7 @@ def submit_answers():
     session_id = str(uuid.uuid4())
 
     record = TalentTypeResult(
+        user_id=current_user.id if current_user.is_authenticated else None,
         session_id=session_id,
         type_code=result['code'],
         answers=json.dumps(answers, ensure_ascii=False),

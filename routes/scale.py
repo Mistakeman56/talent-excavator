@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, jsonify
+from flask_login import current_user
 from models import db, ScaleResult
 import uuid
 import json
@@ -70,6 +71,7 @@ def submit_scale():
     # 保存到数据库
     session_id = str(uuid.uuid4())
     result = ScaleResult(
+        user_id=current_user.id if current_user.is_authenticated else None,
         session_id=session_id,
         scale_type='primary',
         answers=json.dumps(answers),
@@ -138,6 +140,7 @@ def submit_secondary_scale():
     # 保存到数据库
     session_id = str(uuid.uuid4())
     result = ScaleResult(
+        user_id=current_user.id if current_user.is_authenticated else None,
         session_id=session_id,
         scale_type='secondary',
         answers=json.dumps(answers),

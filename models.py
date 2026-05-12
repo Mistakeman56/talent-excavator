@@ -10,6 +10,7 @@ class TalentTypeResult(db.Model):
     __tablename__ = 'talent_type_results'
 
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
     session_id = db.Column(db.String(64), nullable=False, index=True)
     type_code = db.Column(db.String(4), nullable=False)  # 如 "CDAM"
     answers = db.Column(db.Text, nullable=False)  # JSON: {"t1": "a", ...}
@@ -22,8 +23,9 @@ class TalentTypeResult(db.Model):
 class ScaleResult(db.Model):
     """量表答题结果"""
     __tablename__ = 'scale_results'
-    
+
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
     session_id = db.Column(db.String(64), nullable=False)
     scale_type = db.Column(db.String(20), nullable=False)  # 'primary' 或 'secondary'
     answers = db.Column(db.Text, nullable=False)  # JSON格式存储答题结果

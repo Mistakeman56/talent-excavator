@@ -11,6 +11,7 @@
             <li><a href="{{ url_for('main.talent_type') }}">类型学</a></li>
             <li><a href="{{ url_for('dictionary.dictionary') }}">词典</a></li>
             {% if current_user.is_authenticated %}
+            <li><a href="{{ url_for('history.history_page') }}">历史</a></li>
             <li><a href="{{ url_for('auth.logout') }}">退出</a></li>
             {% else %}
             <li><a href="{{ url_for('auth.login') }}" class="nav-cta">登录</a></li>

@@ -130,13 +130,14 @@ els.btnPrev.addEventListener('click', () => {
 
 els.btnNext.addEventListener('click', () => {
     const q = scaleState.questions[scaleState.currentIndex];
-    
+    console.log('[scale] btnNext clicked, currentIndex:', scaleState.currentIndex, 'qid:', q?.id, 'answer:', scaleState.answers[q?.id]);
+
     // 检查是否已选
     if (!scaleState.answers[q.id]) {
         alert('请先选择一个选项');
         return;
     }
-    
+
     if (scaleState.currentIndex < scaleState.questions.length - 1) {
         scaleState.currentIndex++;
         renderQuestion(scaleState.currentIndex);
@@ -147,30 +148,38 @@ els.btnNext.addEventListener('click', () => {
 
 // ===== 提交 =====
 async function submitScale() {
+    console.log('[scale] submitScale called, answers:', scaleState.answers);
+    if (!els.submitLoading) {
+        console.error('[scale] submitLoading element not found!');
+        alert('页面元素异常，请刷新重试');
+        return;
+    }
     els.submitLoading.style.display = 'flex';
-    
+
     try {
         const res = await fetch('/api/scale/submit', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ answers: scaleState.answers })
         });
-        
+
         const data = await res.json();
-        
+        console.log('[scale] API response:', data);
+
         if (!data.success) {
             alert('提交失败：' + data.error);
             els.submitLoading.style.display = 'none';
             return;
         }
-        
+
         // 保存结果到 localStorage
         localStorage.setItem('scaleResult', JSON.stringify(data));
-        
+
         // 跳转到结果页
         window.location.href = '/scale/result';
-        
+
     } catch (err) {
+        console.error('[scale] submit error:', err);
         alert('网络错误：' + err.message);
         els.submitLoading.style.display = 'none';
     }

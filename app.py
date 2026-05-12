@@ -28,7 +28,7 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # 注册 Blueprint
-from routes import main_bp, interview_bp, scale_bp, dictionary_bp, talent_type_bp
+from routes import main_bp, interview_bp, scale_bp, dictionary_bp, talent_type_bp, history_bp
 from routes.auth import auth_bp
 
 app.register_blueprint(main_bp)
@@ -37,10 +37,23 @@ app.register_blueprint(scale_bp)
 app.register_blueprint(dictionary_bp)
 app.register_blueprint(talent_type_bp)
 app.register_blueprint(auth_bp)
+app.register_blueprint(history_bp)
 
 # 数据库初始化（创建表 + 导入词典数据）
 with app.app_context():
     db.create_all()
+
+    # 兼容性处理：为旧表添加 user_id 列
+    from sqlalchemy import text
+    from sqlalchemy.inspection import inspect
+    inspector = inspect(db.engine)
+    for tbl in ['scale_results', 'talent_type_results']:
+        cols = [c['name'] for c in inspector.get_columns(tbl)]
+        if 'user_id' not in cols:
+            with db.engine.connect() as conn:
+                conn.execute(text(f"ALTER TABLE {tbl} ADD COLUMN user_id INTEGER"))
+                conn.commit()
+
     from routes.dictionary import init_dictionary
     init_dictionary()
 

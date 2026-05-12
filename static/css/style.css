@@ -1719,7 +1719,12 @@ textarea::placeholder {
 
 /* ─── Loading ─── */
 .loading-overlay {
-  display: flex;
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(6px);
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -2680,4 +2685,110 @@ textarea::placeholder {
   .report-header-inner h1 {
     font-size: 28px;
   }
+}
+
+/* ─── History Page ─── */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.history-card {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.history-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.history-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-sm);
+}
+
+.history-type-badge {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--primary);
+  background: rgba(0, 102, 204, 0.06);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+}
+
+.history-date {
+  font-size: 13px;
+  color: var(--body-muted);
+}
+
+.history-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
+}
+
+.history-subtitle {
+  font-size: 14px;
+  color: var(--body-muted);
+  line-height: 1.5;
+  margin-bottom: var(--space-md);
+}
+
+.history-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.history-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 8px 18px;
+  cursor: pointer;
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
+  text-decoration: none;
+}
+
+.history-btn:hover {
+  opacity: 0.92;
+}
+
+.history-btn:active {
+  transform: scale(0.96);
+}
+
+.history-empty {
+  text-align: center;
+  padding: var(--space-section) 0;
+}
+
+.tag-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--body-muted);
+  background: var(--canvas-parchment);
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  margin-left: 4px;
+}
+
+.category-tags .tag.active .tag-count {
+  color: var(--on-primary);
+  background: rgba(255, 255, 255, 0.25);
 }
