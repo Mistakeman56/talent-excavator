@@ -226,7 +226,7 @@ async function apiChat(message) {
         }
         if (data.force_report) {
             els.reportNotice.innerHTML = '<span>✦</span> 已达到最大对话轮数，请生成报告';
-            els.reportNotice.style.background = 'linear-gradient(90deg, rgba(212,168,83,0.2), transparent)';
+            els.reportNotice.style.background = 'rgba(0,102,204,0.08)';
         }
 
     } catch (err) {

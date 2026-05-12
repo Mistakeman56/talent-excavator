@@ -35,7 +35,7 @@ function renderRadarChart() {
     const values = dimensions.map(d => scores[d.key]?.score || 0);
     
     const option = {
-        color: ['#d4a853'],
+        color: ['#0066cc'],
         radar: {
             indicator: indicator,
             shape: 'polygon',
@@ -48,10 +48,10 @@ function renderRadarChart() {
                 lineStyle: { color: 'rgba(212, 168, 83, 0.2)' }
             },
             splitArea: {
-                areaStyle: { color: ['transparent', 'rgba(212, 168, 83, 0.05)'] }
+                areaStyle: { color: ['transparent', 'rgba(0, 102, 204, 0.05)'] }
             },
             axisLine: {
-                lineStyle: { color: 'rgba(212, 168, 83, 0.3)' }
+                lineStyle: { color: 'rgba(0, 102, 204, 0.3)' }
             }
         },
         series: [{
@@ -60,8 +60,8 @@ function renderRadarChart() {
                 value: values,
                 name: '你的天赋维度',
                 areaStyle: { color: 'rgba(212, 168, 83, 0.25)' },
-                lineStyle: { color: '#d4a853', width: 2 },
-                itemStyle: { color: '#d4a853' }
+                lineStyle: { color: '#0066cc', width: 2 },
+                itemStyle: { color: '#0066cc' }
             }]
         }]
     };
