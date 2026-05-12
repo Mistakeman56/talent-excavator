@@ -16,6 +16,7 @@
 2. **天赋维度筛查量表** — 一级量表（20题，5维度，雷达图可视化）+ 二级量表（10题/维度，锁定具体天赋子类型）
 3. **天赋类型学测评** — 40 道情境迫选题，输出 4 字母类型代码（类似 MBTI），附带详细解读报告
 4. **Human 词典** — 项目核心概念速查，首次启动自动导入 SQLite
+5. **历史记录** — 登录用户可查看个人所有测评历史（AI 访谈、量表、天赋类型学）
 
 ---
 
@@ -26,17 +27,15 @@
 | Python | CPython | 3.14.0 |
 | 后端框架 | Flask | `>=3.0.0` |
 | ORM | Flask-SQLAlchemy | `>=3.1.0` |
-| 认证 | Flask-Login | 0.6.3（已安装但未在 `requirements.txt` 中显式列出） |
+| 认证 | Flask-Login | 已安装但未在 `requirements.txt` 中显式列出 |
 | 数据库 | SQLite | `instance/talent_assessment.db` |
-| AI SDK | OpenAI Python SDK | `>=1.12.0`（兼容 DeepSeek / Moonshot API） |
-| 环境变量 | python-dotenv | `>=1.0.0`（`app.py` 启动时调用 `load_dotenv()`） |
+| AI SDK | OpenAI Python SDK | `>=1.12.0`（兼容 DeepSeek / Moonshot API）|
+| 环境变量 | python-dotenv | `>=1.0.0`（`app.py` 启动时调用 `load_dotenv()`）|
 | 前端模板 | Jinja2 | Flask 内置 |
-| 前端样式 | 原生 CSS | 暗色主题，金色强调色 `#d4a853` |
+| 前端样式 | 原生 CSS | Apple Design System 风格，CSS 变量系统 |
 | 前端图表 | ECharts 5.x | CDN 引入 |
 | 前端 Markdown | marked.js | CDN 引入 |
 | 前端交互 | 原生 JavaScript | 无框架，按页面拆分文件 |
-
-> **注意**：本项目**没有** `pyproject.toml`、`package.json`、`Cargo.toml` 或其他现代构建工具配置文件。依赖管理完全通过 `requirements.txt` 完成，前端无构建流程，JS/CSS 均为手写原生代码。
 
 ---
 
@@ -48,7 +47,7 @@
 ├── config.py               # 配置类：从环境变量读取 AI 密钥、测评流程参数
 ├── models.py               # SQLAlchemy 模型：User, InterviewSession, ScaleResult, TalentTypeResult, UserProfile, HumanDictionary
 ├── scale_data.py           # 量表题目数据：PRIMARY_SCALE, SECONDARY_SCALE（纯 Python 字典常量）
-├── talent_type_data.py     # 天赋类型学数据：40 道题、计分逻辑、类型解读报告（纯 Python 常量）
+├── talent_type_data.py     # 天赋类型学数据：40 道题、计分逻辑、72 型名称与解读报告（纯 Python 常量）
 ├── dictionary_data.py      # Human 词典种子数据：DICTIONARY_ENTRIES（纯 Python 列表常量）
 ├── requirements.txt        # Python 依赖（4 项，Flask-Login 未列出）
 ├── .env.example            # 环境变量模板
@@ -62,9 +61,10 @@
 │   ├── interview.py        # AI 访谈 API：开始、聊天、生成报告、重置
 │   ├── scale.py            # 量表 API：获取题目、提交答案、二级量表
 │   ├── dictionary.py       # 词典 API：列表查询、分类筛选、单条详情、首次导入
-│   └── talent_type.py      # 天赋类型学 API：获取题目、提交答案、查询结果
+│   ├── talent_type.py      # 天赋类型学 API：获取题目、提交答案、查询结果
+│   └── history.py          # 历史记录 API：汇总三种测评结果、详情查询
 ├── templates/              # Jinja2 模板
-│   ├── base.html           # 基础模板（暗色主题、引入 style.css）
+│   ├── base.html           # 基础模板
 │   ├── index.html          # 首页 / AI 访谈主界面（含登录状态展示）
 │   ├── login.html          # 登录页
 │   ├── register.html       # 注册页
@@ -73,27 +73,30 @@
 │   ├── scale_result.html   # 量表结果页（引入 ECharts CDN）
 │   ├── talent_type.html    # 天赋类型学测评页
 │   ├── talent_type_result.html # 天赋类型学结果页
-│   └── dictionary.html     # Human 词典页
+│   ├── dictionary.html     # Human 词典页
+│   └── history.html        # 历史记录汇总页
 ├── static/
-│   ├── css/style.css       # 全局样式（暗色主题）
+│   ├── css/style.css       # 全局样式（Apple Design System 风格，CSS 变量系统）
 │   └── js/
 │       ├── main.js         # AI 访谈页交互逻辑
 │       ├── scale.js        # 量表测评页逻辑
 │       ├── scale_result.js # 量表结果页逻辑（雷达图渲染 + 二级量表内嵌答题）
 │       ├── talent_type.js      # 天赋类型学测评页逻辑
 │       ├── talent_type_result.js # 天赋类型学结果页逻辑
-│       └── dictionary.js   # 词典页逻辑
+│       ├── dictionary.js   # 词典页逻辑
+│       └── history.js      # 历史记录页逻辑
 ├── instance/
 │   └── talent_assessment.db # SQLite 数据库（运行时自动生成；被 .gitignore 忽略）
 └── .venv/                  # Python 虚拟环境（被 .gitignore 忽略，不应提交）
 ```
 
 **架构特点**：
-- 使用 **Flask Blueprint** 拆分路由，6 个 Blueprint 在 `app.py` 中统一注册。
+- 使用 **Flask Blueprint** 拆分路由，7 个 Blueprint 在 `app.py` 中统一注册。
 - 数据（量表题目、词典词条、天赋类型学题目）以 Python 模块中的**常量形式硬编码**，而非数据库或外部配置文件。
 - AI 服务层 (`services/ai_service.py`) 通过 OpenAI SDK 统一封装，支持切换不同 API 提供商。
-- **用户登录系统**基于 Flask-Login，AI 访谈和报告生成需要登录后才能使用；量表、天赋类型学测评和词典无需登录。
+- **用户登录系统**基于 Flask-Login，AI 访谈、报告生成和历史记录需要登录后才能使用；量表、天赋类型学测评和词典无需登录即可使用，但登录后会关联到用户账号。
 - AI 访谈数据**存储在服务端**：`InterviewSession` 表存储完整对话历史、当前阶段、用户答案和报告内容，不再存放在客户端 Cookie 中。
+- `ScaleResult` 与 `TalentTypeResult` 使用 `session_id`（UUID）作为主查询键，同时带有可空的 `user_id` 外键，支持匿名测评和登录关联两种模式。
 
 ---
 
@@ -116,6 +119,7 @@ source .venv/bin/activate
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+pip install flask-login
 ```
 
 > 注意：`requirements.txt` 未列出 `flask-login`，若新建环境需手动安装：`pip install flask-login`
@@ -196,7 +200,7 @@ python app.py
 - `UserMixin` 支持 Flask-Login
 
 ### InterviewSession（AI 访谈会话）
-- `user_id`（外键关联 `users.id`，带索引）
+- `user_id`（外键关联 `users.id`，带索引，非空）
 - `messages`：JSON 字符串，存储完整对话历史
 - `stage`：整数 0~7，对应 `INTERVIEW_FLOW` 的方向索引
 - `answers`：JSON 字符串，按方向（A-H）汇总用户答案
@@ -205,18 +209,20 @@ python app.py
 - **关键说明**：每个用户最多只有一条活跃访谈记录；开始新访谈时会删除旧记录
 
 ### ScaleResult（量表结果）
+- `user_id`（外键关联 `users.id`，可空，带索引）
 - `session_id`：测评会话标识（UUID）
 - `scale_type`：`'primary'` 或 `'secondary'`
 - `answers`, `scores`, `top_dimensions`：JSON 字符串存储
 - `talent_type`：二级量表锁定的天赋类型名称
-- 注意：`ScaleResult` 使用 `session_id` 而非 `user_id`，登录用户与量表结果之间**无关联**
+- 匿名用户测评时 `user_id` 为 `None`，登录后 `user_id` 写入当前用户 ID
 
 ### TalentTypeResult（天赋类型学测评结果）
+- `user_id`（外键关联 `users.id`，可空，带索引）
 - `session_id`：测评会话标识（UUID），带索引
 - `type_code`：4 字母类型代码，如 `"CDAM"`
 - `answers`, `scores`, `dimensions`, `report`：JSON 字符串存储
 - `created_at`
-- 注意：与 `ScaleResult` 一样，使用 `session_id` 而非 `user_id`
+- 匿名用户测评时 `user_id` 为 `None`，登录后 `user_id` 写入当前用户 ID
 
 ### UserProfile（用户背景）
 - 存储用户人口统计学信息（年龄、性别、城市类型、教育、专业、父母教养方式、是否独生、MBTI）
@@ -280,6 +286,19 @@ AI 被强制要求每轮输出分为四个部分：
 - Module IV（t31-t40）：决定第 4 位字母（M/C/P），对应兴趣指向
 - 最终输出 4 字母类型代码（如 `CDAM`）及详细解读报告
 - 计分逻辑和类型解读全部硬编码在 `talent_type_data.py` 中
+- 总组合 = 4 × 3 × 2 × 3 = **72 种天赋类型**，每种配有专属中文名称与标语
+
+---
+
+## 历史记录机制
+
+`routes/history.py` 为登录用户提供统一的测评历史汇总：
+
+- **AI 访谈**：查询 `InterviewSession` 中 `report_content` 不为空的记录
+- **量表**：查询 `ScaleResult` 中关联当前用户的记录，区分一级/二级量表
+- **天赋类型学**：查询 `TalentTypeResult` 中关联当前用户的记录
+- 三种结果按 `created_at` 合并倒序展示
+- 提供详情 API：`/api/history/interview/<id>`、`/api/history/scale/<session_id>`
 
 ---
 
@@ -297,9 +316,9 @@ AI 被强制要求每轮输出分为四个部分：
 - 前端按页面拆分 JS 文件，每个文件管理对应页面的 DOM 状态和 API 调用。
 
 ### 前端
-- 使用 CSS 变量定义暗色主题色彩系统（`--bg-primary`, `--accent` 等）。
+- 使用 CSS 变量定义设计系统色彩（`--primary`, `--canvas`, `--surface-tile-*` 等），采用 Apple Design System 风格。
 - 模板继承 `base.html`，通过 `{% block %}` 注入页面级 CSS/JS。
-- 注意：`style.css` 中词典部分使用了不一致的变量名（`--card-bg`, `--accent-color` 等），这些变量在 `:root` 中**未定义**，可能导致词典样式异常。
+- 暗色主题与亮色主题通过 CSS 变量切换，主色调为蓝色系（`#0066cc` / `#0071e3`）。
 
 ---
 
@@ -325,6 +344,9 @@ AI 被强制要求每轮输出分为四个部分：
 
 ### 悬空模型
 `UserProfile` 表已定义但代码中无任何写入逻辑。
+
+### 数据库迁移
+`app.py` 启动时会自动检查 `scale_results` 和 `talent_type_results` 表是否存在 `user_id` 列，若不存在则通过 `ALTER TABLE` 添加。这是一种轻量级兼容性处理，**不是正式的数据库迁移方案**（如 Alembic）。
 
 ---
 
@@ -373,6 +395,10 @@ AI 被强制要求每轮输出分为四个部分：
 ### 修改认证逻辑
 - 编辑 `routes/auth.py`。
 - 登录状态检查端点为 `/api/auth/check`，返回 `{authenticated, username}`。
+
+### 修改历史记录逻辑
+- 编辑 `routes/history.py`。
+- 前端展示逻辑在 `static/js/history.js` 和 `templates/history.html` 中。
 
 ---
 
