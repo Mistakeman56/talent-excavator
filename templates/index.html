@@ -1,151 +1,234 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="app-container">
-    <!-- 顶部栏 -->
-    <header class="app-header">
-        <div class="brand">
-            <span class="brand-icon">◈</span>
-            <h1>个人天赋发掘测评系统</h1>
-        </div>
-        <div class="header-right">
+<!-- 全局导航 -->
+<nav class="global-nav">
+    <div class="global-nav-inner">
+        <a href="{{ url_for('main.index') }}" class="nav-brand">◈ Talent</a>
+        <ul class="global-nav-links">
+            <li><a href="{{ url_for('main.index') }}">AI 访谈</a></li>
+            <li><a href="{{ url_for('scale.scale_page') }}">量表</a></li>
+            <li><a href="{{ url_for('main.talent_type') }}">类型学</a></li>
+            <li><a href="{{ url_for('dictionary.dictionary') }}">词典</a></li>
             {% if current_user.is_authenticated %}
-            <div class="user-menu">
-                <span class="username">{{ current_user.username }}</span>
-                <div class="dropdown">
-                    <a href="{{ url_for('auth.logout') }}">退出登录</a>
-                </div>
-            </div>
+            <li><a href="{{ url_for('auth.logout') }}">退出</a></li>
             {% else %}
-            <div class="auth-links">
-                <a href="{{ url_for('auth.login') }}">登录</a>
-                <span class="auth-divider">/</span>
-                <a href="{{ url_for('auth.register') }}">注册</a>
-            </div>
+            <li><a href="{{ url_for('auth.login') }}" class="nav-cta">登录</a></li>
             {% endif %}
-        </div>
-    </header>
+        </ul>
+    </div>
+</nav>
 
-    <!-- 主内容区 -->
-    <main class="main-content">
-        <!-- 欢迎页 -->
-        <div class="welcome-screen" id="welcomeScreen">
-            <div class="welcome-card">
-                <div class="welcome-icon">◈</div>
-                <h2>找到你的底层天赋</h2>
-                <p class="welcome-subtitle">人类3.0发展诊断 · 深度天赋访谈</p>
-                <div class="welcome-divider"></div>
-                <div class="welcome-desc">
-                    <p>这不是测试题，也不是快速贴标签。</p>
-                    <p>我们会通过一轮轮深度问题，逐步挖出你真正的底层天赋，</p>
-                    <p>同时看清：你现在的生活结构，究竟是在放大它，还是在压住它。</p>
-                </div>
-                <div class="welcome-features">
-                    <div class="feature-item">
-                        <span class="feature-num">01</span>
-                        <span>8~15轮深度对话</span>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-num">02</span>
-                        <span>四维度诊断分析</span>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-num">03</span>
-                        <span>个性化天赋报告</span>
-                    </div>
-                </div>
-                <button class="btn-start" id="btnStart">
-                    <span>开始AI深度访谈</span>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
-                </button>
-                
-                <div class="nav-entries">
-                    <a href="{{ url_for('main.talent_type') }}" class="nav-card">
-                        <div class="nav-icon">🧬</div>
-                        <div class="nav-info">
-                            <h3>天赋类型学测评</h3>
-                            <p>40题快速锁定天赋原型 · Human 3.0 快速版 · 无需登录</p>
-                        </div>
-                        <span class="nav-arrow">›</span>
-                    </a>
-                    <a href="{{ url_for('scale.scale_page') }}" class="nav-card">
-                        <div class="nav-icon">📊</div>
-                        <div class="nav-info">
-                            <h3>天赋维度筛查量表</h3>
-                            <p>20题标准化测评，快速识别你的5大天赋维度</p>
-                        </div>
-                        <span class="nav-arrow">›</span>
-                    </a>
-                    <a href="{{ url_for('dictionary.dictionary') }}" class="nav-card">
-                        <div class="nav-icon">📖</div>
-                        <div class="nav-info">
-                            <h3>Human词典</h3>
-                            <p>核心概念速查手册：天赋类型、HUMAN3.0概念、评估术语</p>
-                        </div>
-                        <span class="nav-arrow">›</span>
-                    </a>
-                </div>
+<!-- Hero Tile -->
+<section class="tile tile-parchment hero-tile">
+    <div class="section-content">
+        <h1 class="hero-headline">发现你的底层天赋</h1>
+        <p class="hero-tagline">人类 3.0 发展诊断 · 基于 AI 深度访谈与标准化量表的人才识别系统</p>
+        <div class="hero-cta-group">
+            <button class="btn-primary" id="btnStart">
+                <span>开始 AI 深度访谈</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </button>
+            <a href="{{ url_for('main.talent_type') }}" class="btn-secondary-pill">
+                <span>40 题快速测评</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- AI 访谈 -->
+<section class="tile tile-light">
+    <div class="section-content">
+        <h2 class="section-headline">AI 深度访谈</h2>
+        <p class="section-tagline">8~20 轮渐进式对话，像人类学家一样挖掘你被遮蔽的底层天赋</p>
+        <div class="feature-grid-2">
+            <div class="promo-card">
+                <div class="card-icon">◈</div>
+                <h3>八维深度覆盖</h3>
+                <p>童年模式、无意识胜任区、能量审计、嫉妒与压抑、社会可见优势、深层痛苦、伪擅长区、真实兴趣 —— 八个方向全面扫描。</p>
+                <a href="{{ url_for('main.index') }}" class="card-cta" id="cardCtaInterview">开始访谈 ›</a>
+            </div>
+            <div class="promo-card">
+                <div class="card-icon">◈</div>
+                <h3>结构化诊断报告</h3>
+                <p>完成后生成 14 章节 Markdown 报告：天赋识别、遮蔽原因、能量审计、职业映射、四象限现状、30天/90天演进建议。</p>
+                <a href="{{ url_for('main.index') }}" class="card-cta" id="cardCtaReport">了解更多 ›</a>
             </div>
         </div>
+    </div>
+</section>
 
-        <!-- 对话区 -->
-        <div class="chat-screen" id="chatScreen" style="display:none;">
-            <!-- Sticky 进度条 -->
-            <div class="chat-header" id="chatHeader" style="display:none;">
-                <div class="message-avatar ai">AI</div>
-                <span class="round-badge">第 <strong id="roundNum">0</strong> 轮</span>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
+<!-- 量表 -->
+<section class="tile tile-parchment">
+    <div class="section-content">
+        <h2 class="section-headline">天赋维度筛查量表</h2>
+        <p class="section-tagline">20 题标准化测评，像体检一样量化你的五大天赋维度</p>
+        <div class="feature-grid-2">
+            <div class="promo-card">
+                <div class="card-icon">📊</div>
+                <h3>一级量表 · 五维雷达</h3>
+                <p>认知洞察型、创造表达型、社交连接型、系统推动型、身体感知型 —— 20 题锁定你的 Top 维度，可视化雷达图呈现。</p>
+                <a href="{{ url_for('scale.scale_page') }}" class="card-cta">去测评 ›</a>
             </div>
+            <div class="promo-card">
+                <div class="card-icon">🎯</div>
+                <h3>二级量表 · 精准锁定</h3>
+                <p>针对 Top 维度深入 10 题，在"系统架构师/模式侦探/本质追问者"等 15 个子类型中，精准定位你的天赋 subtype。</p>
+                <a href="{{ url_for('scale.scale_page') }}" class="card-cta">去测评 ›</a>
+            </div>
+        </div>
+    </div>
+</section>
 
-            <div class="chat-history" id="chatHistory">
-                <!-- 消息会动态插入这里 -->
+<!-- 天赋类型学 -->
+<section class="tile tile-light">
+    <div class="section-content">
+        <h2 class="section-headline">天赋类型学测评</h2>
+        <p class="section-tagline">40 道情境迫选题，5 分钟获得你的 4 字母天赋代码与专属解读</p>
+        <div class="feature-grid">
+            <div class="promo-card">
+                <div class="card-icon">🧬</div>
+                <h3>72 种天赋类型</h3>
+                <p>4（天赋形态）× 3（能量模式）× 2（驱动来源）× 3（兴趣指向）= 72 种完整组合，每种配有专属中文名称与标语。</p>
             </div>
-            
-            <div class="input-area" id="inputArea">
-                <div class="report-notice" id="reportNotice" style="display:none;">
-                    <span>✦</span> 已收集足够信息，可以生成报告了
-                </div>
-                <div class="input-box">
-                    <textarea 
-                        id="userInput" 
-                        placeholder="请输入你的回答..." 
-                        rows="3"
-                    ></textarea>
-                    <div class="input-actions">
-                        <span class="input-hint">按 Enter 发送，Shift+Enter 换行</span>
-                        <button class="btn-send" id="btnSend">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                <div class="report-actions" id="reportActions" style="display:none;">
-                    <button class="btn-report" id="btnReport">
+            <div class="promo-card">
+                <div class="card-icon">📈</div>
+                <h3>四维度得分可视化</h3>
+                <p>天赋形态、能量模式、驱动来源、兴趣指向 —— 四维度条形图直观展示你的天赋结构。</p>
+            </div>
+            <div class="promo-card">
+                <div class="card-icon">🔗</div>
+                <h3>一键深入 AI 访谈</h3>
+                <p>量表给出快照，AI 访谈帮你剥开 —— 结果页一键跳转深度对话，延续 Human 3.0 探索。</p>
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: var(--space-xl);">
+            <a href="{{ url_for('main.talent_type') }}" class="btn-primary">开始 40 题测评</a>
+        </div>
+    </div>
+</section>
+
+<!-- Human 词典 -->
+<section class="tile tile-parchment">
+    <div class="section-content">
+        <h2 class="section-headline">Human 词典</h2>
+        <p class="section-tagline">项目核心概念速查手册，涵盖天赋类型、HUMAN 3.0 框架与评估术语</p>
+        <div style="text-align: center; margin-top: var(--space-lg);">
+            <a href="{{ url_for('dictionary.dictionary') }}" class="btn-secondary-pill">浏览词典</a>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h4>测评</h4>
+                <ul>
+                    <li><a href="{{ url_for('main.index') }}">AI 深度访谈</a></li>
+                    <li><a href="{{ url_for('scale.scale_page') }}">天赋维度量表</a></li>
+                    <li><a href="{{ url_for('main.talent_type') }}">天赋类型学</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>资源</h4>
+                <ul>
+                    <li><a href="{{ url_for('dictionary.dictionary') }}">Human 词典</a></li>
+                    <li><a href="{{ url_for('main.talent_type') }}">72 型全表</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>账户</h4>
+                <ul>
+                    {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('auth.logout') }}">退出登录</a></li>
+                    {% else %}
+                    <li><a href="{{ url_for('auth.login') }}">登录</a></li>
+                    <li><a href="{{ url_for('auth.register') }}">注册</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>关于</h4>
+                <ul>
+                    <li><a>毕业设计项目</a></li>
+                    <li><a>基于 Flask + AI</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>个人天赋发掘测评系统 · 毕业设计项目</p>
+        </div>
+    </div>
+</footer>
+
+<!-- 对话浮层（原有功能保留） -->
+<div class="chat-overlay" id="chatOverlay" style="display:none;">
+    <div class="chat-overlay-backdrop" onclick="closeChat()"></div>
+    <div class="chat-overlay-panel">
+        <div class="chat-overlay-header">
+            <span class="round-badge">第 <strong id="roundNum">0</strong> 轮</span>
+            <div class="progress-bar" style="flex:1; margin: 0 var(--space-md);">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <button class="btn-icon-circular" onclick="closeChat()" title="关闭">✕</button>
+        </div>
+        <div class="chat-overlay-history" id="chatHistory"></div>
+        <div class="chat-overlay-input" id="inputArea">
+            <div class="report-notice" id="reportNotice" style="display:none;">
+                <span>◈</span> 已收集足够信息，可以生成报告了
+            </div>
+            <div class="input-box">
+                <textarea id="userInput" placeholder="请输入你的回答..." rows="3"></textarea>
+                <div class="input-actions">
+                    <span class="input-hint">按 Enter 发送，Shift+Enter 换行</span>
+                    <button class="btn-send" id="btnSend">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                            <polyline points="14 2 14 8 20 8"/>
-                            <line x1="16" y1="13" x2="8" y2="13"/>
-                            <line x1="16" y1="17" x2="8" y2="17"/>
-                            <polyline points="10 9 9 9 8 9"/>
+                            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
                         </svg>
-                        <span>生成天赋报告</span>
                     </button>
                 </div>
             </div>
+            <div class="report-actions" id="reportActions" style="display:none;">
+                <button class="btn-report" id="btnReport">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                    <span>生成天赋报告</span>
+                </button>
+            </div>
         </div>
-    </main>
-
-    <footer class="app-footer">
-        <p>个人天赋发掘测评系统 · 毕业设计项目</p>
-    </footer>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+function closeChat() {
+    document.getElementById('chatOverlay').style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+// 让卡片上的 CTA 也能触发开始
+['cardCtaInterview','cardCtaReport'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) {
+        el.addEventListener('click', function(e){
+            e.preventDefault();
+            document.getElementById('btnStart').click();
+        });
+    }
+});
+</script>
 {% endblock %}

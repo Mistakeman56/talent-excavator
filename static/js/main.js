@@ -9,10 +9,8 @@ const state = {
 
 // ===== DOM 元素 =====
 const els = {
-    welcomeScreen: document.getElementById('welcomeScreen'),
-    chatScreen: document.getElementById('chatScreen'),
+    chatOverlay: document.getElementById('chatOverlay'),
     chatHistory: document.getElementById('chatHistory'),
-    chatHeader: document.getElementById('chatHeader'),
     roundNum: document.getElementById('roundNum'),
     progressFill: document.getElementById('progressFill'),
     userInput: document.getElementById('userInput'),
@@ -163,10 +161,11 @@ async function apiStart() {
         // 网络错误继续尝试
     }
 
-    // 切换界面
-    els.welcomeScreen.style.display = 'none';
-    els.chatScreen.style.display = 'flex';
-    els.chatHeader.style.display = 'flex';
+    // 打开浮层
+    if (els.chatOverlay) {
+        els.chatOverlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
 
     showLoading('正在准备访谈...');
 

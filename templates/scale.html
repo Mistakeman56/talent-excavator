@@ -3,18 +3,30 @@
 {% block title %}天赋维度筛查量表{% endblock %}
 
 {% block content %}
-<div class="app-container">
-    <header class="app-header">
-        <div class="brand">
-            <span class="brand-icon">◈</span>
-            <h1>天赋维度筛查量表</h1>
-        </div>
-        <a href="{{ url_for('main.index') }}" class="btn-back" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;">
-            ← 返回AI访谈
-        </a>
-    </header>
+<!-- 全局导航 -->
+<nav class="global-nav">
+    <div class="global-nav-inner">
+        <a href="{{ url_for('main.index') }}" class="nav-brand">◈ Talent</a>
+        <ul class="global-nav-links">
+            <li><a href="{{ url_for('main.index') }}">AI 访谈</a></li>
+            <li><a href="{{ url_for('scale.scale_page') }}">量表</a></li>
+            <li><a href="{{ url_for('main.talent_type') }}">类型学</a></li>
+            <li><a href="{{ url_for('dictionary.dictionary') }}">词典</a></li>
+        </ul>
+    </div>
+</nav>
 
-    <main class="main-content">
+<!-- 页面标题区 -->
+<section class="page-hero">
+    <div class="section-content">
+        <h1>天赋维度筛查量表</h1>
+        <p>标准化量表 · 20 题 · 约 5 分钟</p>
+    </div>
+</section>
+
+<!-- 主内容 -->
+<section class="tile tile-light" style="padding-top: 32px;">
+    <div class="section-content-narrow">
         <!-- 欢迎页 -->
         <div class="welcome-screen" id="scaleWelcome">
             <div class="welcome-card">
@@ -63,11 +75,9 @@
             <div class="question-card" id="questionCard">
                 <div class="question-number" id="questionNumber">第 1 题</div>
                 <h3 class="question-text" id="questionText">加载中...</h3>
-                
                 <div class="options-list" id="optionsList">
                     <!-- 选项动态生成 -->
                 </div>
-                
                 <div class="scale-nav">
                     <button class="btn-nav" id="btnPrev" style="visibility: hidden;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -90,12 +100,50 @@
             <div class="loading-spinner"></div>
             <p class="loading-text">正在分析你的天赋维度...</p>
         </div>
-    </main>
+    </div>
+</section>
 
-    <footer class="app-footer">
-        <p>个人天赋发掘测评系统 · 毕业设计项目</p>
-    </footer>
-</div>
+<!-- Footer -->
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h4>测评</h4>
+                <ul>
+                    <li><a href="{{ url_for('main.index') }}">AI 深度访谈</a></li>
+                    <li><a href="{{ url_for('scale.scale_page') }}">天赋维度量表</a></li>
+                    <li><a href="{{ url_for('main.talent_type') }}">天赋类型学</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>资源</h4>
+                <ul>
+                    <li><a href="{{ url_for('dictionary.dictionary') }}">Human 词典</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>账户</h4>
+                <ul>
+                    {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('auth.logout') }}">退出登录</a></li>
+                    {% else %}
+                    <li><a href="{{ url_for('auth.login') }}">登录</a></li>
+                    <li><a href="{{ url_for('auth.register') }}">注册</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>关于</h4>
+                <ul>
+                    <li><a>毕业设计项目</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>个人天赋发掘测评系统 · 毕业设计项目</p>
+        </div>
+    </div>
+</footer>
 {% endblock %}
 
 {% block extra_js %}
