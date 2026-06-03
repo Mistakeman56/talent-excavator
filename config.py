@@ -38,3 +38,6 @@ class Config:
             raise ValueError('KIMI_API_KEY 环境变量未设置。请复制 .env.example 为 .env 并填写密钥。')
         AI_BASE_URL = 'https://api.moonshot.cn/v1'
         AI_MODEL = 'moonshot-v1-128k'
+
+    # 管理员账号（固定用户名）
+    ADMIN_USERNAME = 'admin'

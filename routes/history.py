@@ -35,7 +35,8 @@ def get_history():
             'type_label': 'AI 深度访谈',
             'title': 'AI 天赋诊断报告',
             'subtitle': f'{len(json.loads(iv.messages or "[]")) // 2} 轮对话',
-            'created_at': iv.created_at.isoformat() if iv.created_at else None
+            'created_at': iv.created_at.isoformat() if iv.created_at else None,
+            'has_report': True
         })
 
     # 量表
@@ -58,7 +59,10 @@ def get_history():
             'type_label': '天赋维度量表',
             'title': title,
             'subtitle': subtitle,
-            'created_at': sc.created_at.isoformat() if sc.created_at else None
+            'created_at': sc.created_at.isoformat() if sc.created_at else None,
+            'scale_type': sc.scale_type,
+            'dimensions': scores,
+            'top_dimensions': top_dims
         })
 
     # 天赋类型学
@@ -74,7 +78,10 @@ def get_history():
             'type_label': '天赋类型学',
             'title': f'{tt.type_code} · {report.get("name", "")}',
             'subtitle': report.get('tagline', ''),
-            'created_at': tt.created_at.isoformat() if tt.created_at else None
+            'created_at': tt.created_at.isoformat() if tt.created_at else None,
+            'type_code': tt.type_code,
+            'dimensions': json.loads(tt.dimensions) if tt.dimensions else {},
+            'scores': json.loads(tt.scores) if tt.scores else {}
         })
 
     # 合并按时间倒序

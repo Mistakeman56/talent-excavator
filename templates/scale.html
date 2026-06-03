@@ -14,6 +14,9 @@
             <li><a href="{{ url_for('dictionary.dictionary') }}">词典</a></li>
             {% if current_user.is_authenticated %}
             <li><a href="{{ url_for('history.history_page') }}">历史</a></li>
+            {% if is_admin() %}
+            <li><a href="{{ url_for('admin.dashboard') }}">管理</a></li>
+            {% endif %}
             <li><a href="{{ url_for('auth.logout') }}">退出</a></li>
             {% else %}
             <li><a href="{{ url_for('auth.login') }}" class="nav-cta">登录</a></li>

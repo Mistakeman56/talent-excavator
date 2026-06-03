@@ -91,3 +91,15 @@ class InterviewSession(db.Model):
     report_content = db.Column(db.Text)                   # 最终生成的报告Markdown
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+
+class VisitLog(db.Model):
+    """访问日志（用于管理后台统计）"""
+    __tablename__ = 'visit_logs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    path = db.Column(db.String(256), nullable=False)
+    module = db.Column(db.String(32), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    ip_address = db.Column(db.String(45), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.now, index=True)

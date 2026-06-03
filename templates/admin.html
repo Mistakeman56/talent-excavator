@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+
+{% block title %}管理后台 - Talent{% endblock %}
+
+{% block content %}
+<!-- 全局导航 -->
+<nav class="global-nav">
+    <div class="global-nav-inner">
+        <a href="{{ url_for('main.index') }}" class="nav-brand">◈ Talent</a>
+        <ul class="global-nav-links">
+            <li><a href="{{ url_for('main.index') }}">AI 访谈</a></li>
+            <li><a href="{{ url_for('scale.scale_page') }}">量表</a></li>
+            <li><a href="{{ url_for('main.talent_type') }}">类型学</a></li>
+            <li><a href="{{ url_for('dictionary.dictionary') }}">词典</a></li>
+            {% if current_user.is_authenticated %}
+            <li><a href="{{ url_for('history.history_page') }}">历史</a></li>
+            {% if is_admin() %}
+            <li><a href="{{ url_for('admin.dashboard') }}" class="nav-active">管理</a></li>
+            {% endif %}
+            <li><a href="{{ url_for('auth.logout') }}">退出</a></li>
+            {% else %}
+            <li><a href="{{ url_for('auth.login') }}" class="nav-cta">登录</a></li>
+            {% endif %}
+        </ul>
+    </div>
+</nav>
+
+<!-- Hero -->
+<section class="tile tile-parchment">
+    <div class="section-content" style="padding-top: var(--space-xl); padding-bottom: var(--space-xl);">
+        <h1 class="hero-headline" style="font-size: 2.5rem;">管理后台</h1>
+        <p class="hero-tagline">网站运行数据概览与用户管理</p>
+    </div>
+</section>
+
+<!-- 统计卡片 -->
+<section class="tile tile-light">
+    <div class="section-content">
+        <div class="admin-stats-grid" id="statsGrid">
+            <div class="admin-stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-value" id="statTotalUsers">--</div>
+                <div class="stat-label">总用户数</div>
+            </div>
+            <div class="admin-stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-value" id="statTodayUsers">--</div>
+                <div class="stat-label">今日新增用户</div>
+            </div>
+            <div class="admin-stat-card">
+                <div class="stat-icon">👁</div>
+                <div class="stat-value" id="statTotalVisits">--</div>
+                <div class="stat-label">总访问量</div>
+            </div>
+            <div class="admin-stat-card">
+                <div class="stat-icon">🔥</div>
+                <div class="stat-value" id="statTodayVisits">--</div>
+                <div class="stat-label">今日访问量</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 图表区域 -->
+<section class="tile tile-parchment">
+    <div class="section-content">
+        <div class="admin-charts-grid">
+            <div class="admin-chart-card">
+                <h3 class="chart-title">各模块访问量</h3>
+                <div class="chart-container">
+                    <canvas id="moduleChart"></canvas>
+                </div>
+            </div>
+            <div class="admin-chart-card">
+                <h3 class="chart-title">近 7 天访问趋势</h3>
+                <div class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 用户管理 -->
+<section class="tile tile-light">
+    <div class="section-content">
+        <h2 class="section-headline">用户管理</h2>
+        <div class="admin-table-wrapper">
+            <table class="admin-table" id="usersTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>用户名</th>
+                        <th>注册时间</th>
+                        <th>测评次数</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="usersBody"></tbody>
+            </table>
+            <div class="admin-pagination" id="usersPagination"></div>
+        </div>
+    </div>
+</section>
+
+<!-- 记录管理 -->
+<section class="tile tile-parchment">
+    <div class="section-content">
+        <h2 class="section-headline">测评记录管理</h2>
+        <div class="admin-filter-tabs">
+            <button class="filter-tab active" data-type="" onclick="filterRecords('')">全部</button>
+            <button class="filter-tab" data-type="interview" onclick="filterRecords('interview')">AI 访谈</button>
+            <button class="filter-tab" data-type="scale" onclick="filterRecords('scale')">量表</button>
+            <button class="filter-tab" data-type="talent_type" onclick="filterRecords('talent_type')">类型学</button>
+        </div>
+        <div class="admin-table-wrapper">
+            <table class="admin-table" id="recordsTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>用户</th>
+                        <th>类型</th>
+                        <th>标题</th>
+                        <th>时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="recordsBody"></tbody>
+            </table>
+            <div class="admin-pagination" id="recordsPagination"></div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-bottom">
+            <p>管理后台 · 个人天赋发掘测评系统</p>
+        </div>
+    </div>
+</footer>
+{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const MODULE_NAMES = {
+    'main': '首页', 'interview': 'AI 访谈', 'scale': '量表',
+    'talent_type': '类型学', 'dictionary': '词典', 'admin': '管理后台', 'other': '其他'
+};
+const MODULE_COLORS = {
+    'interview': '#0066cc', 'scale': '#34c759', 'talent_type': '#ff9500',
+    'dictionary': '#af52de', 'main': '#5856d6', 'admin': '#ff2d55', 'other': '#8e8e93'
+};
+
+let currentRecordType = '';
+let recordsPage = 1;
+
+// 加载统计数据
+async function loadStats() {
+    const res = await fetch('/api/admin/stats');
+    const data = await res.json();
+
+    document.getElementById('statTotalUsers').textContent = data.total_users;
+    document.getElementById('statTodayUsers').textContent = data.today_new_users;
+    document.getElementById('statTotalVisits').textContent = data.total_visits;
+    document.getElementById('statTodayVisits').textContent = data.today_visits;
+
+    renderModuleChart(data.module_counts);
+    renderTrendChart(data.daily_trend);
+}
+
+// 模块访问量柱状图
+function renderModuleChart(counts) {
+    const keys = Object.keys(counts);
+    const labels = keys.map(k => MODULE_NAMES[k] || k);
+    const values = keys.map(k => counts[k]);
+    const colors = keys.map(k => MODULE_COLORS[k] || '#8e8e93');
+
+    new Chart(document.getElementById('moduleChart'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{ data: values, backgroundColor: colors, borderRadius: 6 }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: '#86868b' } },
+                y: { grid: { display: false }, ticks: { color: '#1d1d1f', font: { size: 13 } } }
+            }
+        }
+    });
+}
+
+// 7天趋势折线图
+function renderTrendChart(trend) {
+    const labels = trend.map(t => t.date);
+    const values = trend.map(t => t.count);
+
+    new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: values,
+                borderColor: '#0066cc',
+                backgroundColor: 'rgba(0,102,204,0.08)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: '#0066cc'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: '#86868b' } },
+                y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#86868b' }, beginAtZero: true }
+            }
+        }
+    });
+}
+
+// 用户列表
+async function loadUsers(page) {
+    page = page || 1;
+    const res = await fetch(`/api/admin/users?page=${page}&per_page=15`);
+    const data = await res.json();
+
+    const tbody = document.getElementById('usersBody');
+    tbody.innerHTML = data.data.map(u => `
+        <tr>
+            <td>${u.id}</td>
+            <td><strong>${escapeHtml(u.username)}</strong></td>
+            <td>${u.created_at}</td>
+            <td>${u.assessment_count}</td>
+            <td>
+                <button class="btn-table-action btn-danger" onclick="deleteUser(${u.id}, '${escapeHtml(u.username)}')">删除</button>
+            </td>
+        </tr>
+    `).join('');
+
+    renderPagination('usersPagination', data.page, data.pages, (p) => loadUsers(p));
+}
+
+// 记录列表
+async function loadRecords(page) {
+    page = page || 1;
+    recordsPage = page;
+    const res = await fetch(`/api/admin/records?page=${page}&per_page=15&type=${currentRecordType}`);
+    const data = await res.json();
+
+    const tbody = document.getElementById('recordsBody');
+    tbody.innerHTML = data.data.map(r => `
+        <tr>
+            <td>${r.id}</td>
+            <td>${escapeHtml(r.username)}</td>
+            <td><span class="type-badge type-${r.type}">${r.type_label}</span></td>
+            <td>${escapeHtml(r.title)}</td>
+            <td>${r.created_at}</td>
+            <td>
+                <button class="btn-table-action btn-danger" onclick="deleteRecord('${r.type}', ${r.id})">删除</button>
+            </td>
+        </tr>
+    `).join('');
+
+    renderPagination('recordsPagination', data.page, data.pages, (p) => loadRecords(p));
+}
+
+function filterRecords(type) {
+    currentRecordType = type;
+    document.querySelectorAll('.filter-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.type === type);
+    });
+    loadRecords(1);
+}
+
+// 分页
+function renderPagination(containerId, currentPage, totalPages, callback) {
+    const container = document.getElementById(containerId);
+    if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+    let html = '';
+    if (currentPage > 1) html += `<button onclick="(${callback})(${currentPage - 1})">上一页</button>`;
+    html += `<span class="page-info">${currentPage} / ${totalPages}</span>`;
+    if (currentPage < totalPages) html += `<button onclick="(${callback})(${currentPage + 1})">下一页</button>`;
+    container.innerHTML = html;
+
+    // 绑定事件
+    container.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const match = this.getAttribute('onclick').match(/\((\d+)\)/);
+            if (match) callback(parseInt(match[1]));
+        });
+    });
+}
+
+// 删除操作
+async function deleteUser(id, username) {
+    if (!confirm(`确定删除用户「${username}」？所有相关测评记录将被一并删除。`)) return;
+    const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+        loadUsers(1);
+        loadStats();
+    } else {
+        alert(data.error || '删除失败');
+    }
+}
+
+async function deleteRecord(type, id) {
+    if (!confirm('确定删除这条记录？')) return;
+    const res = await fetch(`/api/admin/records/${type}/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+        loadRecords(recordsPage);
+    } else {
+        alert(data.error || '删除失败');
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+// 初始化
+loadStats();
+loadUsers(1);
+loadRecords(1);
+</script>
+{% endblock %}

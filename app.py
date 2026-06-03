@@ -28,8 +28,9 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # 注册 Blueprint
-from routes import main_bp, interview_bp, scale_bp, dictionary_bp, talent_type_bp, history_bp
+from routes import main_bp, interview_bp, scale_bp, dictionary_bp, talent_type_bp, history_bp, admin_bp
 from routes.auth import auth_bp
+from routes.admin import is_admin
 
 app.register_blueprint(main_bp)
 app.register_blueprint(interview_bp)
@@ -38,6 +39,45 @@ app.register_blueprint(dictionary_bp)
 app.register_blueprint(talent_type_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(history_bp)
+app.register_blueprint(admin_bp)
+
+# 注入 is_admin 到 Jinja2 模板
+app.jinja_env.globals['is_admin'] = is_admin
+
+# 访问追踪
+@app.before_request
+def track_visit():
+    from flask import request
+    from flask_login import current_user
+    from models import VisitLog
+
+    path = request.path
+    if path.startswith('/static') or path == '/favicon.ico' or path.startswith('/admin/api'):
+        return
+
+    module = 'other'
+    if path in ('/', '/report'):
+        module = 'main'
+    elif path.startswith('/interview') or path.startswith('/api/start') or path.startswith('/api/chat') or path.startswith('/api/report') or path.startswith('/api/reset'):
+        module = 'interview'
+    elif path.startswith('/scale') or path.startswith('/api/scale'):
+        module = 'scale'
+    elif path.startswith('/talent-type') or path.startswith('/api/talent-type'):
+        module = 'talent_type'
+    elif path.startswith('/dictionary') or path.startswith('/api/dictionary'):
+        module = 'dictionary'
+
+    visit = VisitLog(
+        path=path,
+        module=module,
+        user_id=current_user.id if current_user.is_authenticated else None,
+        ip_address=request.remote_addr
+    )
+    db.session.add(visit)
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
 # 数据库初始化（创建表 + 导入词典数据）
 with app.app_context():
