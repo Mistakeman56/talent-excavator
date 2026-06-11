@@ -10,12 +10,6 @@ from talent_type_data import ALL_QUESTIONS, calculate_type_code, TYPE_NAMES, DET
 talent_type_bp = Blueprint('talent_type', __name__)
 
 
-@talent_type_bp.route('/type-catalog')
-def type_catalog_page():
-    """72种人格图鉴页面"""
-    return render_template('type_catalog.html')
-
-
 @talent_type_bp.route('/api/talent-type/catalog', methods=['GET'])
 def get_catalog():
     """返回72种人格类型的完整数据"""
