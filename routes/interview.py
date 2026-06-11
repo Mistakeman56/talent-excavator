@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, session, current_app, url_for
+from flask import Blueprint, request, jsonify, current_app, url_for
 from flask_login import current_user
 from services.ai_service import AIService
 from models import db, InterviewSession
@@ -158,9 +158,8 @@ def chat():
     # 只有最终确认的结果才写入数据库历史
     messages.append({"role": "assistant", "content": result['raw']})
 
-    # 推进阶段
-    if interview.stage < 7:
-        interview.stage += 1
+    # 推进阶段（循环遍历8个方向）
+    interview.stage = (interview.stage + 1) % 8
 
     # 结构化存储当前方向的用户回答
     answers = json.loads(interview.answers or '{}')

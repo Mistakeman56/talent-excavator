@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, jsonify, request, current_app
 from flask_login import current_user, login_required
 from functools import wraps
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from models import db, User, InterviewSession, ScaleResult, TalentTypeResult, VisitLog
 import json
 
@@ -36,7 +36,7 @@ def dashboard():
 @admin_required
 def stats():
     """管理后台统计数据"""
-    today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
 
     total_users = User.query.count()
     total_visits = VisitLog.query.count()

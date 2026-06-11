@@ -2,7 +2,7 @@
 
 import json
 import uuid
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify
 from flask_login import current_user
 from models import db, TalentTypeResult
 from talent_type_data import ALL_QUESTIONS, calculate_type_code
@@ -58,6 +58,7 @@ def submit_answers():
         'type_code': result['code'],
         'dimensions': result['dimensions'],
         'scores': result['scores'],
+        'ties': result.get('ties', {}),
         'report': result['report']
     })
 

@@ -39,8 +39,6 @@ class AIService:
         'H': '\u54ea\u4e9b\u4e8b\u60c5\u4f60\u6ca1\u8d5a\u5230\u94b1\uff0c\u4f46\u4e00\u8c08\u8d77\u6765\u5c31\u773c\u775b\u53d1\u4eae\uff1f'
     }
 
-    INTERVIEW_FLOW = ["A", "B", "C", "D", "E", "F", "G", "H"]
-
     # 公共 prompt 片段
     _OUTPUT_FORMAT = """【每轮输出格式 - 严格遵守】
 ---关键信号---（刚听到的关键信息，简要提炼）

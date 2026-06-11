@@ -38,7 +38,7 @@ class Config:
             raise ValueError('DEEPSEEK_API_KEY 环境变量未设置。请复制 .env.example 为 .env 并填写密钥。')
         AI_BASE_URL = 'https://api.deepseek.com/v1'
         AI_MODEL = 'deepseek-v4-flash'  # 或 'deepseek-v4-pro'（推理更深但贵12倍）
-    else:
+    elif _PROVIDER == 'kimi':
         # Kimi (Moonshot) 配置
         # 优点: 上下文窗口大(128k), 中文语料丰富
         # 缺点: 对长system prompt末尾指令遵循度一般, 容易"自主发挥"
@@ -47,3 +47,5 @@ class Config:
             raise ValueError('KIMI_API_KEY 环境变量未设置。请复制 .env.example 为 .env 并填写密钥。')
         AI_BASE_URL = 'https://api.moonshot.cn/v1'
         AI_MODEL = 'moonshot-v1-128k'
+    else:
+        raise ValueError(f'不支持的 PROVIDER 值: {_PROVIDER}，请设置为 "deepseek" 或 "kimi"')

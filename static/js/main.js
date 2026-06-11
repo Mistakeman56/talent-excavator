@@ -141,12 +141,6 @@ function renderUserMessage(text) {
     scrollToBottom();
 }
 
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
 // ===== API 调用 =====
 async function apiStart() {
     // 检查登录状态

@@ -115,11 +115,9 @@
 {% include '_footer.html' %}
 {% endblock %}
 
-{% block extra_css %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-{% endblock %}
-
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/utils.js') }}"></script>
 <script>
 const MODULE_NAMES = {
     'main': '首页', 'interview': 'AI 访谈', 'scale': '量表',
@@ -218,10 +216,17 @@ async function loadUsers(page) {
             <td>${u.created_at}</td>
             <td>${u.assessment_count}</td>
             <td>
-                <button class="btn-table-action btn-danger" onclick="deleteUser(${u.id}, '${escapeHtml(u.username)}')">删除</button>
+                <button class="btn-table-action btn-danger btn-delete-user" data-id="${u.id}" data-name="${escapeHtml(u.username)}">删除</button>
             </td>
         </tr>
     `).join('');
+
+    // 绑定删除按钮事件
+    tbody.querySelectorAll('.btn-delete-user').forEach(btn => {
+        btn.addEventListener('click', function() {
+            deleteUser(parseInt(this.dataset.id), this.dataset.name);
+        });
+    });
 
     renderPagination('usersPagination', data.page, data.pages, (p) => loadUsers(p));
 }
@@ -242,10 +247,17 @@ async function loadRecords(page) {
             <td>${escapeHtml(r.title)}</td>
             <td>${r.created_at}</td>
             <td>
-                <button class="btn-table-action btn-danger" onclick="deleteRecord('${r.type}', ${r.id})">删除</button>
+                <button class="btn-table-action btn-danger btn-delete-record" data-type="${r.type}" data-id="${r.id}">删除</button>
             </td>
         </tr>
     `).join('');
+
+    // 绑定删除按钮事件
+    tbody.querySelectorAll('.btn-delete-record').forEach(btn => {
+        btn.addEventListener('click', function() {
+            deleteRecord(this.dataset.type, parseInt(this.dataset.id));
+        });
+    });
 
     renderPagination('recordsPagination', data.page, data.pages, (p) => loadRecords(p));
 }
@@ -300,12 +312,6 @@ async function deleteRecord(type, id) {
     } else {
         alert(data.error || '删除失败');
     }
-}
-
-function escapeHtml(text) {
-    if (!text) return '';
-    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-    return text.replace(/[&<>"']/g, m => map[m]);
 }
 
 // 初始化

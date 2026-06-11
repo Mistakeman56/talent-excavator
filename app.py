@@ -47,23 +47,32 @@ app.register_blueprint(admin_bp)
 # 注入 is_admin 到 Jinja2 模板
 app.jinja_env.globals['is_admin'] = is_admin
 
-# 访问日志缓冲区（批量写入优化）
+# 访问日志缓冲区（批量写入优化，线程安全）
+import threading
 _visit_buffer = []
+_visit_lock = threading.Lock()
 _VISIT_FLUSH_SIZE = 50  # 累积 50 条后 flush
 
 
 def _flush_visit_buffer():
     """将缓冲区的访问日志批量写入数据库"""
-    if not _visit_buffer:
-        return
+    with _visit_lock:
+        if not _visit_buffer:
+            return
+        # 复制缓冲区并清空，避免长时间持锁
+        batch = list(_visit_buffer)
+        _visit_buffer.clear()
+
     from models import VisitLog, db
     try:
-        db.session.add_all([VisitLog(**v) for v in _visit_buffer])
-        db.session.commit()
+        with app.app_context():
+            db.session.add_all([VisitLog(**v) for v in batch])
+            db.session.commit()
     except Exception:
         db.session.rollback()
-    finally:
-        _visit_buffer.clear()
+        # 失败时将数据放回缓冲区等待重试
+        with _visit_lock:
+            _visit_buffer.extend(batch)
 
 
 # 应用关闭时 flush 缓冲区
