@@ -11,12 +11,13 @@
 
 核心功能是通过 **AI 驱动的多轮深度访谈**，结合**标准化量表测评**与**天赋类型学测评（类似 MBTI）**，帮助用户识别底层天赋，并生成一份《个人天赋使用说明书 + 人类3.0发展诊断报告》。
 
-系统包含四大模块：
+系统包含五大模块：
 1. **AI 深度访谈** — 8~20 轮对话，围绕 8 个访谈方向（A-H）展开，最终生成 Markdown 报告
-2. **天赋维度筛查量表** — 一级量表（20题，5维度，雷达图可视化）+ 二级量表（10题/维度，锁定具体天赋子类型）
-3. **天赋类型学测评** — 40 道情境迫选题，输出 4 字母类型代码（类似 MBTI），附带详细解读报告
+2. **天赋维度筛查量表** — 一级量表（20题，5维度，含反向计分题，雷达图可视化）+ 二级量表（10题/维度，锁定具体天赋子类型）
+3. **天赋类型学测评** — 40 道情境迫选题，输出 4 字母类型代码（类似 MBTI），附带详细解读报告，支持平局检测
 4. **Human 词典** — 项目核心概念速查，首次启动自动导入 SQLite
 5. **历史记录** — 登录用户可查看个人所有测评历史（AI 访谈、量表、天赋类型学）
+6. **管理后台** — 管理员可查看统计数据、用户列表、测评记录
 
 ---
 
@@ -45,7 +46,7 @@
 .
 ├── app.py                  # 主应用入口：创建 Flask 实例、初始化扩展、注册 Blueprint、自动建表
 ├── config.py               # 配置类：从环境变量读取 AI 密钥、测评流程参数
-├── models.py               # SQLAlchemy 模型：User, InterviewSession, ScaleResult, TalentTypeResult, UserProfile, HumanDictionary
+├── models.py               # SQLAlchemy 模型：User, InterviewSession, ScaleResult, TalentTypeResult, HumanDictionary, VisitLog
 ├── scale_data.py           # 量表题目数据：PRIMARY_SCALE, SECONDARY_SCALE（纯 Python 字典常量）
 ├── talent_type_data.py     # 天赋类型学数据：40 道题、计分逻辑、72 型名称与解读报告（纯 Python 常量）
 ├── dictionary_data.py      # Human 词典种子数据：DICTIONARY_ENTRIES（纯 Python 列表常量）
@@ -59,25 +60,33 @@
 │   ├── auth.py             # 认证路由：注册、登录、登出、登录状态检查
 │   ├── main.py             # 主页、报告展示页、天赋类型学页面入口
 │   ├── interview.py        # AI 访谈 API：开始、聊天、生成报告、重置
-│   ├── scale.py            # 量表 API：获取题目、提交答案、二级量表
+│   ├── scale.py            # 量表 API：获取题目、提交答案、二级量表、结果查询
 │   ├── dictionary.py       # 词典 API：列表查询、分类筛选、单条详情、首次导入
 │   ├── talent_type.py      # 天赋类型学 API：获取题目、提交答案、查询结果
-│   └── history.py          # 历史记录 API：汇总三种测评结果、详情查询
+│   ├── history.py          # 历史记录 API：汇总三种测评结果、详情查询
+│   └── admin.py            # 管理后台 API：统计数据、用户管理、记录管理
 ├── templates/              # Jinja2 模板
 │   ├── base.html           # 基础模板
+│   ├── _nav.html           # 导航栏片段（各页面 include）
+│   ├── _footer.html        # Footer 片段（各页面 include）
 │   ├── index.html          # 首页 / AI 访谈主界面（含登录状态展示）
 │   ├── login.html          # 登录页
 │   ├── register.html       # 注册页
-│   ├── report.html         # 报告展示页（使用 marked.js 渲染 Markdown）
+│   ├── report.html         # 报告展示页（使用 marked.js + DOMPurify 渲染 Markdown）
 │   ├── scale.html          # 量表测评页
 │   ├── scale_result.html   # 量表结果页（引入 ECharts CDN）
 │   ├── talent_type.html    # 天赋类型学测评页
 │   ├── talent_type_result.html # 天赋类型学结果页
 │   ├── dictionary.html     # Human 词典页
-│   └── history.html        # 历史记录汇总页
+│   ├── history.html        # 历史记录汇总页
+│   ├── admin.html          # 管理后台页面
+│   └── errors/             # 错误页面
+│       ├── 404.html        # 404 页面
+│       └── 500.html        # 500 页面
 ├── static/
 │   ├── css/style.css       # 全局样式（Apple Design System 风格，CSS 变量系统）
 │   └── js/
+│       ├── utils.js        # 公共工具函数（escapeHtml 等）
 │       ├── main.js         # AI 访谈页交互逻辑
 │       ├── scale.js        # 量表测评页逻辑
 │       ├── scale_result.js # 量表结果页逻辑（雷达图渲染 + 二级量表内嵌答题）
@@ -91,12 +100,14 @@
 ```
 
 **架构特点**：
-- 使用 **Flask Blueprint** 拆分路由，7 个 Blueprint 在 `app.py` 中统一注册。
+- 使用 **Flask Blueprint** 拆分路由，8 个 Blueprint 在 `app.py` 中统一注册。
 - 数据（量表题目、词典词条、天赋类型学题目）以 Python 模块中的**常量形式硬编码**，而非数据库或外部配置文件。
 - AI 服务层 (`services/ai_service.py`) 通过 OpenAI SDK 统一封装，支持切换不同 API 提供商。
-- **用户登录系统**基于 Flask-Login，AI 访谈、报告生成和历史记录需要登录后才能使用；量表、天赋类型学测评和词典无需登录即可使用，但登录后会关联到用户账号。
+- **用户登录系统**基于 Flask-Login，AI 访谈、报告生成、量表测评、天赋类型学测评和历史记录均需要登录后才能使用。
 - AI 访谈数据**存储在服务端**：`InterviewSession` 表存储完整对话历史、当前阶段、用户答案和报告内容，不再存放在客户端 Cookie 中。
-- `ScaleResult` 与 `TalentTypeResult` 使用 `session_id`（UUID）作为主查询键，同时带有可空的 `user_id` 外键，支持匿名测评和登录关联两种模式。
+- `ScaleResult` 与 `TalentTypeResult` 使用 `session_id`（UUID）作为主查询键，同时带有 `user_id` 外键关联用户。
+- **访问追踪**使用内存缓冲 + 批量写入（50条/次），通过 `threading.Lock` 保证线程安全。
+- **全局错误处理**：404 和 500 错误有专门的错误页面，API 请求返回统一 JSON 格式。
 
 ---
 
@@ -153,7 +164,7 @@ KIMI_API_KEY=sk-your-key
 python app.py
 ```
 
-默认在 `http://0.0.0.0:5001` 启动，Flask debug 模式已开启。
+默认在 `http://0.0.0.0:5001` 启动，Flask debug 模式通过 `FLASK_DEBUG` 环境变量控制（默认关闭）。
 
 ### 依赖列表
 
@@ -189,6 +200,10 @@ python app.py
 | `AI_API_KEY` | 根据 PROVIDER 自动选择 | AI 服务 API 密钥 |
 | `AI_BASE_URL` | 提供商对应地址 | OpenAI 兼容 API 基础地址 |
 | `AI_MODEL` | `deepseek-v4-flash` / `moonshot-v1-128k` | 模型名称 |
+| `SQLALCHEMY_DATABASE_URI` | `sqlite:///talent_assessment.db` | 数据库连接字符串 |
+| `HOST` | `0.0.0.0` | 服务器监听地址 |
+| `PORT` | `5001` | 服务器监听端口 |
+| `DEBUG` | `false` | Flask debug 模式 |
 
 ---
 
@@ -209,24 +224,18 @@ python app.py
 - **关键说明**：每个用户最多只有一条活跃访谈记录；开始新访谈时会删除旧记录
 
 ### ScaleResult（量表结果）
-- `user_id`（外键关联 `users.id`，可空，带索引）
+- `user_id`（外键关联 `users.id`，带索引）
 - `session_id`：测评会话标识（UUID）
 - `scale_type`：`'primary'` 或 `'secondary'`
 - `answers`, `scores`, `top_dimensions`：JSON 字符串存储
 - `talent_type`：二级量表锁定的天赋类型名称
-- 匿名用户测评时 `user_id` 为 `None`，登录后 `user_id` 写入当前用户 ID
 
 ### TalentTypeResult（天赋类型学测评结果）
-- `user_id`（外键关联 `users.id`，可空，带索引）
+- `user_id`（外键关联 `users.id`，带索引）
 - `session_id`：测评会话标识（UUID），带索引
 - `type_code`：4 字母类型代码，如 `"CDAM"`
 - `answers`, `scores`, `dimensions`, `report`：JSON 字符串存储
 - `created_at`
-- 匿名用户测评时 `user_id` 为 `None`，登录后 `user_id` 写入当前用户 ID
-
-### UserProfile（用户背景）
-- 存储用户人口统计学信息（年龄、性别、城市类型、教育、专业、父母教养方式、是否独生、MBTI）
-- **当前代码中尚未在实际流程中使用**，模型已定义但无写入逻辑
 
 ### HumanDictionary（Human 词典）
 - `term`, `category`, `definition`, `example`, `related_terms`
@@ -256,10 +265,8 @@ python app.py
 
 1. **阶段索引**：`interview.py` 通过 `INTERVIEW_FLOW[stage]`（`stage` 为 0~7 的整数）确定当前应访谈的方向。
 2. **Prompt 注入**：将当前方向的描述和参考问题写入 system prompt，引导 AI 在该方向内提问。
-3. **阶段推进**：每完成一轮对话，`stage` 递增，最多覆盖全部 8 个方向。
+3. **阶段推进**：每完成一轮对话，`stage` 递增（`stage = (stage + 1) % 8`），超过 8 轮后循环遍历所有方向。
 4. **防重复兜底**：`interview.py` 中如果检测到 AI 提出的问题与最近 3 轮问题前缀重复，会追加 system 消息要求 AI 重试一次。
-
-> 注意：`ai_service.py` 中定义的 `detect_direction()`（基于关键词库被动分类）和 `_is_similar_question()`（Jaccard 相似度检测）**当前未被调用**，属于遗留代码。
 
 ### 四段式输出格式
 
@@ -287,6 +294,7 @@ AI 被强制要求每轮输出分为四个部分：
 - 最终输出 4 字母类型代码（如 `CDAM`）及详细解读报告
 - 计分逻辑和类型解读全部硬编码在 `talent_type_data.py` 中
 - 总组合 = 4 × 3 × 2 × 3 = **72 种天赋类型**，每种配有专属中文名称与标语
+- 支持平局检测：当某维度出现多个选项得分相同时，返回 `ties` 字段标记歧义维度
 
 ---
 
@@ -333,7 +341,7 @@ AI 被强制要求每轮输出分为四个部分：
 ## 已知问题与运行注意事项
 
 ### 开发服务器警告
-`app.py` 使用 `app.run(debug=True, host='0.0.0.0', port=5001)` 启动，这是 Flask 内置开发服务器，**不适合生产环境**。生产部署应使用 Gunicorn、uWSGI 等 WSGI 服务器。
+`app.py` 使用 `app.run(debug=Config.DEBUG, host=Config.HOST, port=Config.PORT)` 启动，这是 Flask 内置开发服务器，**不适合生产环境**。生产部署应使用 Gunicorn、uWSGI 等 WSGI 服务器。
 
 ### SQLAlchemy 2.0 兼容警告
 `models.py` 和 `routes/` 中多处使用 `User.query.get(int(user_id))` 和 `Model.query.filter_by(...).first()` 等语法，这是 SQLAlchemy 1.x 的 legacy API，在 2.0 中会触发 `LegacyAPIWarning`。当前代码仍可正常运行，但未来升级 SQLAlchemy 时可能需要改写为 `db.session.get(User, int(user_id))` 等新 API。
@@ -341,9 +349,6 @@ AI 被强制要求每轮输出分为四个部分：
 ### 依赖缺失
 - `flask-login` 已安装但未在 `requirements.txt` 中列出。
 - `python-dotenv` 已安装并在 `app.py` 开头调用 `load_dotenv()`。
-
-### 悬空模型
-`UserProfile` 表已定义但代码中无任何写入逻辑。
 
 ### 数据库迁移
 `app.py` 启动时会自动检查 `scale_results` 和 `talent_type_results` 表是否存在 `user_id` 列，若不存在则通过 `ALTER TABLE` 添加。这是一种轻量级兼容性处理，**不是正式的数据库迁移方案**（如 Alembic）。
@@ -353,12 +358,12 @@ AI 被强制要求每轮输出分为四个部分：
 ## 安全注意事项
 
 1. **环境变量强制校验**：`config.py` 不再包含硬编码 API 密钥。若 `SECRET_KEY` 或对应提供商的 API 密钥未设置，应用启动即失败并抛出 `ValueError`。这避免了开发时不小心提交密钥，但也意味着**本地必须配置 `.env` 文件才能启动**。
-2. **Flask Debug 模式**：`app.py` 中 `app.run(debug=True, ...)` 在开发环境开启，生产部署必须关闭。
+2. **Flask Debug 模式**：通过 `FLASK_DEBUG` 环境变量控制（默认关闭），生产部署必须关闭。
 3. **Session 安全**：`SECRET_KEY` 通过环境变量注入，开发时请勿使用弱密钥。
-4. **输入校验**：当前仅做了最基本的空值检查，未对用户输入做严格的 XSS/SQL 注入防护（SQLAlchemy ORM 提供了一定保护）。
-5. **XSS 风险**：
-   - `report.html` 通过 `marked.parse()` 渲染 AI 生成的 Markdown 报告，虽然内容先经过 Jinja 的 `forceescape`，但最终通过 DOM 操作注入时 HTML 实体会被解码，存在潜在 XSS 风险。
-   - `dictionary.js` 通过 `innerHTML` 直接插入 API 返回的词条内容，无消毒处理。
+4. **输入校验**：量表提交有服务端校验（题目 ID 和分数范围），其他接口仅做基本空值检查。
+5. **XSS 防护**：
+   - 所有 JS 文件的 `innerHTML` 插入点均使用 `escapeHtml()` 消毒（通过 `utils.js` 公共函数）
+   - `report.html` 和 `history.html` 使用 DOMPurify 对 `marked.parse()` 输出进行消毒
 6. **CSRF 防护缺失**：所有表单和 API 端点均无 CSRF token 保护。
 7. **SQLite 文件**：`instance/talent_assessment.db` 包含用户测评数据，注意访问权限和备份。
 8. **Rate Limiting 缺失**：登录、注册、AI 聊天等端点均无速率限制。
