@@ -3628,3 +3628,264 @@ textarea::placeholder {
     padding: 4rem 0;
     color: #dc2626;
 }
+
+/* ===== 72种人格图鉴页 ===== */
+.catalog-filter {
+    margin-bottom: 2rem;
+}
+
+.catalog-dim-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.dim-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.dim-filter-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--body-muted);
+    min-width: 4.5rem;
+}
+
+.dim-filter-tags {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+}
+
+.dim-filter-tags .tag {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+}
+
+.catalog-stats {
+    font-size: 0.85rem;
+    color: var(--body-muted);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: var(--primary);
+    cursor: pointer;
+    font-size: 0.85rem;
+    text-decoration: underline;
+    padding: 0;
+}
+
+.catalog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.catalog-card {
+    background: var(--canvas);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.catalog-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.catalog-card.has-detail {
+    border-left: 3px solid var(--primary);
+}
+
+.catalog-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.catalog-code {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: 2px;
+}
+
+.catalog-badge {
+    font-size: 0.65rem;
+    background: rgba(0, 102, 204, 0.1);
+    color: var(--primary);
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.catalog-name {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+    color: var(--ink);
+}
+
+.catalog-tagline {
+    font-size: 0.8rem;
+    color: var(--body-muted);
+    line-height: 1.5;
+    margin-bottom: 0.75rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.catalog-dims {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.catalog-dim {
+    font-size: 0.7rem;
+    background: var(--canvas-parchment);
+    color: var(--body-muted);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+}
+
+.catalog-empty {
+    text-align: center;
+    padding: 3rem 0;
+}
+
+/* 详情弹窗 */
+.catalog-detail-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.catalog-detail-code {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: 4px;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.catalog-detail-name {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.catalog-detail-tagline {
+    font-size: 0.95rem;
+    color: var(--body-muted);
+    font-style: italic;
+}
+
+.catalog-detail-dims {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.catalog-detail-dim {
+    background: var(--canvas-parchment);
+    padding: 1rem;
+    border-radius: var(--radius-md);
+}
+
+.catalog-detail-dim .dim-label {
+    font-size: 0.75rem;
+    color: var(--body-muted);
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.catalog-detail-dim .dim-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--ink);
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.catalog-detail-dim .dim-desc {
+    font-size: 0.8rem;
+    color: var(--body-muted);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.catalog-detail-report {
+    border-top: 1px solid var(--hairline);
+    padding-top: 1.5rem;
+}
+
+.catalog-detail-report h3 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: var(--primary);
+}
+
+.catalog-detail-report .report-section {
+    margin-bottom: 1rem;
+}
+
+.catalog-detail-report .report-section h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.catalog-detail-report .report-section p {
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: var(--body-muted);
+    margin: 0;
+}
+
+.catalog-detail-no-report {
+    border-top: 1px solid var(--hairline);
+    padding-top: 1.5rem;
+    text-align: center;
+}
+
+.catalog-detail-no-report p {
+    font-size: 0.85rem;
+    color: var(--body-muted);
+}
+
+.catalog-detail-no-report a {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .catalog-dim-filters {
+        flex-direction: column;
+    }
+    .dim-filter-group {
+        flex-wrap: wrap;
+    }
+    .catalog-detail-dims {
+        grid-template-columns: 1fr;
+    }
+    .catalog-grid {
+        grid-template-columns: 1fr;
+    }
+}

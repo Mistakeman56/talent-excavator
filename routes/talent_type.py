@@ -2,12 +2,59 @@
 
 import json
 import uuid
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template
 from flask_login import current_user
 from models import db, TalentTypeResult
-from talent_type_data import ALL_QUESTIONS, calculate_type_code
+from talent_type_data import ALL_QUESTIONS, calculate_type_code, TYPE_NAMES, DETAILED_REPORTS, TYPE_DIM1, TYPE_DIM2, TYPE_DIM3, TYPE_DIM4
 
 talent_type_bp = Blueprint('talent_type', __name__)
+
+
+@talent_type_bp.route('/type-catalog')
+def type_catalog_page():
+    """72种人格图鉴页面"""
+    return render_template('type_catalog.html')
+
+
+@talent_type_bp.route('/api/talent-type/catalog', methods=['GET'])
+def get_catalog():
+    """返回72种人格类型的完整数据"""
+    dim1_keys = ["C", "R", "B", "S"]
+    dim2_keys = ["D", "R", "V"]
+    dim3_keys = ["A", "H"]
+    dim4_keys = ["M", "C", "P"]
+
+    types = []
+    for d1 in dim1_keys:
+        for d2 in dim2_keys:
+            for d3 in dim3_keys:
+                for d4 in dim4_keys:
+                    code = d1 + d2 + d3 + d4
+                    name_info = TYPE_NAMES.get(code, {})
+                    detail = DETAILED_REPORTS.get(code)
+
+                    types.append({
+                        "code": code,
+                        "name": name_info.get("name", "未知类型"),
+                        "tagline": name_info.get("tagline", ""),
+                        "dim1": {"code": d1, "name": TYPE_DIM1[d1]["name"], "desc": TYPE_DIM1[d1]["desc"]},
+                        "dim2": {"code": d2, "name": TYPE_DIM2[d2]["name"], "desc": TYPE_DIM2[d2]["desc"]},
+                        "dim3": {"code": d3, "name": TYPE_DIM3[d3]["name"], "desc": TYPE_DIM3[d3]["desc"]},
+                        "dim4": {"code": d4, "name": TYPE_DIM4[d4]["name"], "desc": TYPE_DIM4[d4]["desc"]},
+                        "has_detail": detail is not None,
+                        "report": detail if detail else None
+                    })
+
+    return jsonify({
+        "success": True,
+        "types": types,
+        "dimensions": {
+            "dim1": {k: v for k, v in TYPE_DIM1.items()},
+            "dim2": {k: v for k, v in TYPE_DIM2.items()},
+            "dim3": {k: v for k, v in TYPE_DIM3.items()},
+            "dim4": {k: v for k, v in TYPE_DIM4.items()}
+        }
+    })
 
 
 @talent_type_bp.route('/api/talent-type/questions', methods=['GET'])

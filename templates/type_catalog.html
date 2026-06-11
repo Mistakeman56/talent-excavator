@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}72种人格图鉴 · 天赋类型学{% endblock %}
+
+{% block content %}
+{% include '_nav.html' %}
+
+<!-- 页面标题区 -->
+<section class="page-hero">
+    <div class="section-content">
+        <h1>72种人格图鉴</h1>
+        <p>基于 Human 3.0 框架 · 4维天赋模型 · 72种独特人格类型</p>
+    </div>
+</section>
+
+<!-- 主内容 -->
+<section class="tile tile-light" style="padding-top: 32px; min-height: 60vh;">
+    <div class="section-content">
+        <!-- 搜索和筛选区 -->
+        <div class="catalog-filter">
+            <!-- 搜索框 -->
+            <div class="search-box" style="margin-bottom: 24px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--body-muted); flex-shrink: 0;">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" id="searchInput" placeholder="搜索类型代码或名称（如 CDAM、深渊哲学家）" autocomplete="off">
+            </div>
+
+            <!-- 维度筛选 -->
+            <div class="catalog-dim-filters">
+                <div class="dim-filter-group">
+                    <span class="dim-filter-label">天赋形态</span>
+                    <div class="dim-filter-tags" data-dim="dim1">
+                        <button class="tag active" data-value="">全部</button>
+                        <button class="tag" data-value="C">C 认知洞察</button>
+                        <button class="tag" data-value="R">R 关系创造</button>
+                        <button class="tag" data-value="B">B 身体实践</button>
+                        <button class="tag" data-value="S">S 系统引领</button>
+                    </div>
+                </div>
+                <div class="dim-filter-group">
+                    <span class="dim-filter-label">能量模式</span>
+                    <div class="dim-filter-tags" data-dim="dim2">
+                        <button class="tag active" data-value="">全部</button>
+                        <button class="tag" data-value="D">D 深度沉浸</button>
+                        <button class="tag" data-value="R">R 快速响应</button>
+                        <button class="tag" data-value="V">V 多元切换</button>
+                    </div>
+                </div>
+                <div class="dim-filter-group">
+                    <span class="dim-filter-label">驱动来源</span>
+                    <div class="dim-filter-tags" data-dim="dim3">
+                        <button class="tag active" data-value="">全部</button>
+                        <button class="tag" data-value="A">A 热爱牵引</button>
+                        <button class="tag" data-value="H">H 痛苦驱动</button>
+                    </div>
+                </div>
+                <div class="dim-filter-group">
+                    <span class="dim-filter-label">兴趣指向</span>
+                    <div class="dim-filter-tags" data-dim="dim4">
+                        <button class="tag active" data-value="">全部</button>
+                        <button class="tag" data-value="M">M 意义建构</button>
+                        <button class="tag" data-value="C">C 创造产出</button>
+                        <button class="tag" data-value="P">P 与人连接</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 结果统计 -->
+            <div class="catalog-stats">
+                <span id="resultCount">72</span> 种类型
+                <button class="btn-link" id="btnResetFilter" style="display:none;">重置筛选</button>
+            </div>
+        </div>
+
+        <!-- 类型网格 -->
+        <div class="catalog-grid" id="catalogGrid">
+            <!-- 动态生成 -->
+        </div>
+
+        <!-- 空状态 -->
+        <div class="catalog-empty" id="catalogEmpty" style="display:none;">
+            <div style="font-size: 40px; margin-bottom: 12px; color: var(--body-muted);">🔍</div>
+            <p>没有找到匹配的类型</p>
+            <p style="font-size: 0.85rem; color: var(--body-muted); margin-top: 8px;">试试其他筛选条件</p>
+        </div>
+    </div>
+</section>
+
+<!-- 详情弹窗 -->
+<div class="dict-modal" id="detailModal" style="display:none;">
+    <div class="dict-modal-overlay" onclick="closeDetailModal()"></div>
+    <div class="dict-modal-content" style="max-width: 700px;">
+        <button class="dict-modal-close" onclick="closeDetailModal()">✕</button>
+        <div class="dict-modal-body" id="detailModalBody">
+            <!-- 动态生成 -->
+        </div>
+    </div>
+</div>
+
+{% include '_footer.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/type_catalog.js') }}"></script>
+{% endblock %}
