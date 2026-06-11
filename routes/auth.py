@@ -81,6 +81,9 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user and user.check_password(password):
             login_user(user)
+            # 管理员直接跳转到管理后台
+            if user.is_admin:
+                return redirect(url_for('admin.dashboard'))
             next_page = _safe_redirect(request.args.get('next'))
             return redirect(next_page)
         else:
