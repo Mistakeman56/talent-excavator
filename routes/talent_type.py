@@ -132,3 +132,23 @@ def get_result(session_id):
         'report': json.loads(result.report),
         'created_at': result.created_at.isoformat()
     })
+
+@talent_type_bp.route('/type-catalog/cognitive')
+def type_catalog_cognitive():
+    """认知洞察型图鉴页面"""
+    return render_template('type_catalog_group.html', group_type='C')
+
+@talent_type_bp.route('/type-catalog/relational')
+def type_catalog_relational():
+    """关系创造型图鉴页面"""
+    return render_template('type_catalog_group.html', group_type='R')
+
+@talent_type_bp.route('/type-catalog/body')
+def type_catalog_body():
+    """身体实践型图鉴页面"""
+    return render_template('type_catalog_group.html', group_type='B')
+
+@talent_type_bp.route('/type-catalog/systemic')
+def type_catalog_systemic():
+    """系统引领型图鉴页面"""
+    return render_template('type_catalog_group.html', group_type='S')

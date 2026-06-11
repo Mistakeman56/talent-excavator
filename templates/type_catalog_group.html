@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if group_type == 'C' %}认知洞察型 · 人格图鉴{% elif group_type == 'R' %}关系创造型 · 人格图鉴{% elif group_type == 'B' %}身体实践型 · 人格图鉴{% elif group_type == 'S' %}系统引领型 · 人格图鉴{% endif %}
+{% endblock %}
+
+{% block content %}
+{% include '_nav.html' %}
+
+<!-- 页面标题区（带主题色） -->
+<section class="page-hero" style="{% if group_type == 'C' %}background: linear-gradient(135deg, #0066cc 0%, #004499 100%);{% elif group_type == 'R' %}background: linear-gradient(135deg, #34c759 0%, #248a3d 100%);{% elif group_type == 'B' %}background: linear-gradient(135deg, #ff9500 0%, #cc7700 100%);{% elif group_type == 'S' %}background: linear-gradient(135deg, #af52de 0%, #8944ab 100%);{% endif %}">
+    <div class="section-content">
+        <a href="/type-catalog" style="color: rgba(255,255,255,0.8); text-decoration: none; font-size: 0.9rem; display: inline-block; margin-bottom: 1rem;">← 返回图鉴首页</a>
+        <h1 style="color: white; font-size: 2rem;">
+            {% if group_type == 'C' %}🧠 认知洞察型{% elif group_type == 'R' %}💚 关系创造型{% elif group_type == 'B' %}⚡ 身体实践型{% elif group_type == 'S' %}👑 系统引领型{% endif %}
+        </h1>
+        <p style="color: rgba(255,255,255,0.9); font-size: 1.1rem; margin-top: 0.5rem;">
+            {% if group_type == 'C' %}天赋核心在于「想」——理解复杂系统、发现底层模式、追问本质{% elif group_type == 'R' %}天赋核心在于「连接」——深度共情、网络编织、关系创造{% elif group_type == 'B' %}天赋核心在于「做」——用双手和身体去感知世界、改变世界{% elif group_type == 'S' %}天赋核心在于「推动」——在混乱中建立秩序、带领大家往前走{% endif %}
+        </p>
+        <div style="display: flex; gap: 2rem; margin-top: 1.5rem; color: white; font-size: 0.95rem;">
+            <span>共 <strong>18</strong> 种类型</span>
+            <span>3 种能量模式 × 2 种驱动来源 × 3 种兴趣指向</span>
+        </div>
+    </div>
+</section>
+
+<!-- 主内容 -->
+<section class="tile tile-light" style="padding-top: 32px; min-height: 60vh;">
+    <div class="section-content">
+        <!-- 搜索框 -->
+        <div class="catalog-search">
+            <div class="search-box">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--body-muted); flex-shrink: 0;">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" id="searchInput" placeholder="搜索类型代码或名称" autocomplete="off">
+            </div>
+        </div>
+
+        <!-- 类型网格 -->
+        <div class="catalog-grid" id="catalogGrid" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
+            <!-- 动态生成 -->
+        </div>
+
+        <!-- 空状态 -->
+        <div class="catalog-empty" id="catalogEmpty" style="display:none;">
+            <div style="font-size: 40px; margin-bottom: 12px; color: var(--body-muted);">🔍</div>
+            <p>没有找到匹配的类型</p>
+        </div>
+    </div>
+</section>
+
+<!-- 详情弹窗 -->
+<div class="dict-modal" id="detailModal" style="display:none;">
+    <div class="dict-modal-overlay" onclick="closeDetailModal()"></div>
+    <div class="dict-modal-content" style="max-width: 700px;">
+        <button class="dict-modal-close" onclick="closeDetailModal()">✕</button>
+        <div class="dict-modal-body" id="detailModalBody">
+            <!-- 动态生成 -->
+        </div>
+    </div>
+</div>
+
+{% include '_footer.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+<script>
+(function() {
+    const GROUP_TYPE = '{{ group_type }}';
+    const GROUP_CONFIG = {
+        'C': { name: '认知洞察型', color: '#0066cc', colorLight: 'rgba(0, 102, 204, 0.1)', colorBorder: 'rgba(0, 102, 204, 0.3)' },
+        'R': { name: '关系创造型', color: '#34c759', colorLight: 'rgba(52, 199, 89, 0.1)', colorBorder: 'rgba(52, 199, 89, 0.3)' },
+        'B': { name: '身体实践型', color: '#ff9500', colorLight: 'rgba(255, 149, 0, 0.1)', colorBorder: 'rgba(255, 149, 0, 0.3)' },
+        'S': { name: '系统引领型', color: '#af52de', colorLight: 'rgba(175, 82, 222, 0.1)', colorBorder: 'rgba(175, 82, 222, 0.3)' }
+    };
+
+    let allTypes = [];
+    let searchKeyword = '';
+    const group = GROUP_CONFIG[GROUP_TYPE];
+
+    const catalogGrid = document.getElementById('catalogGrid');
+    const catalogEmpty = document.getElementById('catalogEmpty');
+    const searchInput = document.getElementById('searchInput');
+
+    loadCatalog();
+
+    async function loadCatalog() {
+        try {
+            const res = await fetch('/api/talent-type/catalog');
+            const data = await res.json();
+            if (!data.success) {
+                catalogGrid.innerHTML = '<p style="text-align:center; color: var(--body-muted); padding: 40px;">加载失败</p>';
+                return;
+            }
+            allTypes = data.types.filter(t => t.code[0] === GROUP_TYPE);
+            renderGrid();
+        } catch (err) {
+            catalogGrid.innerHTML = '<p style="text-align:center; color: var(--body-muted); padding: 40px;">网络错误</p>';
+        }
+    }
+
+    function renderGrid() {
+        const filtered = searchKeyword ? allTypes.filter(t => {
+            const kw = searchKeyword.toLowerCase();
+            return t.code.toLowerCase().includes(kw) || t.name.toLowerCase().includes(kw) || t.tagline.toLowerCase().includes(kw);
+        }) : allTypes;
+
+        if (filtered.length === 0) {
+            catalogGrid.style.display = 'none';
+            catalogEmpty.style.display = 'block';
+            return;
+        }
+
+        catalogGrid.style.display = 'grid';
+        catalogEmpty.style.display = 'none';
+
+        catalogGrid.innerHTML = filtered.map(type => `
+            <div class="catalog-card ${type.has_detail ? 'has-detail' : ''}" 
+                 data-code="${type.code}"
+                 style="--group-color: ${group.color}; --group-color-light: ${group.colorLight}; --group-color-border: ${group.colorBorder};"
+                 onclick="openDetail('${type.code}')">
+                <div class="catalog-card-header">
+                    <span class="catalog-code">${type.code}</span>
+                    ${type.has_detail ? '<span class="catalog-badge">详细报告</span>' : ''}
+                </div>
+                <h3 class="catalog-name">${escapeHtml(type.name)}</h3>
+                <p class="catalog-tagline">${escapeHtml(type.tagline)}</p>
+                <div class="catalog-dims">
+                    <span class="catalog-dim">${type.dim2.code} ${escapeHtml(type.dim2.name)}</span>
+                    <span class="catalog-dim">${type.dim3.code} ${escapeHtml(type.dim3.name)}</span>
+                    <span class="catalog-dim">${type.dim4.code} ${escapeHtml(type.dim4.name)}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    searchInput.addEventListener('input', function(e) {
+        searchKeyword = e.target.value.trim();
+        renderGrid();
+    });
+
+    window.openDetail = function(code) {
+        const type = allTypes.find(t => t.code === code);
+        if (!type) return;
+
+        const body = document.getElementById('detailModalBody');
+        let html = `
+            <div class="catalog-detail-header" style="border-top: 3px solid ${group.color};">
+                <span class="catalog-detail-code">${type.code}</span>
+                <h2 class="catalog-detail-name">${escapeHtml(type.name)}</h2>
+                <p class="catalog-detail-tagline">${escapeHtml(type.tagline)}</p>
+            </div>
+            <div class="catalog-detail-dims">
+                <div class="catalog-detail-dim" style="border-left: 3px solid ${group.color};">
+                    <span class="dim-label">天赋形态</span>
+                    <span class="dim-value">${type.dim1.code} · ${escapeHtml(type.dim1.name)}</span>
+                    <p class="dim-desc">${escapeHtml(type.dim1.desc)}</p>
+                </div>
+                <div class="catalog-detail-dim">
+                    <span class="dim-label">能量模式</span>
+                    <span class="dim-value">${type.dim2.code} · ${escapeHtml(type.dim2.name)}</span>
+                    <p class="dim-desc">${escapeHtml(type.dim2.desc)}</p>
+                </div>
+                <div class="catalog-detail-dim">
+                    <span class="dim-label">驱动来源</span>
+                    <span class="dim-value">${type.dim3.code} · ${escapeHtml(type.dim3.name)}</span>
+                    <p class="dim-desc">${escapeHtml(type.dim3.desc)}</p>
+                </div>
+                <div class="catalog-detail-dim">
+                    <span class="dim-label">兴趣指向</span>
+                    <span class="dim-value">${type.dim4.code} · ${escapeHtml(type.dim4.name)}</span>
+                    <p class="dim-desc">${escapeHtml(type.dim4.desc)}</p>
+                </div>
+            </div>
+        `;
+
+        if (type.has_detail && type.report) {
+            const r = type.report;
+            html += `
+                <div class="catalog-detail-report">
+                    <h3 style="color: ${group.color};">详细解读</h3>
+                    ${r.strength ? `<div class="report-section"><h4>核心优势</h4><p>${escapeHtml(r.strength)}</p></div>` : ''}
+                    ${r.watch_out ? `<div class="report-section"><h4>⚠️ 需要注意</h4><p>${escapeHtml(r.watch_out)}</p></div>` : ''}
+                    ${r.best_environment ? `<div class="report-section"><h4>最适合的环境</h4><p>${escapeHtml(r.best_environment)}</p></div>` : ''}
+                    ${r.human30_insight ? `<div class="report-section"><h4>Human 3.0 洞察</h4><p>${escapeHtml(r.human30_insight)}</p></div>` : ''}
+                    ${r.development_advice ? `<div class="report-section"><h4>发展建议</h4><p>${escapeHtml(r.development_advice)}</p></div>` : ''}
+                </div>
+            `;
+        } else {
+            html += `<div class="catalog-detail-no-report"><p>该类型暂无详细报告，可通过 <a href="/talent-type" style="color: ${group.color};">40题测评</a> 获取专属解读。</p></div>`;
+        }
+
+        body.innerHTML = html;
+        document.getElementById('detailModal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.closeDetailModal = function() {
+        document.getElementById('detailModal').style.display = 'none';
+        document.body.style.overflow = '';
+    };
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeDetailModal();
+    });
+})();
+</script>
+{% endblock %}
