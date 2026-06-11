@@ -3,7 +3,8 @@ const scaleState = {
     questions: [],
     currentIndex: 0,
     answers: {},
-    scaleData: null
+    scaleData: null,
+    isTransitioning: false  // 防止快速点击导致跳转混乱
 };
 
 // ===== DOM 元素 =====
@@ -55,6 +56,10 @@ async function initScale() {
 
 // ===== 渲染题目 =====
 function renderQuestion(index) {
+    // 边界检查
+    if (index < 0 || index >= scaleState.questions.length) {
+        return;
+    }
     const q = scaleState.questions[index];
     const total = scaleState.questions.length;
     
@@ -103,19 +108,24 @@ function renderQuestion(index) {
 
 // ===== 选择选项 =====
 function selectOption(questionId, value) {
+    // 防止快速重复点击
+    if (scaleState.isTransitioning) return;
+
     scaleState.answers[questionId] = value;
-    
+
     // 更新UI
     const items = els.optionsList.querySelectorAll('.option-item');
     items.forEach(item => {
         item.classList.toggle('selected', parseInt(item.dataset.value) === value);
     });
-    
+
     // 自动跳到下一题（最后一题除外）
     if (scaleState.currentIndex < scaleState.questions.length - 1) {
+        scaleState.isTransitioning = true;
         setTimeout(() => {
             scaleState.currentIndex++;
             renderQuestion(scaleState.currentIndex);
+            scaleState.isTransitioning = false;
         }, 250);
     }
 }
@@ -129,7 +139,11 @@ els.btnPrev.addEventListener('click', () => {
 });
 
 els.btnNext.addEventListener('click', () => {
+    // 防止快速重复点击
+    if (scaleState.isTransitioning) return;
+
     const q = scaleState.questions[scaleState.currentIndex];
+    if (!q) return;
 
     // 检查是否已选
     if (!scaleState.answers[q.id]) {
@@ -138,8 +152,11 @@ els.btnNext.addEventListener('click', () => {
     }
 
     if (scaleState.currentIndex < scaleState.questions.length - 1) {
+        scaleState.isTransitioning = true;
         scaleState.currentIndex++;
         renderQuestion(scaleState.currentIndex);
+        // 立即按钮点击不需要延迟解锁
+        scaleState.isTransitioning = false;
     } else {
         submitScale();
     }
