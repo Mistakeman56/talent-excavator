@@ -157,12 +157,29 @@ with app.app_context():
         with db.engine.connect() as conn:
             conn.execute(text("ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT 0"))
             conn.commit()
-        # 将原 admin 用户标记为管理员
+        # 将 op 用户标记为管理员
         from models import User
-        admin_user = User.query.filter_by(username='admin').first()
-        if admin_user:
-            admin_user.is_admin = True
+        op_user = User.query.filter_by(username='op').first()
+        if op_user:
+            op_user.is_admin = True
             db.session.commit()
+
+    # 确保 op 管理员账号存在
+    from models import User
+    from werkzeug.security import generate_password_hash
+    op_user = User.query.filter_by(username='op').first()
+    if not op_user:
+        op_user = User(
+            username='op',
+            password_hash=generate_password_hash('323328'),
+            is_admin=True
+        )
+        db.session.add(op_user)
+        db.session.commit()
+        logging.info('已创建管理员账号: op')
+    elif not op_user.is_admin:
+        op_user.is_admin = True
+        db.session.commit()
 
     from routes.dictionary import init_dictionary
     init_dictionary()
