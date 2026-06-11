@@ -4227,3 +4227,20 @@ textarea::placeholder {
         display: none;
     }
 }
+
+/* ===== 背景字母颜色（按大类型） ===== */
+.type-letters-bg .letter-c {
+    color: rgba(0, 102, 204, 0.08); /* 蓝色 */
+}
+
+.type-letters-bg .letter-r {
+    color: rgba(52, 199, 89, 0.08); /* 绿色 */
+}
+
+.type-letters-bg .letter-b {
+    color: rgba(255, 149, 0, 0.08); /* 黄色 */
+}
+
+.type-letters-bg .letter-s {
+    color: rgba(175, 82, 222, 0.08); /* 紫色 */
+}
