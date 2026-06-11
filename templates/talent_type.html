@@ -309,7 +309,7 @@
             {% if is_admin() %}
             <li><a href="{{ url_for('admin.dashboard') }}">管理</a></li>
             {% endif %}
-            <li><a href="{{ url_for('auth.logout') }}">退出</a></li>
+            <li><form method="POST" action="{{ url_for('auth.logout') }}" style="display:inline;"><button type="submit" class="nav-logout-btn">退出</button></form></li>
             {% else %}
             <li><a href="{{ url_for('auth.login') }}" class="nav-cta">登录</a></li>
             {% endif %}
@@ -421,7 +421,7 @@
                 <h4>账户</h4>
                 <ul>
                     {% if current_user.is_authenticated %}
-                    <li><a href="{{ url_for('auth.logout') }}">退出登录</a></li>
+                    <li><form method="POST" action="{{ url_for('auth.logout') }}" style="display:inline;"><button type="submit" class="nav-logout-btn">退出登录</button></form></li>
                     {% else %}
                     <li><a href="{{ url_for('auth.login') }}">登录</a></li>
                     <li><a href="{{ url_for('auth.register') }}">注册</a></li>

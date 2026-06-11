@@ -1,11 +1,14 @@
 import re
+import logging
 from openai import OpenAI
 from flask import current_app
+
+logger = logging.getLogger(__name__)
 
 class AIService:
     def __init__(self):
         self.client = None
-    
+
     def _get_client(self):
         if self.client is None:
             self.client = OpenAI(
@@ -13,29 +16,7 @@ class AIService:
                 base_url=current_app.config['AI_BASE_URL']
             )
         return self.client
-    
-    DIRECTION_KEYWORDS = {
-        'A': ['16\u5c81', '\u7ae5\u5e74', '\u5c0f\u65f6\u5019', '\u62c6', '\u7f3a\u70b9', '\u6279\u8bc4', '\u987d\u56fa', '\u7236\u6bcd\u903c', '\u6c89\u8fdb\u53bb', '\u6ca1\u4eba\u903c',
-              '\u5e74\u5e7c', '\u5c11\u5e74', '\u6210\u957f\u8fc7\u7a0b', '\u672c\u6027', '\u5929\u6027', '\u5c0f\u7684\u65f6\u5019', '\u521d\u4e2d', '\u5c0f\u5b66'],
-        'B': ['\u5f88\u660e\u663e', '\u8fd9\u4e5f\u8981\u5b66', '\u522b\u4eba\u89c9\u5f97\u96be', '\u65e0\u610f\u8bc6\u80dc\u4efb', '\u4e0d\u9700\u8981\u5b66', '\u5929\u751f\u4f1a', '\u522b\u4eba\u666e\u904d',
-              '\u81ea\u7136\u800c\u7136', '\u672c\u80fd', '\u76f4\u89c9', '\u6ca1\u5b66\u8fc7', '\u65e0\u5e08\u81ea\u901a', '\u8fd9\u4e5f\u8981\u6559', '\u522b\u4eba\u505a\u4e0d\u5230'],
-        'C': ['\u8eab\u4f53\u7d2f', '\u7cbe\u795e\u4ea2\u594b', '\u80fd\u91cf', '\u75b2\u60eb', '\u5174\u594b', '\u7d2f\u4f46', '\u505a\u5b8c\u540e\u7d2f', '\u6781\u5ea6\u4ea2\u594b',
-              '\u75b2\u60eb\u4f46', '\u5145\u7535', '\u8017\u7535', '\u71c3', '\u5026\u6020', '\u5fc3\u6d41', 'flow', '\u6c89\u6d78', '\u5fd8\u65f6\u95f4', '\u65f6\u95f4\u6d88\u5931'],
-        'D': ['\u5ac9\u5992', '\u7fa1\u6155', '\u5ac9\u5992\u8fc7', '\u54ea\u79cd\u4eba', '\u54ea\u79cd\u80fd\u529b', '\u751f\u6d3b\u72b6\u6001', '\u538b\u6291', '\u672a\u88ab\u5141\u8bb8',
-              '\u60f3\u6210\u4e3a', '\u6e34\u671b\u6210\u4e3a', '\u773c\u7ea2', '\u4e0d\u7518\u5fc3', '\u4e3a\u4ec0\u4e48\u4ed6\u80fd', '\u51ed\u4ec0\u4e48', '\u5411\u5f80'],
-        'E': ['\u6765\u627e\u4f60', '\u522b\u4eba', '\u670b\u53cb', '\u540c\u4e8b', '\u627e\u4f60', '\u793e\u4f1a\u4f18\u52bf', '\u53ef\u89c1\u4f18\u52bf', '\u4ed6\u4eba\u773c\u4e2d', '\u4e3a\u4ec0\u4e48\u6765',
-              '\u6c42\u52a9', '\u8bf7\u6559', '\u53e3\u7891', '\u8ba4\u53ef', '\u4fe1\u4efb', '\u4f9d\u8d56', ' reputation ', '\u53e3\u7891'],
-        'F': ['\u75db\u82e6', '\u53d7\u4f24', '\u6267\u7740', '\u53cd\u590d', '\u4e3b\u9898', '\u521b\u4f24', '\u9634\u5f71', '\u6700\u53cd\u590d', '\u6700\u6267\u7740',
-              '\u5faa\u73af', '\u9003\u4e0d\u6389', '\u653e\u4e0d\u4e0b', '\u523b\u9aa8\u94ed\u5fc3', '\u5185\u5fc3\u620f', '\u6323\u624e', '\u7ea0\u7ed3', '\u8fc7\u4e0d\u53bb', '\u574e',
-              '\u5361\u4f4f', '\u65e9\u5e74\u7684', '\u7ae5\u5e74\u7684', '\u539f\u751f\u5bb6\u5ead', '\u671f\u5f85', '\u88ab\u671f\u5f85', '\u7236\u6bcd\u671f\u671b', '\u522b\u4eba\u7684\u773c\u5149',
-              '\u8bb0\u5fc6', '\u6700\u65e9', '\u6700\u6e05\u6670', '\u5f53\u65f6\u53d1\u751f\u4e86\u4ec0\u4e48', '\u5177\u4f53\u573a\u666f', '\u53cd\u5e94'],
-        'G': ['\u8d8a\u505a\u8d8a\u7a7a', '\u4f2a\u64c5\u957f', '\u7a7a\u865a', '\u505a\u5f97\u4e0d\u9519', '\u8d8a\u505a\u8d8a', '\u7a7a\u6cdb', '\u6ca1\u611f\u89c9', '\u8d8a\u505a\u8d8a\u6ca1',
-              '\u9ebb\u6728', '\u5026\u6020', '\u65e0\u610f\u4e49', '\u673a\u68b0', '\u91cd\u590d', '\u719f\u7ec3\u4f46', '\u64c5\u957f\u4f46', '\u6ca1\u6709\u6210\u5c31\u611f'],
-        'H': ['\u6ca1\u8d5a\u5230\u94b1', '\u773c\u775b\u53d1\u4eae', '\u5174\u8da3', '\u4e00\u804a\u8d77\u6765', '\u53d1\u4eae', '\u70ed\u60c5', '\u8c08\u5230', '\u4e0d\u8d5a\u94b1', '\u773c\u775b\u4eae',
-              '\u70ed\u7231', '\u75f4\u8ff7', '\u7740\u8ff7', '\u505c\u4e0d\u4e0b\u6765', '\u81ea\u53d1', '\u81ea\u613f', '\u4e1a\u4f59\u65f6\u95f4', '\u5468\u672b', '\u7a7a\u95f2\u65f6',
-              '\u5fcd\u4e0d\u4f4f', '\u7740\u8ff7', '\u7740\u8ff7\u4e8e']
-    }
-    
+
     DIRECTION_DESCRIPTIONS = {
         'A': '\u3010A-\u7ae5\u5e74/\u987d\u56fa\u7f3a\u70b9\u301116\u5c81\u4e4b\u524d\u6ca1\u4eba\u903c\u4f60\u4e5f\u4f1a\u6c89\u8fdb\u53bb\u505a\u7684\u4e8b\uff0c\u6216\u4ece\u5c0f\u5e38\u88ab\u6279\u8bc4\u7684"\u987d\u56fa\u7f3a\u70b9"',
         'B': '\u3010B-\u65e0\u610f\u8bc6\u80dc\u4efb\u533a\u3011\u6210\u5e74\u540e\u522b\u4eba\u89c9\u5f97\u5f88\u96be\u4f46\u4f60\u89c9\u5f97\u5f88\u81ea\u7136\u3001"\u8fd9\u4e0d\u662f\u5f88\u660e\u663e\u5417"\u7684\u4e8b',
@@ -59,66 +40,7 @@ class AIService:
     }
 
     INTERVIEW_FLOW = ["A", "B", "C", "D", "E", "F", "G", "H"]
-    
-    def detect_direction(self, question):
-        """\u901a\u8fc7\u5173\u952e\u8bcd\u5339\u914d\u5224\u65ad\u95ee\u9898\u5c5e\u4e8e\u54ea\u4e2a\u65b9\u5411(A-H)"""
-        if not question:
-            return None
-        q = question.lower()
-        scores = {}
-        for direction, keywords in self.DIRECTION_KEYWORDS.items():
-            score = sum(1 for kw in keywords if kw in q)
-            if score > 0:
-                scores[direction] = score
-        if not scores:
-            return None
-        return max(scores, key=scores.get)
-    
-    def _is_similar_question(self, q1, q2, threshold=0.65):
-        """\u5224\u65ad\u4e24\u4e2a\u95ee\u9898\u662f\u5426\u76f8\u4f3c\uff08\u7528\u4e8e\u540e\u7aef\u786c\u62e6\u622a\u91cd\u590d\uff09"""
-        if not q1 or not q2:
-            return False
-        
-        def clean(text):
-            text = re.sub(r'[^\w\s\u4e00-\u9fff]', ' ', text)
-            text = re.sub(r'\s+', ' ', text).strip().lower()
-            return text
-        
-        c1, c2 = clean(q1), clean(q2)
-        
-        # \u77ed\u95ee\u9898\u76f4\u63a5\u6bd4\u8f83
-        if len(c1) < 15 or len(c2) < 15:
-            return c1 == c2 or c1 in c2 or c2 in c1
-        
-        # \u5305\u542b\u5173\u7cfb
-        if c1 in c2 or c2 in c1:
-            return True
-        
-        # Jaccard\u76f8\u4f3c\u5ea6\uff08\u6309\u5b57\u7b26\uff09
-        chars1 = set(c1)
-        chars2 = set(c2)
-        if not chars1 or not chars2:
-            return False
-        jaccard = len(chars1 & chars2) / len(chars1 | chars2)
-        if jaccard >= threshold:
-            return True
-        
-        # \u6309\u8bcd\u6bd4\u8f83
-        words1 = set(c1.split())
-        words2 = set(c2.split())
-        if not words1 or not words2:
-            return False
-        word_jaccard = len(words1 & words2) / len(words1 | words2)
-        return word_jaccard >= threshold
 
-    @staticmethod
-    def extract_question(text):
-        """\u4eceAI\u56db\u6bb5\u5f0f\u8f93\u51fa\u4e2d\u63d0\u53d6'---\u4e0b\u4e00\u9898---'\u4e4b\u540e\u7684\u5185\u5bb9"""
-        if not text:
-            return ''
-        if '---\u4e0b\u4e00\u9898---' in text:
-            return text.split('---\u4e0b\u4e00\u9898---')[-1].strip()
-        return text.strip()
     def get_system_prompt(self, round_num=0, max_rounds=20, is_report=False,
                           asked_questions=None, covered_directions=None,
                           current_direction=None, is_first_round=False):
@@ -289,16 +211,10 @@ H. 没赚到钱但一谈起来眼睛发亮的事——真兴趣
         )
         
         full_messages = [{"role": "system", "content": system_prompt}] + messages
-        
-        # 调试日志：打印最终发给 API 的消息结构
-        try:
-            import json as _json
-            print("\n[AI DEBUG] full_messages sent to API:")
-            print(_json.dumps(full_messages, ensure_ascii=False, indent=2))
-            print("[AI DEBUG] total messages:", len(full_messages))
-        except Exception:
-            pass
-        
+
+        logger.info("AI API 调用: %d 条消息, direction=%s, round=%d",
+                     len(full_messages), current_direction, round_num)
+
         def _call_api(msgs, is_report=False):
             """内部封装：调用 API 并解析"""
             resp = client.chat.completions.create(
@@ -323,7 +239,7 @@ H. 没赚到钱但一谈起来眼睛发亮的事——真兴趣
             
             # 异常拦截：检测 AI 是否开始讲自己的故事
             if self._contains_story(parsed.get('raw', '')):
-                print("[AI DEBUG] Story detected, triggering retry...")
+                logger.warning("检测到 AI 讲故事，触发重试")
                 retry_messages = full_messages + [
                     {"role": "system", "content": "你刚才开始讲自己的案例或经历，这是绝对不允许的。你的任务是分析用户并提问，不是展示你自己。请重新输出。"}
                 ]
@@ -335,4 +251,5 @@ H. 没赚到钱但一谈起来眼睛发亮的事——真兴趣
                 **parsed
             }
         except Exception as e:
-            return {"type": "error", "message": str(e)}
+            logger.error("AI API 调用失败: %s", str(e))
+            return {"type": "error", "message": "AI 服务暂时不可用，请稍后重试"}

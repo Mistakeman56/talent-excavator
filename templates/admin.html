@@ -17,7 +17,7 @@
             {% if is_admin() %}
             <li><a href="{{ url_for('admin.dashboard') }}" class="nav-active">管理</a></li>
             {% endif %}
-            <li><a href="{{ url_for('auth.logout') }}">退出</a></li>
+            <li><form method="POST" action="{{ url_for('auth.logout') }}" style="display:inline;"><button type="submit" class="nav-logout-btn">退出</button></form></li>
             {% else %}
             <li><a href="{{ url_for('auth.login') }}" class="nav-cta">登录</a></li>
             {% endif %}

@@ -53,7 +53,7 @@ function hideLoading() {
 }
 
 function updateProgress(round) {
-    const maxRounds = 15;
+    const maxRounds = 20;
     const pct = Math.min((round / maxRounds) * 100, 100);
     els.progressFill.style.width = pct + '%';
     els.roundNum.textContent = round;

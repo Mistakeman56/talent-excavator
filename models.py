@@ -41,30 +41,24 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now)
+
+    # 关联关系（级联删除）
+    interviews = db.relationship('InterviewSession', backref='user', lazy='dynamic',
+                                 cascade='all, delete-orphan')
+    scale_results = db.relationship('ScaleResult', backref='user', lazy='dynamic',
+                                    cascade='all, delete-orphan')
+    talent_type_results = db.relationship('TalentTypeResult', backref='user', lazy='dynamic',
+                                          cascade='all, delete-orphan')
+    visit_logs = db.relationship('VisitLog', backref='user', lazy='dynamic',
+                                 cascade='all, delete-orphan')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-
-
-class UserProfile(db.Model):
-    """用户背景信息（用于关联性分析）"""
-    __tablename__ = 'user_profiles'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    session_id = db.Column(db.String(64), nullable=False, unique=True)
-    age = db.Column(db.Integer)
-    gender = db.Column(db.String(10))
-    city_type = db.Column(db.String(20))  # 城市/农村/小镇
-    education = db.Column(db.String(20))
-    major = db.Column(db.String(50))
-    parent_style = db.Column(db.String(20))  # 权威/放任/忽视
-    only_child = db.Column(db.Boolean)
-    mbti = db.Column(db.String(10))
-    created_at = db.Column(db.DateTime, default=datetime.now)
 
 class HumanDictionary(db.Model):
     """Human词典词条"""

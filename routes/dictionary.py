@@ -1,5 +1,8 @@
+import logging
 from flask import Blueprint, render_template, request, jsonify
 from models import db, HumanDictionary
+
+logger = logging.getLogger(__name__)
 
 dictionary_bp = Blueprint('dictionary', __name__)
 
@@ -55,7 +58,9 @@ def get_dictionary():
 @dictionary_bp.route('/api/dictionary/<int:entry_id>')
 def get_dictionary_entry(entry_id):
     """获取单个词条详情"""
-    entry = HumanDictionary.query.get_or_404(entry_id)
+    entry = db.session.get(HumanDictionary, entry_id)
+    if not entry:
+        return jsonify({"success": False, "error": "词条不存在"}), 404
     return jsonify({
         "success": True,
         "entry": {
@@ -76,4 +81,4 @@ def init_dictionary():
         for entry in DICTIONARY_ENTRIES:
             db.session.add(HumanDictionary(**entry))
         db.session.commit()
-        print(f"[Dictionary] Imported {len(DICTIONARY_ENTRIES)} entries")
+        logger.info("导入词典数据: %d 条", len(DICTIONARY_ENTRIES))

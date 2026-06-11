@@ -191,6 +191,31 @@ body {
   opacity: 1;
 }
 
+.nav-logout-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--on-dark);
+  opacity: 0.8;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity var(--transition-fast);
+}
+.nav-logout-btn:hover { opacity: 1; }
+
+/* Footer 中的退出按钮 */
+.site-footer .nav-logout-btn {
+  color: var(--body-muted);
+  font-size: 14px;
+  opacity: 1;
+}
+.site-footer .nav-logout-btn:hover {
+  color: var(--primary);
+}
+
 /* ─── Hero Tile ─── */
 .hero-tile {
   text-align: center;

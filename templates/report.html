@@ -14,7 +14,7 @@
             <li><a href="{{ url_for('dictionary.dictionary') }}">词典</a></li>
             {% if current_user.is_authenticated %}
             <li><a href="{{ url_for('history.history_page') }}">历史</a></li>
-            <li><a href="{{ url_for('auth.logout') }}">退出</a></li>
+            <li><form method="POST" action="{{ url_for('auth.logout') }}" style="display:inline;"><button type="submit" class="nav-logout-btn">退出</button></form></li>
             {% else %}
             <li><a href="{{ url_for('auth.login') }}" class="nav-cta">登录</a></li>
             {% endif %}

@@ -11,7 +11,7 @@ admin_bp = Blueprint('admin', __name__)
 def is_admin():
     """检查当前用户是否为管理员"""
     return (current_user.is_authenticated and
-            current_user.username == current_app.config.get('ADMIN_USERNAME', 'admin'))
+            getattr(current_user, 'is_admin', False))
 
 
 def admin_required(f):
@@ -111,18 +111,14 @@ def get_users():
 @login_required
 @admin_required
 def delete_user(user_id):
-    """删除用户（级联删除测评记录）"""
-    user = User.query.get(user_id)
+    """删除用户（通过 ORM 级联自动删除关联记录）"""
+    user = db.session.get(User, user_id)
     if not user:
         return jsonify({"error": "用户不存在"}), 404
-    if user.username == current_app.config.get('ADMIN_USERNAME', 'admin'):
+    if user.is_admin:
         return jsonify({"error": "不能删除管理员账号"}), 400
 
-    # 级联删除相关记录
-    InterviewSession.query.filter_by(user_id=user_id).delete()
-    ScaleResult.query.filter_by(user_id=user_id).delete()
-    TalentTypeResult.query.filter_by(user_id=user_id).delete()
-    VisitLog.query.filter_by(user_id=user_id).delete()
+    # ORM cascade 会自动删除关联的 interviews、scale_results、talent_type_results、visit_logs
     db.session.delete(user)
     db.session.commit()
 
@@ -146,7 +142,7 @@ def get_records():
             InterviewSession.report_content.isnot(None)
         ).order_by(InterviewSession.created_at.desc()).all()
         for r in interviews:
-            user = User.query.get(r.user_id)
+            user = db.session.get(User, r.user_id)
             items.append({
                 'id': r.id,
                 'type': 'interview',
@@ -160,7 +156,7 @@ def get_records():
     if not record_type or record_type == 'scale':
         scales = ScaleResult.query.order_by(ScaleResult.created_at.desc()).all()
         for s in scales:
-            user = User.query.get(s.user_id)
+            user = db.session.get(User, s.user_id)
             scores = json.loads(s.scores) if s.scores else {}
             top = json.loads(s.top_dimensions) if s.top_dimensions else []
             title = f'量表 ({s.scale_type})'
@@ -180,7 +176,7 @@ def get_records():
     if not record_type or record_type == 'talent_type':
         tts = TalentTypeResult.query.order_by(TalentTypeResult.created_at.desc()).all()
         for t in tts:
-            user = User.query.get(t.user_id)
+            user = db.session.get(User, t.user_id)
             report = json.loads(t.report) if t.report else {}
             name = report.get('name', '')
             title = f'{t.type_code}' + (f' · {name}' if name else '')
@@ -218,11 +214,11 @@ def get_records():
 def delete_record(record_type, record_id):
     """删除单条测评记录"""
     if record_type == 'interview':
-        record = InterviewSession.query.get(record_id)
+        record = db.session.get(InterviewSession, record_id)
     elif record_type == 'scale':
-        record = ScaleResult.query.get(record_id)
+        record = db.session.get(ScaleResult, record_id)
     elif record_type == 'talent_type':
-        record = TalentTypeResult.query.get(record_id)
+        record = db.session.get(TalentTypeResult, record_id)
     else:
         return jsonify({"error": "无效的记录类型"}), 400
 

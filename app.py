@@ -2,10 +2,15 @@ from dotenv import load_dotenv
 # 必须在导入 config 之前加载环境变量
 load_dotenv()
 
+import os
+import logging
 from flask import Flask
 from config import Config
 from models import db
 from flask_login import LoginManager
+
+# 配置日志
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 
 # 创建 Flask 应用实例
 app = Flask(__name__)
@@ -25,7 +30,7 @@ login_manager.login_message = '请先登录'
 @login_manager.user_loader
 def load_user(user_id):
     from models import User
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 # 注册 Blueprint
 from routes import main_bp, interview_bp, scale_bp, dictionary_bp, talent_type_bp, history_bp, admin_bp
@@ -44,7 +49,7 @@ app.register_blueprint(admin_bp)
 # 注入 is_admin 到 Jinja2 模板
 app.jinja_env.globals['is_admin'] = is_admin
 
-# 访问追踪
+# 访问追踪（仅记录页面访问，跳过 API/AJAX 请求）
 @app.before_request
 def track_visit():
     from flask import request
@@ -52,19 +57,25 @@ def track_visit():
     from models import VisitLog
 
     path = request.path
-    if path.startswith('/static') or path == '/favicon.ico' or path.startswith('/admin/api'):
+    # 跳过静态资源、favicon、管理后台 API、以及所有 /api/ 接口请求
+    if (path.startswith('/static') or path == '/favicon.ico'
+            or path.startswith('/admin/api') or path.startswith('/api/')):
+        return
+
+    # 仅记录页面级别的 GET 请求（排除 AJAX 轮询）
+    if request.method != 'GET':
         return
 
     module = 'other'
     if path in ('/', '/report'):
         module = 'main'
-    elif path.startswith('/interview') or path.startswith('/api/start') or path.startswith('/api/chat') or path.startswith('/api/report') or path.startswith('/api/reset'):
+    elif path.startswith('/interview'):
         module = 'interview'
-    elif path.startswith('/scale') or path.startswith('/api/scale'):
+    elif path.startswith('/scale'):
         module = 'scale'
-    elif path.startswith('/talent-type') or path.startswith('/api/talent-type'):
+    elif path.startswith('/talent-type'):
         module = 'talent_type'
-    elif path.startswith('/dictionary') or path.startswith('/api/dictionary'):
+    elif path.startswith('/dictionary'):
         module = 'dictionary'
 
     visit = VisitLog(
@@ -94,9 +105,23 @@ with app.app_context():
                 conn.execute(text(f"ALTER TABLE {tbl} ADD COLUMN user_id INTEGER"))
                 conn.commit()
 
+    # 兼容性处理：为旧 users 表添加 is_admin 列
+    user_cols = [c['name'] for c in inspector.get_columns('users')]
+    if 'is_admin' not in user_cols:
+        with db.engine.connect() as conn:
+            conn.execute(text("ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT 0"))
+            conn.commit()
+        # 将原 admin 用户标记为管理员
+        from models import User
+        admin_user = User.query.filter_by(username='admin').first()
+        if admin_user:
+            admin_user.is_admin = True
+            db.session.commit()
+
     from routes.dictionary import init_dictionary
     init_dictionary()
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    debug = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
+    app.run(debug=debug, host='0.0.0.0', port=5001)
