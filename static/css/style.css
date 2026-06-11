@@ -3889,3 +3889,209 @@ textarea::placeholder {
         grid-template-columns: 1fr;
     }
 }
+
+/* ===== 图鉴页面大类型标签 ===== */
+.catalog-type-tabs {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.type-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border: 2px solid var(--hairline);
+    border-radius: var(--radius-lg);
+    background: var(--canvas);
+    cursor: pointer;
+    transition: all 0.2s;
+    flex: 1;
+    min-width: 150px;
+}
+
+.type-tab:hover {
+    border-color: var(--primary);
+}
+
+.type-tab.active {
+    border-color: var(--primary);
+    background: rgba(0, 102, 204, 0.05);
+}
+
+.type-tab-c.active {
+    border-color: #0066cc;
+    background: rgba(0, 102, 204, 0.05);
+}
+
+.type-tab-r.active {
+    border-color: #34c759;
+    background: rgba(52, 199, 89, 0.05);
+}
+
+.type-tab-b.active {
+    border-color: #ff9500;
+    background: rgba(255, 149, 0, 0.05);
+}
+
+.type-tab-s.active {
+    border-color: #af52de;
+    background: rgba(175, 82, 222, 0.05);
+}
+
+.type-tab-icon {
+    font-size: 1.5rem;
+}
+
+.type-tab-label {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.type-tab-count {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: var(--body-muted);
+    background: var(--canvas-parchment);
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+}
+
+/* ===== 图鉴搜索框 ===== */
+.catalog-search {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.catalog-search .search-box {
+    flex: 1;
+}
+
+/* ===== 图鉴分组 ===== */
+.catalog-group {
+    margin-bottom: 2.5rem;
+}
+
+.catalog-group-header {
+    padding: 1rem 1.25rem;
+    background: var(--canvas);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    border: 1px solid var(--hairline);
+    border-bottom: none;
+}
+
+.catalog-group-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.catalog-group-icon {
+    font-size: 1.5rem;
+}
+
+.catalog-group-title h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.catalog-group-count {
+    font-size: 0.8rem;
+    color: var(--body-muted);
+    background: var(--canvas-parchment);
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+}
+
+.catalog-group-desc {
+    font-size: 0.85rem;
+    color: var(--body-muted);
+    margin: 0;
+}
+
+.catalog-group .catalog-grid {
+    border: 1px solid var(--hairline);
+    border-top: none;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    padding: 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    background: var(--canvas-parchment);
+}
+
+/* ===== 图鉴卡片（带分组颜色） ===== */
+.catalog-card {
+    background: var(--canvas);
+    border: 1px solid var(--group-color-border, var(--hairline));
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.catalog-card:hover {
+    border-color: var(--group-color, var(--primary));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.catalog-card.has-detail {
+    border-left: 3px solid var(--group-color, var(--primary));
+}
+
+.catalog-card .catalog-code {
+    color: var(--group-color, var(--primary));
+}
+
+.catalog-card .catalog-badge {
+    background: var(--group-color-light, rgba(0, 102, 204, 0.1));
+    color: var(--group-color, var(--primary));
+}
+
+/* ===== 详情弹窗（带分组颜色） ===== */
+.catalog-detail-header {
+    padding-top: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.catalog-detail-type {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.catalog-detail-icon {
+    font-size: 1.25rem;
+}
+
+.catalog-detail-group {
+    font-weight: 600;
+}
+
+/* ===== 响应式 ===== */
+@media (max-width: 768px) {
+    .catalog-type-tabs {
+        flex-direction: column;
+    }
+    
+    .type-tab {
+        min-width: auto;
+    }
+    
+    .catalog-group .catalog-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .catalog-search {
+        flex-direction: column;
+    }
+}

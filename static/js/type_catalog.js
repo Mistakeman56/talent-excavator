@@ -1,17 +1,52 @@
 /**
- * 72种人格图鉴 — 交互逻辑
+ * 72种人格图鉴 — 交互逻辑（分组显示版）
  */
 (function() {
     let allTypes = [];
     let dimensions = {};
-    let filters = { dim1: '', dim2: '', dim3: '', dim4: '' };
+    let currentType = '';
     let searchKeyword = '';
+
+    // 大类型配置
+    const TYPE_GROUPS = {
+        'C': {
+            name: '认知洞察型',
+            icon: '🧠',
+            desc: '天赋核心在于「想」——理解复杂系统、发现底层模式、追问本质',
+            color: '#0066cc',
+            colorLight: 'rgba(0, 102, 204, 0.1)',
+            colorBorder: 'rgba(0, 102, 204, 0.3)'
+        },
+        'R': {
+            name: '关系创造型',
+            icon: '💚',
+            desc: '天赋核心在于「连接」——深度共情、网络编织、关系创造',
+            color: '#34c759',
+            colorLight: 'rgba(52, 199, 89, 0.1)',
+            colorBorder: 'rgba(52, 199, 89, 0.3)'
+        },
+        'B': {
+            name: '身体实践型',
+            icon: '⚡',
+            desc: '天赋核心在于「做」——用双手和身体去感知世界、改变世界',
+            color: '#ff9500',
+            colorLight: 'rgba(255, 149, 0, 0.1)',
+            colorBorder: 'rgba(255, 149, 0, 0.3)'
+        },
+        'S': {
+            name: '系统引领型',
+            icon: '👑',
+            desc: '天赋核心在于「推动」——在混乱中建立秩序、带领大家往前走',
+            color: '#af52de',
+            colorLight: 'rgba(175, 82, 222, 0.1)',
+            colorBorder: 'rgba(175, 82, 222, 0.3)'
+        }
+    };
 
     // DOM 元素
     const searchInput = document.getElementById('searchInput');
-    const catalogGrid = document.getElementById('catalogGrid');
+    const catalogGroups = document.getElementById('catalogGroups');
     const catalogEmpty = document.getElementById('catalogEmpty');
-    const resultCount = document.getElementById('resultCount');
     const btnResetFilter = document.getElementById('btnResetFilter');
 
     // 初始化
@@ -23,37 +58,83 @@
             const res = await fetch('/api/talent-type/catalog');
             const data = await res.json();
             if (!data.success) {
-                catalogGrid.innerHTML = '<p style="text-align:center; color: var(--body-muted); padding: 40px;">加载失败</p>';
+                catalogGroups.innerHTML = '<p style="text-align:center; color: var(--body-muted); padding: 40px;">加载失败</p>';
                 return;
             }
             allTypes = data.types;
             dimensions = data.dimensions;
-            renderGrid();
+            renderGroups();
         } catch (err) {
-            catalogGrid.innerHTML = '<p style="text-align:center; color: var(--body-muted); padding: 40px;">网络错误</p>';
+            catalogGroups.innerHTML = '<p style="text-align:center; color: var(--body-muted); padding: 40px;">网络错误</p>';
         }
     }
 
-    // 渲染网格
-    function renderGrid() {
+    // 按大类型分组渲染
+    function renderGroups() {
         const filtered = filterTypes();
 
+        // 按首字母分组
+        const groups = {};
+        filtered.forEach(type => {
+            const groupKey = type.code[0];
+            if (!groups[groupKey]) groups[groupKey] = [];
+            groups[groupKey].push(type);
+        });
+
+        // 更新统计
+        updateStats(filtered);
+
         if (filtered.length === 0) {
-            catalogGrid.style.display = 'none';
+            catalogGroups.style.display = 'none';
             catalogEmpty.style.display = 'block';
-        } else {
-            catalogGrid.style.display = 'grid';
-            catalogEmpty.style.display = 'none';
+            return;
         }
 
-        resultCount.textContent = filtered.length;
+        catalogGroups.style.display = 'block';
+        catalogEmpty.style.display = 'none';
 
-        // 显示/隐藏重置按钮
-        const hasFilter = Object.values(filters).some(v => v !== '') || searchKeyword !== '';
-        btnResetFilter.style.display = hasFilter ? 'inline' : 'none';
+        // 确定要显示的组
+        const groupsToShow = currentType ? [currentType] : ['C', 'R', 'B', 'S'];
 
-        catalogGrid.innerHTML = filtered.map(type => `
-            <div class="catalog-card ${type.has_detail ? 'has-detail' : ''}" data-code="${type.code}" onclick="openDetail('${type.code}')">
+        let html = '';
+        groupsToShow.forEach(groupKey => {
+            const types = groups[groupKey] || [];
+            if (types.length === 0) return;
+
+            const group = TYPE_GROUPS[groupKey];
+            html += `
+                <div class="catalog-group" data-group="${groupKey}">
+                    <div class="catalog-group-header" style="border-left: 4px solid ${group.color};">
+                        <div class="catalog-group-title">
+                            <span class="catalog-group-icon">${group.icon}</span>
+                            <h2>${group.name}</h2>
+                            <span class="catalog-group-count">${types.length} 种</span>
+                        </div>
+                        <p class="catalog-group-desc">${group.desc}</p>
+                    </div>
+                    <div class="catalog-grid">
+                        ${types.map(type => renderCard(type, group)).join('')}
+                    </div>
+                </div>
+            `;
+        });
+
+        catalogGroups.innerHTML = html;
+
+        // 绑定卡片点击事件
+        catalogGroups.querySelectorAll('.catalog-card').forEach(card => {
+            card.addEventListener('click', function() {
+                openDetail(this.dataset.code);
+            });
+        });
+    }
+
+    // 渲染单个卡片
+    function renderCard(type, group) {
+        return `
+            <div class="catalog-card ${type.has_detail ? 'has-detail' : ''}" 
+                 data-code="${type.code}"
+                 style="--group-color: ${group.color}; --group-color-light: ${group.colorLight}; --group-color-border: ${group.colorBorder};">
                 <div class="catalog-card-header">
                     <span class="catalog-code">${type.code}</span>
                     ${type.has_detail ? '<span class="catalog-badge">详细报告</span>' : ''}
@@ -61,23 +142,19 @@
                 <h3 class="catalog-name">${escapeHtml(type.name)}</h3>
                 <p class="catalog-tagline">${escapeHtml(type.tagline)}</p>
                 <div class="catalog-dims">
-                    <span class="catalog-dim" title="${escapeHtml(type.dim1.desc)}">${type.dim1.code} ${escapeHtml(type.dim1.name)}</span>
-                    <span class="catalog-dim" title="${escapeHtml(type.dim2.desc)}">${type.dim2.code} ${escapeHtml(type.dim2.name)}</span>
-                    <span class="catalog-dim" title="${escapeHtml(type.dim3.desc)}">${type.dim3.code} ${escapeHtml(type.dim3.name)}</span>
-                    <span class="catalog-dim" title="${escapeHtml(type.dim4.desc)}">${type.dim4.code} ${escapeHtml(type.dim4.name)}</span>
+                    <span class="catalog-dim">${type.dim2.code} ${escapeHtml(type.dim2.name)}</span>
+                    <span class="catalog-dim">${type.dim3.code} ${escapeHtml(type.dim3.name)}</span>
+                    <span class="catalog-dim">${type.dim4.code} ${escapeHtml(type.dim4.name)}</span>
                 </div>
             </div>
-        `).join('');
+        `;
     }
 
     // 筛选逻辑
     function filterTypes() {
         return allTypes.filter(type => {
-            // 维度筛选
-            if (filters.dim1 && type.dim1.code !== filters.dim1) return false;
-            if (filters.dim2 && type.dim2.code !== filters.dim2) return false;
-            if (filters.dim3 && type.dim3.code !== filters.dim3) return false;
-            if (filters.dim4 && type.dim4.code !== filters.dim4) return false;
+            // 大类型筛选
+            if (currentType && type.code[0] !== currentType) return false;
 
             // 搜索筛选
             if (searchKeyword) {
@@ -92,35 +169,37 @@
         });
     }
 
+    // 更新统计
+    function updateStats(filtered) {
+        const hasFilter = currentType || searchKeyword;
+        btnResetFilter.style.display = hasFilter ? 'inline' : 'none';
+    }
+
     // 搜索输入
     searchInput.addEventListener('input', function(e) {
         searchKeyword = e.target.value.trim();
-        renderGrid();
+        renderGroups();
     });
 
-    // 维度筛选标签点击
-    document.querySelectorAll('.dim-filter-tags').forEach(group => {
-        group.addEventListener('click', function(e) {
-            const btn = e.target.closest('.tag');
-            if (!btn) return;
-
-            const dim = this.dataset.dim;
-            group.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
-            filters[dim] = btn.dataset.value;
-            renderGrid();
+    // 大类型标签点击
+    document.querySelectorAll('.type-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            currentType = this.dataset.type;
+            renderGroups();
         });
     });
 
     // 重置筛选
     btnResetFilter.addEventListener('click', function() {
-        filters = { dim1: '', dim2: '', dim3: '', dim4: '' };
+        currentType = '';
         searchKeyword = '';
         searchInput.value = '';
-        document.querySelectorAll('.dim-filter-tags .tag').forEach(t => {
-            t.classList.toggle('active', t.dataset.value === '');
+        document.querySelectorAll('.type-tab').forEach(t => {
+            t.classList.toggle('active', t.dataset.type === '');
         });
-        renderGrid();
+        renderGroups();
     });
 
     // 打开详情弹窗
@@ -128,16 +207,21 @@
         const type = allTypes.find(t => t.code === code);
         if (!type) return;
 
+        const group = TYPE_GROUPS[type.code[0]];
         const body = document.getElementById('detailModalBody');
         let html = `
-            <div class="catalog-detail-header">
+            <div class="catalog-detail-header" style="border-top: 3px solid ${group.color};">
+                <div class="catalog-detail-type" style="color: ${group.color};">
+                    <span class="catalog-detail-icon">${group.icon}</span>
+                    <span class="catalog-detail-group">${group.name}</span>
+                </div>
                 <span class="catalog-detail-code">${type.code}</span>
                 <h2 class="catalog-detail-name">${escapeHtml(type.name)}</h2>
                 <p class="catalog-detail-tagline">${escapeHtml(type.tagline)}</p>
             </div>
 
             <div class="catalog-detail-dims">
-                <div class="catalog-detail-dim">
+                <div class="catalog-detail-dim" style="border-left: 3px solid ${group.color};">
                     <span class="dim-label">天赋形态</span>
                     <span class="dim-value">${type.dim1.code} · ${escapeHtml(type.dim1.name)}</span>
                     <p class="dim-desc">${escapeHtml(type.dim1.desc)}</p>
@@ -165,7 +249,7 @@
             const r = type.report;
             html += `
                 <div class="catalog-detail-report">
-                    <h3>详细解读</h3>
+                    <h3 style="color: ${group.color};">详细解读</h3>
                     ${r.strength ? `
                     <div class="report-section">
                         <h4>核心优势</h4>
@@ -196,7 +280,7 @@
         } else {
             html += `
                 <div class="catalog-detail-no-report">
-                    <p>该类型暂无详细报告，可通过 <a href="/talent-type">40题测评</a> 获取你的专属解读。</p>
+                    <p>该类型暂无详细报告，可通过 <a href="/talent-type" style="color: ${group.color};">40题测评</a> 获取你的专属解读。</p>
                 </div>
             `;
         }
