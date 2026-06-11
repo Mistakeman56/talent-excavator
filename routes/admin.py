@@ -190,7 +190,9 @@ def get_records():
             top = json.loads(s.top_dimensions) if s.top_dimensions else []
             title = f'量表 ({s.scale_type})'
             if top:
-                title = f'量表 Top: {", ".join(top[:2])}'
+                # top 是字典列表 [{"key": ..., "name": ..., "score": ...}]
+                top_names = [t.get('name', '') for t in top[:2]]
+                title = f'量表 Top: {", ".join(top_names)}'
             items.append({
                 'id': s.id,
                 'type': 'scale',
