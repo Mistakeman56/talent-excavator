@@ -4095,3 +4095,135 @@ textarea::placeholder {
         flex-direction: column;
     }
 }
+
+/* ===== 首页人格图鉴区域 ===== */
+.type-catalog-section {
+    position: relative;
+    overflow: hidden;
+}
+
+/* 背景装饰字母 */
+.type-letters-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.type-letters-bg .letter {
+    position: absolute;
+    font-weight: 800;
+    font-family: var(--font-display), serif;
+    user-select: none;
+    transform: rotate(-15deg);
+}
+
+/* 人格类型预览卡片 */
+.type-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.type-preview-card {
+    padding: 1.5rem 1rem;
+    border-radius: var(--radius-lg);
+    text-align: center;
+    background: var(--canvas);
+    border: 2px solid transparent;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.type-preview-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.type-preview-c {
+    border-color: rgba(0, 102, 204, 0.3);
+}
+.type-preview-c:hover {
+    border-color: #0066cc;
+    background: rgba(0, 102, 204, 0.05);
+}
+.type-preview-c .type-preview-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+}
+.type-preview-c h3 {
+    color: #0066cc;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.type-preview-r {
+    border-color: rgba(52, 199, 89, 0.3);
+}
+.type-preview-r:hover {
+    border-color: #34c759;
+    background: rgba(52, 199, 89, 0.05);
+}
+.type-preview-r .type-preview-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+}
+.type-preview-r h3 {
+    color: #34c759;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.type-preview-b {
+    border-color: rgba(255, 149, 0, 0.3);
+}
+.type-preview-b:hover {
+    border-color: #ff9500;
+    background: rgba(255, 149, 0, 0.05);
+}
+.type-preview-b .type-preview-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+}
+.type-preview-b h3 {
+    color: #ff9500;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.type-preview-s {
+    border-color: rgba(175, 82, 222, 0.3);
+}
+.type-preview-s:hover {
+    border-color: #af52de;
+    background: rgba(175, 82, 222, 0.05);
+}
+.type-preview-s .type-preview-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+}
+.type-preview-s h3 {
+    color: #af52de;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.type-preview-card p {
+    font-size: 0.85rem;
+    color: var(--body-muted);
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .type-preview-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .type-letters-bg .letter {
+        display: none;
+    }
+}
