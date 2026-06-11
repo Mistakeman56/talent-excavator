@@ -238,6 +238,41 @@ def get_records():
     })
 
 
+@admin_bp.route('/api/admin/talent-type-stats')
+@login_required
+@admin_required
+def talent_type_stats():
+    """72种人格类型分布统计"""
+    # 统计所有类型学测评结果的 type_code 分布
+    results = TalentTypeResult.query.all()
+
+    # 计算每种类型的数量
+    type_counts = {}
+    for r in results:
+        code = r.type_code
+        type_counts[code] = type_counts.get(code, 0) + 1
+
+    # 按数量排序
+    sorted_types = sorted(type_counts.items(), key=lambda x: x[1], reverse=True)
+
+    # 获取类型名称映射
+    from talent_type_data import TYPE_NAMES
+
+    return jsonify({
+        'success': True,
+        'total': len(results),
+        'distribution': [
+            {
+                'code': code,
+                'name': TYPE_NAMES.get(code, {}).get('name', '未知'),
+                'count': count,
+                'percentage': round(count / len(results) * 100, 1) if results else 0
+            }
+            for code, count in sorted_types
+        ]
+    })
+
+
 @admin_bp.route('/api/admin/records/<record_type>/<int:record_id>', methods=['DELETE'])
 @login_required
 @admin_required

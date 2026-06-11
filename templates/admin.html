@@ -83,6 +83,30 @@
     </div>
 </section>
 
+<!-- 72种人格类型分布 -->
+<section class="tile tile-parchment">
+    <div class="section-content">
+        <h2 class="section-headline">72种人格类型分布</h2>
+        <div class="admin-charts-grid">
+            <div class="admin-chart-card">
+                <h3 class="admin-chart-title">Top 15 类型分布</h3>
+                <div class="admin-chart-container" style="height: 400px;">
+                    <canvas id="typeDistributionChart"></canvas>
+                </div>
+            </div>
+            <div class="admin-chart-card">
+                <h3 class="admin-chart-title">类型统计</h3>
+                <div id="typeStatsInfo" style="padding: 1rem;">
+                    <p style="color: var(--body-muted);">加载中...</p>
+                </div>
+                <div class="admin-chart-container" style="height: 300px;">
+                    <canvas id="typePieChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- 记录管理 -->
 <section class="tile tile-parchment">
     <div class="section-content">
@@ -314,9 +338,112 @@ async function deleteRecord(type, id) {
     }
 }
 
+// 72种人格类型分布
+async function loadTalentTypeStats() {
+    try {
+        const res = await fetch('/api/admin/talent-type-stats');
+        const data = await res.json();
+        if (!data.success) return;
+
+        const { total, distribution } = data;
+
+        // 更新统计信息
+        const statsInfo = document.getElementById('typeStatsInfo');
+        const uniqueTypes = distribution.length;
+        statsInfo.innerHTML = `
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 700; color: var(--primary);">${total}</div>
+                    <div style="font-size: 0.85rem; color: var(--body-muted);">总测评次数</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 700; color: var(--primary);">${uniqueTypes}/72</div>
+                    <div style="font-size: 0.85rem; color: var(--body-muted);">已出现类型</div>
+                </div>
+            </div>
+            ${distribution.length > 0 ? `
+            <div style="font-size: 0.85rem; color: var(--body-muted); text-align: center;">
+                最常见: <strong>${distribution[0].code} ${distribution[0].name}</strong> (${distribution[0].count}次, ${distribution[0].percentage}%)
+            </div>` : ''}
+        `;
+
+        // 渲染柱状图 (Top 15)
+        if (distribution.length > 0) {
+            const top15 = distribution.slice(0, 15);
+            const barColors = top15.map((_, i) => {
+                const hue = (i * 24) % 360;
+                return `hsl(${hue}, 70%, 55%)`;
+            });
+
+            new Chart(document.getElementById('typeDistributionChart'), {
+                type: 'bar',
+                data: {
+                    labels: top15.map(d => d.code),
+                    datasets: [{
+                        label: '测评次数',
+                        data: top15.map(d => d.count),
+                        backgroundColor: barColors,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: (items) => {
+                                    const d = top15[items[0].dataIndex];
+                                    return `${d.code} ${d.name}`;
+                                },
+                                label: (item) => `${item.raw}次 (${top15[item.dataIndex].percentage}%)`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#86868b', font: { size: 11 } } },
+                        y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#86868b' }, beginAtZero: true }
+                    }
+                }
+            });
+
+            // 渲染饼图 (按维度分组)
+            const dim1Counts = { C: 0, R: 0, B: 0, S: 0 };
+            distribution.forEach(d => {
+                const dim1 = d.code[0];
+                dim1Counts[dim1] = (dim1Counts[dim1] || 0) + d.count;
+            });
+
+            new Chart(document.getElementById('typePieChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['C 认知洞察', 'R 关系创造', 'B 身体实践', 'S 系统引领'],
+                    datasets: [{
+                        data: [dim1Counts.C, dim1Counts.R, dim1Counts.B, dim1Counts.S],
+                        backgroundColor: ['#0066cc', '#34c759', '#ff9500', '#af52de'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true } }
+                    }
+                }
+            });
+        }
+    } catch (err) {
+        console.error('加载人格类型统计失败:', err);
+    }
+}
+
 // 初始化
 loadStats();
 loadUsers(1);
 loadRecords(1);
+loadTalentTypeStats();
 </script>
 {% endblock %}
