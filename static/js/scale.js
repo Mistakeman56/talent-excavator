@@ -167,16 +167,18 @@ async function submitScale() {
         console.log('[scale] API response:', data);
 
         if (!data.success) {
+            if (data.need_login) {
+                alert('请先登录后再进行测评');
+                window.location.href = '/login';
+                return;
+            }
             alert('提交失败：' + data.error);
             els.submitLoading.style.display = 'none';
             return;
         }
 
-        // 保存结果到 localStorage
-        localStorage.setItem('scaleResult', JSON.stringify(data));
-
         // 跳转到结果页
-        window.location.href = '/scale/result';
+        window.location.href = '/scale/result?session_id=' + data.session_id;
 
     } catch (err) {
         console.error('[scale] submit error:', err);

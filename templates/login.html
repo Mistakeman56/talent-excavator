@@ -3,18 +3,7 @@
 {% block title %}登录{% endblock %}
 
 {% block content %}
-<!-- 全局导航 -->
-<nav class="global-nav">
-    <div class="global-nav-inner">
-        <a href="{{ url_for('main.index') }}" class="nav-brand">◈ Talent</a>
-        <ul class="global-nav-links">
-            <li><a href="{{ url_for('main.index') }}">AI 访谈</a></li>
-            <li><a href="{{ url_for('scale.scale_page') }}">量表</a></li>
-            <li><a href="{{ url_for('main.talent_type') }}">类型学</a></li>
-            <li><a href="{{ url_for('dictionary.dictionary') }}">词典</a></li>
-        </ul>
-    </div>
-</nav>
+{% include '_nav.html' %}
 
 <!-- 页面标题区 -->
 <section class="page-hero">
@@ -55,40 +44,5 @@
     </div>
 </section>
 
-<!-- Footer -->
-<footer class="site-footer">
-    <div class="footer-inner">
-        <div class="footer-grid">
-            <div class="footer-col">
-                <h4>测评</h4>
-                <ul>
-                    <li><a href="{{ url_for('main.index') }}">AI 深度访谈</a></li>
-                    <li><a href="{{ url_for('scale.scale_page') }}">天赋维度量表</a></li>
-                    <li><a href="{{ url_for('main.talent_type') }}">天赋类型学</a></li>
-                </ul>
-            </div>
-            <div class="footer-col">
-                <h4>资源</h4>
-                <ul>
-                    <li><a href="{{ url_for('dictionary.dictionary') }}">Human 词典</a></li>
-                </ul>
-            </div>
-            <div class="footer-col">
-                <h4>账户</h4>
-                <ul>
-                    <li><a href="{{ url_for('auth.register') }}">注册</a></li>
-                </ul>
-            </div>
-            <div class="footer-col">
-                <h4>关于</h4>
-                <ul>
-                    <li><a>毕业设计项目</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>个人天赋发掘测评系统 · 毕业设计项目</p>
-        </div>
-    </div>
-</footer>
+{% include '_footer.html' %}
 {% endblock %}

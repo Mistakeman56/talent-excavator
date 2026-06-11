@@ -5,6 +5,16 @@ from flask_login import login_required, current_user
 from models import db, InterviewSession, ScaleResult, TalentTypeResult
 import json
 
+
+def safe_json_loads(text, default=None):
+    """安全的 JSON 反序列化，失败返回默认值"""
+    if default is None:
+        default = {}
+    try:
+        return json.loads(text) if text else default
+    except (json.JSONDecodeError, TypeError):
+        return default
+
 history_bp = Blueprint('history', __name__)
 
 
@@ -29,12 +39,13 @@ def get_history():
 
     interview_items = []
     for iv in interviews:
+        messages = safe_json_loads(iv.messages, [])
         interview_items.append({
             'id': iv.id,
             'type': 'interview',
             'type_label': 'AI 深度访谈',
             'title': 'AI 天赋诊断报告',
-            'subtitle': f'{len(json.loads(iv.messages or "[]")) // 2} 轮对话',
+            'subtitle': f'{len(messages) // 2} 轮对话',
             'created_at': iv.created_at.isoformat() if iv.created_at else None,
             'has_report': True
         })
@@ -44,8 +55,8 @@ def get_history():
 
     scale_items = []
     for sc in scales:
-        scores = json.loads(sc.scores) if sc.scores else {}
-        top_dims = json.loads(sc.top_dimensions) if sc.top_dimensions else []
+        scores = safe_json_loads(sc.scores)
+        top_dims = safe_json_loads(sc.top_dimensions, [])
         if sc.scale_type == 'primary':
             title = '一级量表 · 五维筛查'
             subtitle = f'Top: {", ".join([d["name"] for d in top_dims[:2]])}' if top_dims else ''
@@ -70,7 +81,7 @@ def get_history():
 
     tt_items = []
     for tt in tts:
-        report = json.loads(tt.report) if tt.report else {}
+        report = safe_json_loads(tt.report)
         tt_items.append({
             'id': tt.id,
             'session_id': tt.session_id,
@@ -80,8 +91,8 @@ def get_history():
             'subtitle': report.get('tagline', ''),
             'created_at': tt.created_at.isoformat() if tt.created_at else None,
             'type_code': tt.type_code,
-            'dimensions': json.loads(tt.dimensions) if tt.dimensions else {},
-            'scores': json.loads(tt.scores) if tt.scores else {}
+            'dimensions': safe_json_loads(tt.dimensions),
+            'scores': safe_json_loads(tt.scores)
         })
 
     # 合并按时间倒序
@@ -112,7 +123,7 @@ def get_interview_detail(interview_id):
         'success': True,
         'type': 'interview',
         'report': iv.report_content,
-        'messages': json.loads(iv.messages or '[]'),
+        'messages': safe_json_loads(iv.messages, []),
         'created_at': iv.created_at.isoformat() if iv.created_at else None
     })
 
@@ -130,8 +141,8 @@ def get_scale_detail(session_id):
         'type': 'scale',
         'session_id': sc.session_id,
         'scale_type': sc.scale_type,
-        'scores': json.loads(sc.scores) if sc.scores else {},
-        'top_dimensions': json.loads(sc.top_dimensions) if sc.top_dimensions else [],
+        'scores': safe_json_loads(sc.scores),
+        'top_dimensions': safe_json_loads(sc.top_dimensions, []),
         'talent_type': sc.talent_type,
         'created_at': sc.created_at.isoformat() if sc.created_at else None
     })

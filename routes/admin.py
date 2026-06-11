@@ -19,7 +19,7 @@ def admin_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if not is_admin():
-            return jsonify({"error": "无权限"}), 403
+            return jsonify({"success": False, "error": "无权限"}), 403
         return f(*args, **kwargs)
     return decorated
 
@@ -85,12 +85,39 @@ def get_users():
         page=page, per_page=per_page, error_out=False
     )
 
+    # 使用子查询一次性获取每个用户的测评计数
+    interview_subq = db.session.query(
+        InterviewSession.user_id,
+        db.func.count(InterviewSession.id).label('count')
+    ).group_by(InterviewSession.user_id).subquery()
+
+    scale_subq = db.session.query(
+        ScaleResult.user_id,
+        db.func.count(ScaleResult.id).label('count')
+    ).group_by(ScaleResult.user_id).subquery()
+
+    tt_subq = db.session.query(
+        TalentTypeResult.user_id,
+        db.func.count(TalentTypeResult.id).label('count')
+    ).group_by(TalentTypeResult.user_id).subquery()
+
+    users_query = db.session.query(
+        User,
+        db.func.coalesce(interview_subq.c.count, 0).label('interview_count'),
+        db.func.coalesce(scale_subq.c.count, 0).label('scale_count'),
+        db.func.coalesce(tt_subq.c.count, 0).label('tt_count')
+    ).outerjoin(
+        interview_subq, User.id == interview_subq.c.user_id
+    ).outerjoin(
+        scale_subq, User.id == scale_subq.c.user_id
+    ).outerjoin(
+        tt_subq, User.id == tt_subq.c.user_id
+    ).order_by(User.created_at.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+
     users = []
-    for u in pagination.items:
-        # 统计每个用户的测评数
-        interview_count = InterviewSession.query.filter_by(user_id=u.id).count()
-        scale_count = ScaleResult.query.filter_by(user_id=u.id).count()
-        tt_count = TalentTypeResult.query.filter_by(user_id=u.id).count()
+    for u, interview_count, scale_count, tt_count in users_query.items:
         users.append({
             'id': u.id,
             'username': u.username,
@@ -114,9 +141,9 @@ def delete_user(user_id):
     """删除用户（通过 ORM 级联自动删除关联记录）"""
     user = db.session.get(User, user_id)
     if not user:
-        return jsonify({"error": "用户不存在"}), 404
+        return jsonify({"success": False, "error": "用户不存在"}), 404
     if user.is_admin:
-        return jsonify({"error": "不能删除管理员账号"}), 400
+        return jsonify({"success": False, "error": "不能删除管理员账号"}), 400
 
     # ORM cascade 会自动删除关联的 interviews、scale_results、talent_type_results、visit_logs
     db.session.delete(user)
@@ -134,29 +161,31 @@ def get_records():
     per_page = request.args.get('per_page', 20, type=int)
     record_type = request.args.get('type', '')
 
-    # 收集所有记录
+    # 收集所有记录（使用 JOIN 避免 N+1 查询）
     items = []
 
     if not record_type or record_type == 'interview':
-        interviews = InterviewSession.query.filter(
+        interviews = db.session.query(InterviewSession, User).join(
+            User, InterviewSession.user_id == User.id
+        ).filter(
             InterviewSession.report_content.isnot(None)
         ).order_by(InterviewSession.created_at.desc()).all()
-        for r in interviews:
-            user = db.session.get(User, r.user_id)
+        for r, user in interviews:
             items.append({
                 'id': r.id,
                 'type': 'interview',
                 'type_label': 'AI 访谈',
-                'username': user.username if user else '未知',
+                'username': user.username,
                 'user_id': r.user_id,
                 'title': f'访谈报告',
                 'created_at': r.created_at.strftime('%Y-%m-%d %H:%M')
             })
 
     if not record_type or record_type == 'scale':
-        scales = ScaleResult.query.order_by(ScaleResult.created_at.desc()).all()
-        for s in scales:
-            user = db.session.get(User, s.user_id)
+        scales = db.session.query(ScaleResult, User).outerjoin(
+            User, ScaleResult.user_id == User.id
+        ).order_by(ScaleResult.created_at.desc()).all()
+        for s, user in scales:
             scores = json.loads(s.scores) if s.scores else {}
             top = json.loads(s.top_dimensions) if s.top_dimensions else []
             title = f'量表 ({s.scale_type})'
@@ -174,9 +203,10 @@ def get_records():
             })
 
     if not record_type or record_type == 'talent_type':
-        tts = TalentTypeResult.query.order_by(TalentTypeResult.created_at.desc()).all()
-        for t in tts:
-            user = db.session.get(User, t.user_id)
+        tts = db.session.query(TalentTypeResult, User).outerjoin(
+            User, TalentTypeResult.user_id == User.id
+        ).order_by(TalentTypeResult.created_at.desc()).all()
+        for t, user in tts:
             report = json.loads(t.report) if t.report else {}
             name = report.get('name', '')
             title = f'{t.type_code}' + (f' · {name}' if name else '')
@@ -220,10 +250,10 @@ def delete_record(record_type, record_id):
     elif record_type == 'talent_type':
         record = db.session.get(TalentTypeResult, record_id)
     else:
-        return jsonify({"error": "无效的记录类型"}), 400
+        return jsonify({"success": False, "error": "无效的记录类型"}), 400
 
     if not record:
-        return jsonify({"error": "记录不存在"}), 404
+        return jsonify({"success": False, "error": "记录不存在"}), 404
 
     db.session.delete(record)
     db.session.commit()

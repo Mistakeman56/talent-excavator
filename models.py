@@ -1,7 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, timezone
 
 db = SQLAlchemy()
 
@@ -17,7 +17,7 @@ class TalentTypeResult(db.Model):
     scores = db.Column(db.Text, nullable=False)   # JSON: 各维度原始得分
     dimensions = db.Column(db.Text, nullable=False)  # JSON: 四维度详情
     report = db.Column(db.Text, nullable=False)  # JSON: 完整解读报告
-    created_at = db.Column(db.DateTime, default=datetime.now)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class ScaleResult(db.Model):
@@ -32,7 +32,7 @@ class ScaleResult(db.Model):
     scores = db.Column(db.Text, nullable=False)   # JSON格式存储各维度得分
     top_dimensions = db.Column(db.Text)  # JSON格式存储Top维度
     talent_type = db.Column(db.String(100))  # 二级量表锁定的天赋类型
-    created_at = db.Column(db.DateTime, default=datetime.now)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 class User(UserMixin, db.Model):
     """用户账户"""
@@ -42,7 +42,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     is_admin = db.Column(db.Boolean, default=False, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.now)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     # 关联关系（级联删除）
     interviews = db.relationship('InterviewSession', backref='user', lazy='dynamic',
@@ -70,7 +70,7 @@ class HumanDictionary(db.Model):
     definition = db.Column(db.Text, nullable=False)
     example = db.Column(db.Text)
     related_terms = db.Column(db.String(255))
-    created_at = db.Column(db.DateTime, default=datetime.now)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class InterviewSession(db.Model):
@@ -83,8 +83,8 @@ class InterviewSession(db.Model):
     stage = db.Column(db.Integer, default=0)              # 当前方向索引 0-7（对应A-H）
     answers = db.Column(db.Text, default='{}')            # JSON，结构化存储各方向用户回答
     report_content = db.Column(db.Text)                   # 最终生成的报告Markdown
-    created_at = db.Column(db.DateTime, default=datetime.now)
-    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
 
 class VisitLog(db.Model):
@@ -96,4 +96,4 @@ class VisitLog(db.Model):
     module = db.Column(db.String(32), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     ip_address = db.Column(db.String(45), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.now, index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)

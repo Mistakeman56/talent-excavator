@@ -32,6 +32,9 @@ def get_scale_questions():
 @scale_bp.route('/api/scale/submit', methods=['POST'])
 def submit_scale():
     """提交一级量表答案，计算得分"""
+    if not current_user.is_authenticated:
+        return jsonify({"success": False, "error": "未登录", "need_login": True})
+
     from scale_data import PRIMARY_SCALE
 
     data = request.get_json()
@@ -39,6 +42,18 @@ def submit_scale():
 
     if not answers:
         return jsonify({"success": False, "error": "没有提交答案"})
+
+    # 校验答案数据
+    valid_question_ids = set()
+    for dim_data in PRIMARY_SCALE['dimensions'].values():
+        for q in dim_data['questions']:
+            valid_question_ids.add(q['id'])
+
+    for qid, score in answers.items():
+        if qid not in valid_question_ids:
+            return jsonify({"success": False, "error": f"无效的题目ID: {qid}"}), 400
+        if not isinstance(score, (int, float)) or score < 1 or score > 5:
+            return jsonify({"success": False, "error": f"无效的分数值: {qid}={score}，应为1-5"}), 400
 
     # 计算各维度得分
     scores = {}
@@ -71,7 +86,7 @@ def submit_scale():
     # 保存到数据库
     session_id = str(uuid.uuid4())
     result = ScaleResult(
-        user_id=current_user.id if current_user.is_authenticated else None,
+        user_id=current_user.id,
         session_id=session_id,
         scale_type='primary',
         answers=json.dumps(answers),
@@ -109,9 +124,29 @@ def get_secondary_questions():
     })
 
 
+@scale_bp.route('/api/scale/result/<session_id>')
+def get_scale_result(session_id):
+    """获取量表结果"""
+    result = ScaleResult.query.filter_by(session_id=session_id).first()
+    if not result:
+        return jsonify({"success": False, "error": "结果不存在"}), 404
+
+    return jsonify({
+        "success": True,
+        "session_id": result.session_id,
+        "scale_type": result.scale_type,
+        "scores": json.loads(result.scores or '{}'),
+        "top_dimensions": json.loads(result.top_dimensions or '[]'),
+        "talent_type": result.talent_type
+    })
+
+
 @scale_bp.route('/api/scale/secondary/submit', methods=['POST'])
 def submit_secondary_scale():
     """提交二级量表答案，计算天赋类型"""
+    if not current_user.is_authenticated:
+        return jsonify({"success": False, "error": "未登录", "need_login": True})
+
     from scale_data import SECONDARY_SCALE
 
     data = request.get_json()
@@ -140,7 +175,7 @@ def submit_secondary_scale():
     # 保存到数据库
     session_id = str(uuid.uuid4())
     result = ScaleResult(
-        user_id=current_user.id if current_user.is_authenticated else None,
+        user_id=current_user.id,
         session_id=session_id,
         scale_type='secondary',
         answers=json.dumps(answers),

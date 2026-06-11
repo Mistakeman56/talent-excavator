@@ -22,6 +22,9 @@ def get_questions():
 @talent_type_bp.route('/api/talent-type/submit', methods=['POST'])
 def submit_answers():
     """提交答题结果，计算类型并保存"""
+    if not current_user.is_authenticated:
+        return jsonify({"success": False, "error": "未登录", "need_login": True})
+
     data = request.get_json()
     if not data or 'answers' not in data:
         return jsonify({'success': False, 'error': '缺少答题数据'}), 400
@@ -38,7 +41,7 @@ def submit_answers():
     session_id = str(uuid.uuid4())
 
     record = TalentTypeResult(
-        user_id=current_user.id if current_user.is_authenticated else None,
+        user_id=current_user.id,
         session_id=session_id,
         type_code=result['code'],
         answers=json.dumps(answers, ensure_ascii=False),
@@ -61,8 +64,14 @@ def submit_answers():
 
 @talent_type_bp.route('/api/talent-type/result/<session_id>', methods=['GET'])
 def get_result(session_id):
-    """查询已保存的测评结果"""
-    result = TalentTypeResult.query.filter_by(session_id=session_id).first()
+    """查询已保存的测评结果（仅限本人）"""
+    if not current_user.is_authenticated:
+        return jsonify({"success": False, "error": "未登录", "need_login": True})
+
+    result = TalentTypeResult.query.filter_by(
+        session_id=session_id,
+        user_id=current_user.id
+    ).first()
     if not result:
         return jsonify({'success': False, 'error': '结果不存在'}), 404
 

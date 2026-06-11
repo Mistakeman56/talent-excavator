@@ -3209,3 +3209,422 @@ textarea::placeholder {
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== 天赋类型学测评页 ===== */
+.talent-type-container {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.tt-question-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+}
+.tt-question-dim {
+    font-size: 0.75rem;
+    color: var(--primary);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+.tt-question-num {
+    font-size: 0.8rem;
+    color: var(--body-muted);
+}
+
+.tt-question-text {
+    font-family: var(--font-display);
+    font-size: 21px;
+    font-weight: 600;
+    line-height: 1.47;
+    margin-bottom: 1.5rem;
+    color: var(--ink);
+}
+
+.tt-nav {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.75rem;
+}
+.tt-nav button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.7rem 1.4rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    font-family: inherit;
+}
+.tt-btn-prev {
+    background: var(--canvas-parchment);
+    color: var(--body-muted);
+    border: 1px solid var(--hairline) !important;
+}
+.tt-btn-prev:hover {
+    background: var(--divider-soft);
+}
+.tt-btn-next {
+    background: var(--primary);
+    color: var(--on-primary);
+    font-weight: 600;
+    flex: 1;
+}
+.tt-btn-next:active {
+    transform: scale(0.96);
+}
+.tt-btn-next:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.tt-btn-submit {
+    background: var(--primary);
+    color: var(--on-primary);
+    font-weight: 700;
+    flex: 1;
+}
+
+.tt-welcome-card {
+    background: var(--canvas);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem 2rem;
+    text-align: center;
+}
+.tt-welcome-card h2 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.14;
+    margin-bottom: 0.5rem;
+    color: var(--ink);
+}
+.tt-welcome-card .subtitle {
+    color: var(--primary);
+    font-size: 0.95rem;
+    margin-bottom: 1.25rem;
+    font-weight: 500;
+}
+.tt-welcome-card .desc {
+    color: var(--body-muted);
+    font-size: 0.9rem;
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+}
+.tt-welcome-card .features {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+}
+.tt-feature {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    color: var(--body-muted);
+}
+.tt-feature .num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(0, 102, 204, 0.1);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+.tt-btn-start {
+    background: var(--primary);
+    color: var(--on-primary);
+    border: none;
+    padding: 0.85rem 2.5rem;
+    border-radius: var(--radius-pill);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: transform 0.2s, opacity 0.2s;
+}
+.tt-btn-start:active {
+    transform: scale(0.96);
+}
+
+.loading-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 0;
+}
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--divider-soft);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 1rem;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+.loading-text {
+    color: var(--body-muted);
+    font-size: 0.9rem;
+}
+
+.tt-back-link {
+    display: block;
+    text-align: center;
+    margin-top: 1.5rem;
+    color: var(--body-muted);
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.tt-back-link:hover {
+    color: var(--primary);
+}
+
+.tt-tip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    color: var(--body-muted);
+    opacity: 0.7;
+}
+.tt-tip svg {
+    flex-shrink: 0;
+}
+
+/* ===== 天赋类型学结果页 ===== */
+.result-container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.result-card {
+    background: var(--card-bg, rgba(255,255,255,0.04));
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 20px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+}
+.result-type-code {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+.result-type-code .letter {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    background: rgba(0, 102, 204, 0.08);
+    border: 2px solid var(--accent, #d4a853);
+    color: var(--accent, #d4a853);
+    font-size: 2rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.result-name {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+.result-tagline {
+    font-size: 1rem;
+    color: var(--text-secondary, #aaa);
+    font-style: italic;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.result-divider {
+    width: 60px;
+    height: 2px;
+    background: var(--accent, #d4a853);
+    margin: 0 auto 1.5rem;
+    opacity: 0.5;
+}
+
+.dimension-details {
+    text-align: left;
+}
+.dim-card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 1.25rem 1.2rem;
+    margin-bottom: 0.85rem;
+    transition: all 0.2s;
+}
+.dim-card:hover {
+    border-color: rgba(212, 168, 83, 0.2);
+    background: rgba(212, 168, 83, 0.03);
+}
+.dim-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.65rem;
+}
+.dim-card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: rgba(212, 168, 83, 0.12);
+    color: var(--accent, #d4a853);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.dim-card-label {
+    font-size: 0.75rem;
+    color: var(--text-muted, #888);
+    margin-bottom: 0.15rem;
+}
+.dim-card-name {
+    font-size: 1rem;
+    font-weight: 600;
+}
+.dim-card-desc {
+    font-size: 0.85rem;
+    color: var(--text-secondary, #aaa);
+    line-height: 1.65;
+    margin-bottom: 0.6rem;
+}
+.dim-score-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+.dim-score-label {
+    font-size: 0.75rem;
+    color: var(--text-muted, #888);
+    min-width: 3.5rem;
+}
+.dim-score-track {
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    overflow: hidden;
+}
+.dim-score-fill {
+    height: 100%;
+    background: var(--accent, #d4a853);
+    border-radius: 2px;
+    transition: width 0.6s ease;
+}
+.dim-score-value {
+    font-size: 0.8rem;
+    color: var(--accent, #d4a853);
+    font-weight: 600;
+    min-width: 2.5rem;
+    text-align: right;
+}
+
+.report-section {
+    margin-top: 1.75rem;
+}
+.report-section h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    color: var(--accent, #d4a853);
+}
+.report-text {
+    font-size: 0.9rem;
+    line-height: 1.8;
+    color: var(--text-secondary, #aaa);
+}
+.report-text p {
+    margin-bottom: 0.85rem;
+}
+.report-text strong {
+    color: var(--text-primary, #e0e0e0);
+}
+
+.cta-section {
+    margin-top: 2rem;
+    text-align: center;
+}
+.cta-section h3 {
+    font-size: 1.05rem;
+    margin-bottom: 0.75rem;
+}
+.cta-section p {
+    font-size: 0.85rem;
+    color: var(--text-muted, #888);
+    line-height: 1.7;
+    margin-bottom: 1rem;
+}
+.btn-ai-interview {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.85rem 2.2rem;
+    background: var(--primary);
+    color: var(--on-primary);
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: filter 0.2s;
+}
+.btn-ai-interview:hover {
+    filter: brightness(1.1);
+}
+.btn-retake {
+    display: inline-block;
+    margin-top: 1rem;
+    color: var(--text-muted, #888);
+    font-size: 0.85rem;
+    text-decoration: none;
+}
+.btn-retake:hover {
+    color: var(--accent, #d4a853);
+}
+
+.result-loading {
+    text-align: center;
+    padding: 4rem 0;
+}
+.result-loading .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255,255,255,0.1);
+    border-top-color: var(--accent, #d4a853);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+.result-error {
+    text-align: center;
+    padding: 4rem 0;
+    color: #dc2626;
+}

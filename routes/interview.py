@@ -8,18 +8,24 @@ interview_bp = Blueprint('interview', __name__)
 ai_service = AIService()
 
 
+def _create_interview(user_id):
+    """创建新的访谈会话"""
+    interview = InterviewSession(
+        user_id=user_id,
+        messages=json.dumps([]),
+        stage=0,
+        answers=json.dumps({})
+    )
+    db.session.add(interview)
+    db.session.commit()
+    return interview
+
+
 def _get_or_create_interview(user_id):
     """获取或创建用户的访谈会话"""
     interview = InterviewSession.query.filter_by(user_id=user_id).first()
     if not interview:
-        interview = InterviewSession(
-            user_id=user_id,
-            messages=json.dumps([]),
-            stage=0,
-            answers=json.dumps({})
-        )
-        db.session.add(interview)
-        db.session.commit()
+        interview = _create_interview(user_id)
     return interview
 
 
@@ -60,14 +66,7 @@ def start_assessment():
     db.session.commit()
 
     # 创建新会话
-    interview = InterviewSession(
-        user_id=current_user.id,
-        messages=json.dumps([]),
-        stage=0,
-        answers=json.dumps({})
-    )
-    db.session.add(interview)
-    db.session.commit()
+    interview = _create_interview(current_user.id)
 
     # 第一轮：获取AI开场白，方向固定为A
     result = ai_service.chat(

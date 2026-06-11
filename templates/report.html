@@ -3,24 +3,7 @@
 {% block title %}个人天赋使用说明书 + 人类3.0发展诊断报告{% endblock %}
 
 {% block content %}
-<!-- 全局导航 -->
-<nav class="global-nav">
-    <div class="global-nav-inner">
-        <a href="{{ url_for('main.index') }}" class="nav-brand">◈ Talent</a>
-        <ul class="global-nav-links">
-            <li><a href="{{ url_for('main.index') }}">AI 访谈</a></li>
-            <li><a href="{{ url_for('scale.scale_page') }}">量表</a></li>
-            <li><a href="{{ url_for('main.talent_type') }}">类型学</a></li>
-            <li><a href="{{ url_for('dictionary.dictionary') }}">词典</a></li>
-            {% if current_user.is_authenticated %}
-            <li><a href="{{ url_for('history.history_page') }}">历史</a></li>
-            <li><form method="POST" action="{{ url_for('auth.logout') }}" style="display:inline;"><button type="submit" class="nav-logout-btn">退出</button></form></li>
-            {% else %}
-            <li><a href="{{ url_for('auth.login') }}" class="nav-cta">登录</a></li>
-            {% endif %}
-        </ul>
-    </div>
-</nav>
+{% include '_nav.html' %}
 
 <!-- 报告头部 -->
 <header class="report-header">
@@ -71,13 +54,14 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var rawEl = document.getElementById('reportRaw');
     var contentEl = document.getElementById('reportContent');
     if (rawEl && contentEl && typeof marked !== 'undefined') {
         var md = rawEl.value;
-        contentEl.innerHTML = marked.parse(md);
+        contentEl.innerHTML = DOMPurify.sanitize(marked.parse(md));
     }
 });
 </script>

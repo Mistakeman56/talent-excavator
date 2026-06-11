@@ -63,7 +63,7 @@
         q.options.forEach(opt => {
             const btn = document.createElement('button');
             btn.className = 'tt-option' + (selected === opt.key ? ' selected' : '');
-            btn.innerHTML = '<span class="tt-option-letter">' + opt.key.toUpperCase() + '</span>' + opt.text;
+            btn.innerHTML = '<span class="tt-option-letter">' + opt.key.toUpperCase() + '</span>' + escapeHtml(opt.text);
             // 单击 = 选中（不跳转）
             btn.addEventListener('click', () => {
                 answers[q.id] = opt.key;
@@ -126,6 +126,11 @@
             if (data.success) {
                 window.location.href = '/talent-type/result/' + data.session_id;
             } else {
+                if (data.need_login) {
+                    alert('请先登录后再进行测评');
+                    window.location.href = '/login';
+                    return;
+                }
                 alert('提交失败：' + (data.error || '未知错误'));
                 screen.style.display = 'block';
                 loading.style.display = 'none';

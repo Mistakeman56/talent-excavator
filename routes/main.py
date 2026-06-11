@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, session, redirect, url_for
-from flask_login import current_user
+from flask_login import current_user, login_required
 from datetime import datetime
 from models import InterviewSession
 
@@ -12,6 +12,7 @@ def index():
 
 
 @main_bp.route('/report')
+@login_required
 def report():
     """报告展示页面"""
     interview = InterviewSession.query.filter_by(user_id=current_user.id).order_by(InterviewSession.id.desc()).first()

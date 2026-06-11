@@ -4,7 +4,7 @@ load_dotenv()
 
 import os
 import logging
-from flask import Flask
+from flask import Flask, jsonify, render_template
 from config import Config
 from models import db
 from flask_login import LoginManager
@@ -48,6 +48,24 @@ app.register_blueprint(admin_bp)
 
 # 注入 is_admin 到 Jinja2 模板
 app.jinja_env.globals['is_admin'] = is_admin
+
+
+# 全局错误处理器
+@app.errorhandler(404)
+def not_found(error):
+    from flask import request
+    if request.path.startswith('/api/'):
+        return jsonify({"success": False, "error": "资源不存在"}), 404
+    return render_template('errors/404.html'), 404
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    from flask import request
+    db.session.rollback()
+    if request.path.startswith('/api/'):
+        return jsonify({"success": False, "error": "服务器内部错误"}), 500
+    return render_template('errors/500.html'), 500
 
 # 访问追踪（仅记录页面访问，跳过 API/AJAX 请求）
 @app.before_request

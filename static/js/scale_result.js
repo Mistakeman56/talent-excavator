@@ -1,7 +1,11 @@
 // ===== 结果展示 =====
-const resultData = JSON.parse(localStorage.getItem('scaleResult') || '{}');
+let resultData = {};
 
-if (!resultData.scores) {
+// 从 URL 获取 session_id
+const urlParams = new URLSearchParams(window.location.search);
+const sessionId = urlParams.get('session_id');
+
+if (!sessionId) {
     document.getElementById('resultScreen').innerHTML = `
         <div class="welcome-card" style="text-align:center; padding: 60px 0;">
             <h2>暂无结果</h2>
@@ -11,6 +15,42 @@ if (!resultData.scores) {
             </a>
         </div>
     `;
+} else {
+    // 从服务端获取结果
+    fetch(`/api/scale/result/${sessionId}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                resultData = data;
+                if (resultData.scores) {
+                    renderRadarChart();
+                    renderTopDimensions();
+                    renderScoreBars();
+                    initSecondary();
+                }
+            } else {
+                document.getElementById('resultScreen').innerHTML = `
+                    <div class="welcome-card" style="text-align:center; padding: 60px 0;">
+                        <h2>结果加载失败</h2>
+                        <p style="color: var(--text-secondary); margin: 16px 0;">${data.error || '请重新测评'}</p>
+                        <a href="/scale" class="btn-start" style="text-decoration:none; display:inline-flex;">
+                            <span>去测评</span>
+                        </a>
+                    </div>
+                `;
+            }
+        })
+        .catch(() => {
+            document.getElementById('resultScreen').innerHTML = `
+                <div class="welcome-card" style="text-align:center; padding: 60px 0;">
+                    <h2>网络错误</h2>
+                    <p style="color: var(--text-secondary); margin: 16px 0;">请检查网络后刷新</p>
+                    <a href="/scale" class="btn-start" style="text-decoration:none; display:inline-flex;">
+                        <span>重试</span>
+                    </a>
+                </div>
+            `;
+        });
 }
 
 // ===== 渲染雷达图 =====
@@ -85,8 +125,8 @@ function renderTopDimensions() {
             <div class="dimension-card ${rankClass}">
                 <div class="dim-rank">#${i + 1}</div>
                 <div class="dim-info">
-                    <h4>${dim.name}</h4>
-                    <p>${desc}</p>
+                    <h4>${escapeHtml(dim.name)}</h4>
+                    <p>${escapeHtml(desc)}</p>
                     <div class="dim-score">${dim.score.toFixed(1)} / 5.0</div>
                 </div>
             </div>
@@ -113,13 +153,13 @@ function renderScoreBars() {
         html += `
             <div class="score-bar-item">
                 <div class="score-bar-label">
-                    <span>${s.name}</span>
+                    <span>${escapeHtml(s.name)}</span>
                     <span class="score-bar-value">${s.score.toFixed(1)}</span>
                 </div>
                 <div class="score-bar-track">
                     <div class="score-bar-fill" style="width: ${pct}%"></div>
                 </div>
-                <p class="score-bar-desc">${s.description}</p>
+                <p class="score-bar-desc">${escapeHtml(s.description)}</p>
             </div>
         `;
     }
@@ -178,7 +218,7 @@ function startSecondaryScale(data) {
         const pct = ((currentIdx + 1) / questions.length) * 100;
         
         container.innerHTML = `
-            <h2 class="result-title">二级深度量表 · ${data.dimension_name}</h2>
+            <h2 class="result-title">二级深度量表 · ${escapeHtml(data.dimension_name)}</h2>
             <div class="scale-progress" style="margin-bottom: 24px;">
                 <div class="progress-bar">
                     <div class="progress-fill" style="width: ${pct}%"></div>
@@ -186,7 +226,7 @@ function startSecondaryScale(data) {
                 <span class="progress-text">${currentIdx + 1} / ${questions.length}</span>
             </div>
             <div class="question-card">
-                <h3 class="question-text">${q.text}</h3>
+                <h3 class="question-text">${escapeHtml(q.text)}</h3>
                 <div class="options-list">
                     ${[1,2,3,4,5].map(v => `
                         <div class="option-item ${answers[q.id] === v ? 'selected' : ''}" 
@@ -228,9 +268,9 @@ function startSecondaryScale(data) {
                     container.innerHTML = `
                         <h2 class="result-title">你的精准天赋类型</h2>
                         <div class="talent-type-card">
-                            <div class="talent-badge">${result.dimension}</div>
-                            <h3>${result.talent_type}</h3>
-                            <p>${result.talent_description}</p>
+                            <div class="talent-badge">${escapeHtml(result.dimension)}</div>
+                            <h3>${escapeHtml(result.talent_type)}</h3>
+                            <p>${escapeHtml(result.talent_description)}</p>
                         </div>
                     `;
                 }
@@ -241,12 +281,4 @@ function startSecondaryScale(data) {
     };
     
     renderSecondaryQuestion();
-}
-
-// ===== 初始化 =====
-if (resultData.scores) {
-    renderRadarChart();
-    renderTopDimensions();
-    renderScoreBars();
-    initSecondary();
 }
