@@ -760,11 +760,32 @@ def calculate_type_code(answers):
                     dim4_scores[dim] = dim4_scores.get(dim, 0) + score
                 break
 
-    # 找出各维度最高分
-    code_1 = max(dim1_scores, key=dim1_scores.get)
-    code_2 = max(dim2_scores, key=dim2_scores.get)
-    code_3 = max(dim3_scores, key=dim3_scores.get)
-    code_4 = max(dim4_scores, key=dim4_scores.get)
+    # 找出各维度最高分，并检测平局
+    def get_top_scorer(scores):
+        """返回最高分维度，如果有平局则返回 None"""
+        if not scores:
+            return None, []
+        max_score = max(scores.values())
+        top_dims = [k for k, v in scores.items() if v == max_score]
+        if len(top_dims) > 1:
+            return top_dims[0], top_dims  # 返回第一个（默认），同时返回平局列表
+        return top_dims[0], []
+
+    code_1, ties_1 = get_top_scorer(dim1_scores)
+    code_2, ties_2 = get_top_scorer(dim2_scores)
+    code_3, ties_3 = get_top_scorer(dim3_scores)
+    code_4, ties_4 = get_top_scorer(dim4_scores)
+
+    # 检测是否有平局
+    ties = {}
+    if ties_1:
+        ties["dim1"] = ties_1
+    if ties_2:
+        ties["dim2"] = ties_2
+    if ties_3:
+        ties["dim3"] = ties_3
+    if ties_4:
+        ties["dim4"] = ties_4
 
     # 映射到缩写字母
     map1 = {"cognitive": "C", "relational": "R", "body": "B", "systemic": "S"}
@@ -818,5 +839,6 @@ def calculate_type_code(answers):
             "dim3": dim3_scores,
             "dim4": dim4_scores
         },
+        "ties": ties,  # 平局信息
         "report": report
     }

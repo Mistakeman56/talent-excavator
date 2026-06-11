@@ -130,7 +130,6 @@ els.btnPrev.addEventListener('click', () => {
 
 els.btnNext.addEventListener('click', () => {
     const q = scaleState.questions[scaleState.currentIndex];
-    console.log('[scale] btnNext clicked, currentIndex:', scaleState.currentIndex, 'qid:', q?.id, 'answer:', scaleState.answers[q?.id]);
 
     // 检查是否已选
     if (!scaleState.answers[q.id]) {
@@ -148,9 +147,7 @@ els.btnNext.addEventListener('click', () => {
 
 // ===== 提交 =====
 async function submitScale() {
-    console.log('[scale] submitScale called, answers:', scaleState.answers);
     if (!els.submitLoading) {
-        console.error('[scale] submitLoading element not found!');
         alert('页面元素异常，请刷新重试');
         return;
     }
@@ -164,7 +161,6 @@ async function submitScale() {
         });
 
         const data = await res.json();
-        console.log('[scale] API response:', data);
 
         if (!data.success) {
             if (data.need_login) {
@@ -181,7 +177,6 @@ async function submitScale() {
         window.location.href = '/scale/result?session_id=' + data.session_id;
 
     } catch (err) {
-        console.error('[scale] submit error:', err);
         alert('网络错误：' + err.message);
         els.submitLoading.style.display = 'none';
     }

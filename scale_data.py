@@ -26,8 +26,8 @@ PRIMARY_SCALE = {
                 },
                 {
                     "id": "c4",
-                    "text": "我擅长用框架、模型或分类法来整理混乱的信息",
-                    "reverse": False
+                    "text": "面对复杂信息时，我更倾向于凭直觉而非系统分析来做判断",
+                    "reverse": True
                 }
             ]
         },
@@ -52,8 +52,8 @@ PRIMARY_SCALE = {
                 },
                 {
                     "id": "cr4",
-                    "text": "限制和规则常常激发我找到别出心裁的解决方案",
-                    "reverse": False
+                    "text": "我更喜欢按照既定的方法做事，而不是尝试新的方式",
+                    "reverse": True
                 }
             ]
         },
@@ -78,8 +78,8 @@ PRIMARY_SCALE = {
                 },
                 {
                     "id": "s4",
-                    "text": "我擅长把不同背景的人连接起来，促成合作",
-                    "reverse": False
+                    "text": "我通常更愿意独立完成工作，而不是与他人协作",
+                    "reverse": True
                 }
             ]
         },
@@ -104,8 +104,8 @@ PRIMARY_SCALE = {
                 },
                 {
                     "id": "sy4",
-                    "text": "别人还在犹豫时，我已经做出了判断并开始行动",
-                    "reverse": False
+                    "text": "我更喜欢等待事情自然发展，而不是主动推动改变",
+                    "reverse": True
                 }
             ]
         },
@@ -130,8 +130,8 @@ PRIMARY_SCALE = {
                 },
                 {
                     "id": "p4",
-                    "text": "我在体育、手工、烹饪或类似需要身体协调的活动中有优势",
-                    "reverse": False
+                    "text": "我更喜欢思考和分析，而不是动手实践",
+                    "reverse": True
                 }
             ]
         }

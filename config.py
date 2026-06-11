@@ -10,7 +10,16 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY')
     if not SECRET_KEY:
         raise ValueError('SECRET_KEY 环境变量未设置。请复制 .env.example 为 .env 并填写密钥。')
-    
+
+    # 数据库配置
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///talent_assessment.db'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # 服务器配置
+    HOST = os.getenv('FLASK_HOST', '0.0.0.0')
+    PORT = int(os.getenv('FLASK_PORT', '5001'))
+    DEBUG = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
+
     # 测评流程配置
     MIN_QUESTIONS = 8          # 最少答题数才能生成报告
     SUGGEST_REPORT_AT = 12     # 建议生成报告的轮数

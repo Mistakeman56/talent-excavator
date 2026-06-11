@@ -15,8 +15,6 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(me
 # 创建 Flask 应用实例
 app = Flask(__name__)
 app.config.from_object(Config)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///talent_assessment.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # 初始化数据库
 db.init_app(app)
@@ -49,6 +47,29 @@ app.register_blueprint(admin_bp)
 # 注入 is_admin 到 Jinja2 模板
 app.jinja_env.globals['is_admin'] = is_admin
 
+# 访问日志缓冲区（批量写入优化）
+_visit_buffer = []
+_VISIT_FLUSH_SIZE = 50  # 累积 50 条后 flush
+
+
+def _flush_visit_buffer():
+    """将缓冲区的访问日志批量写入数据库"""
+    if not _visit_buffer:
+        return
+    from models import VisitLog, db
+    try:
+        db.session.add_all([VisitLog(**v) for v in _visit_buffer])
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+    finally:
+        _visit_buffer.clear()
+
+
+# 应用关闭时 flush 缓冲区
+import atexit
+atexit.register(_flush_visit_buffer)
+
 
 # 全局错误处理器
 @app.errorhandler(404)
@@ -67,12 +88,11 @@ def internal_error(error):
         return jsonify({"success": False, "error": "服务器内部错误"}), 500
     return render_template('errors/500.html'), 500
 
-# 访问追踪（仅记录页面访问，跳过 API/AJAX 请求）
+# 访问追踪（仅记录页面访问，跳过 API/AJAX 请求，批量写入）
 @app.before_request
 def track_visit():
     from flask import request
     from flask_login import current_user
-    from models import VisitLog
 
     path = request.path
     # 跳过静态资源、favicon、管理后台 API、以及所有 /api/ 接口请求
@@ -96,17 +116,16 @@ def track_visit():
     elif path.startswith('/dictionary'):
         module = 'dictionary'
 
-    visit = VisitLog(
-        path=path,
-        module=module,
-        user_id=current_user.id if current_user.is_authenticated else None,
-        ip_address=request.remote_addr
-    )
-    db.session.add(visit)
-    try:
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
+    _visit_buffer.append({
+        'path': path,
+        'module': module,
+        'user_id': current_user.id if current_user.is_authenticated else None,
+        'ip_address': request.remote_addr
+    })
+
+    # 累积到阈值后批量写入
+    if len(_visit_buffer) >= _VISIT_FLUSH_SIZE:
+        _flush_visit_buffer()
 
 # 数据库初始化（创建表 + 导入词典数据）
 with app.app_context():
@@ -141,5 +160,4 @@ with app.app_context():
 
 
 if __name__ == '__main__':
-    debug = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
-    app.run(debug=debug, host='0.0.0.0', port=5001)
+    app.run(debug=Config.DEBUG, host=Config.HOST, port=Config.PORT)
