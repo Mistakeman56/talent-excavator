@@ -1,3 +1,43 @@
+"""
+services/ai_service.py — AI 服务封装模块
+
+本模块封装了与 AI API 的所有交互逻辑，包括：
+1. 系统提示词（System Prompt）构建 — 定义 AI 的角色和行为规范
+2. API 调用 — 通过 OpenAI 兼容接口调用 DeepSeek/Kimi 等模型
+3. 响应解析 — 从 AI 输出中提取四段式结构化数据
+4. 异常处理 — 检测 AI 是否违反规则（如讲故事）并自动重试
+
+AI 访谈的核心机制：
+┌─────────────────────────────────────────────────────────────┐
+│  System Prompt 定义了 AI 的角色：                            │
+│  - 深度天赋挖掘师                                           │
+│  - HUMAN 3.0 发展诊断师                                     │
+│  - 综合视角：生涯咨询师 + 组织发展专家 + 高管教练 + ...     │
+│                                                              │
+│  每轮对话 AI 必须输出四段式格式：                            │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │ ---关键信号---                                        │   │
+│  │ 刚听到的关键信息，简要提炼                            │   │
+│  │                                                       │   │
+│  │ ---天赋假设---                                        │   │
+│  │ 当前初步天赋假设                                      │   │
+│  │                                                       │   │
+│  │ ---HUMAN 3.0 判断---                                  │   │
+│  │ 四象限判断，可初步                                    │   │
+│  │                                                       │   │
+│  │ ---下一题---                                          │   │
+│  │ 一次只问一个主问题                                    │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                                                              │
+│  后端控制访谈方向（A-H），AI 只负责在给定方向内提问          │
+└─────────────────────────────────────────────────────────────┘
+
+AI 提供商切换：
+- 通过 config.py 中的 PROVIDER 环境变量切换
+- deepseek: 使用 DeepSeek API（默认，指令遵循度好，价格便宜）
+- kimi: 使用 Moonshot API（上下文窗口大，中文语料丰富）
+"""
+
 import re
 import logging
 from openai import OpenAI
@@ -5,11 +45,32 @@ from flask import current_app
 
 logger = logging.getLogger(__name__)
 
+
 class AIService:
+    """
+    AI 服务类 — 封装所有与 AI API 的交互
+
+    设计思路：
+    - 使用 OpenAI Python SDK 的兼容接口，可以无缝切换不同的 AI 提供商
+    - 延迟初始化客户端（首次调用时才创建），避免在模块导入时就需要 Flask 应用上下文
+    - 全局复用同一个客户端实例，减少连接开销
+    """
+
     def __init__(self):
-        self.client = None
+        """初始化 AI 服务（客户端延迟创建）"""
+        self.client = None  # OpenAI 客户端实例，首次调用时创建
 
     def _get_client(self):
+        """
+        获取 OpenAI 客户端实例（延迟初始化）
+
+        返回:
+            OpenAI 客户端实例
+
+        说明:
+            使用延迟初始化模式，避免在模块导入时就需要 Flask 应用上下文
+            首次调用时从 config 读取 API 密钥和基础 URL 创建客户端
+        """
         if self.client is None:
             self.client = OpenAI(
                 api_key=current_app.config['AI_API_KEY'],
@@ -17,46 +78,62 @@ class AIService:
             )
         return self.client
 
+    # ============================================================
+    # 访谈方向定义（8个方向 A-H）
+    # ============================================================
+    # 每个方向有三个组成部分：
+    # 1. DIRECTION_DESCRIPTIONS: 方向描述（注入到 System Prompt）
+    # 2. DIRECTION_QUESTIONS: 参考问题（引导 AI 在该方向内提问）
+    # 3. INTERVIEW_FLOW: 方向遍历顺序（定义在 route 中）
+
     DIRECTION_DESCRIPTIONS = {
-        'A': '\u3010A-\u7ae5\u5e74/\u987d\u56fa\u7f3a\u70b9\u301116\u5c81\u4e4b\u524d\u6ca1\u4eba\u903c\u4f60\u4e5f\u4f1a\u6c89\u8fdb\u53bb\u505a\u7684\u4e8b\uff0c\u6216\u4ece\u5c0f\u5e38\u88ab\u6279\u8bc4\u7684"\u987d\u56fa\u7f3a\u70b9"',
-        'B': '\u3010B-\u65e0\u610f\u8bc6\u80dc\u4efb\u533a\u3011\u6210\u5e74\u540e\u522b\u4eba\u89c9\u5f97\u5f88\u96be\u4f46\u4f60\u89c9\u5f97\u5f88\u81ea\u7136\u3001"\u8fd9\u4e0d\u662f\u5f88\u660e\u663e\u5417"\u7684\u4e8b',
-        'C': '\u3010C-\u80fd\u91cf\u5ba1\u8ba1\u3011\u505a\u5b8c\u540e\u8eab\u4f53\u7d2f\u4f46\u7cbe\u795e\u6781\u5ea6\u4ea2\u594b\u3001\u5145\u6ee1\u80fd\u91cf\u7684\u4e8b',
-        'D': '\u3010D-\u5ac9\u5992/\u538b\u6291\u3011\u5f3a\u70c8\u5ac9\u5992\u8fc7\u7684\u4eba\u3001\u80fd\u529b\u3001\u751f\u6d3b\u72b6\u6001\u2014\u2014\u8bc6\u522b\u88ab\u538b\u6291\u7684\u5929\u8d4b',
-        'E': '\u3010E-\u793e\u4f1a\u53ef\u89c1\u4f18\u52bf\u3011\u522b\u4eba\u901a\u5e38\u4e3a\u4ec0\u4e48\u6765\u627e\u4f60\u2014\u2014\u4ed6\u4eba\u773c\u4e2d\u7684\u4f60',
-        'F': '\u3010F-\u6df1\u5c42\u75db\u82e6\u3011\u6700\u53cd\u590d\u75db\u82e6/\u53d7\u4f24/\u6267\u7740\u7684\u4e3b\u9898\u2014\u2014\u6df1\u5c42\u9a71\u52a8\u529b\u548c\u9634\u5f71',
-        'G': '\u3010G-\u4f2a\u64c5\u957f\u533a\u3011\u505a\u5f97\u4e0d\u9519\u4f46\u8d8a\u505a\u8d8a\u7a7a\u3001\u6ca1\u6709\u6210\u5c31\u611f\u7684\u4e8b',
-        'H': '\u3010H-\u771f\u5174\u8da3\u3011\u6ca1\u8d5a\u5230\u94b1\u4f46\u4e00\u8c08\u8d77\u6765\u773c\u775b\u53d1\u4eae\u3001\u5145\u6ee1\u751f\u547d\u529b\u7684\u4e8b'
-    }
-    
-    DIRECTION_QUESTIONS = {
-        'A': '16\u5c81\u4e4b\u524d\uff0c\u6ca1\u4eba\u903c\u4f60\u4e5f\u4f1a\u6c89\u8fdb\u53bb\u505a\u7684\u4e8b\u662f\u4ec0\u4e48\uff1f\u6216\u8005\u4f60\u4ece\u5c0f\u5e38\u88ab\u6279\u8bc4\u7684"\u987d\u56fa\u7f3a\u70b9"\u662f\u4ec0\u4e48\uff1f',
-        'B': '\u6210\u5e74\u540e\uff0c\u4ec0\u4e48\u4e8b\u60c5\u4f60\u4f1a\u89c9\u5f97\uff1a"\u8fd9\u4e0d\u662f\u5f88\u660e\u663e\u5417\uff1f\u8fd9\u4e5f\u8981\u5b66\uff1f"\u4f46\u522b\u4eba\u666e\u904d\u89c9\u5f97\u5f88\u96be\uff1f',
-        'C': '\u4ec0\u4e48\u4e8b\u60c5\u505a\u5b8c\u540e\u8eab\u4f53\u7d2f\uff0c\u4f46\u7cbe\u795e\u6781\u5ea6\u4ea2\u594b\uff1f',
-        'D': '\u4f60\u5f3a\u70c8\u5ac9\u5992\u8fc7\u54ea\u79cd\u4eba\u3001\u54ea\u79cd\u80fd\u529b\u3001\u54ea\u79cd\u751f\u6d3b\u72b6\u6001\uff1f',
-        'E': '\u522b\u4eba\u901a\u5e38\u4e3a\u4ec0\u4e48\u6765\u627e\u4f60\uff1f',
-        'F': '\u4f60\u6700\u53cd\u590d\u75db\u82e6/\u53d7\u4f24/\u6267\u7740\u7684\u4e3b\u9898\u662f\u4ec0\u4e48\uff1f',
-        'G': '\u54ea\u4e9b\u4e8b\u60c5\u4f60\u505a\u5f97\u4e0d\u9519\uff0c\u4f46\u8d8a\u505a\u8d8a\u7a7a\uff1f',
-        'H': '\u54ea\u4e9b\u4e8b\u60c5\u4f60\u6ca1\u8d5a\u5230\u94b1\uff0c\u4f46\u4e00\u8c08\u8d77\u6765\u5c31\u773c\u775b\u53d1\u4eae\uff1f'
+        'A': '【A-童年/顽固缺点】16岁之前没人逼你也会沉进去做的事，或从小常被批评的"顽固缺点"',
+        'B': '【B-无意识胜任区】成年后别人觉得很难但你觉得很自然、"这不是很明显吗"的事',
+        'C': '【C-能量审计】做完后身体累但精神极度亢奋、充满能量的事',
+        'D': '【D-嫉妒/压抑】强烈嫉妒过的人、能力、生活状态——识别被压抑的天赋',
+        'E': '【E-社会可见优势】别人通常为什么来找你——他人眼中的你',
+        'F': '【F-深层痛苦】最反复痛苦/受伤/执著的主题——深层驱动力和阴影',
+        'G': '【G-伪擅长区】做得不错但越做越空、没有成就感的事',
+        'H': '【H-真兴趣】没赚到钱但一谈起来眼睛发亮、充满生命力的事'
     }
 
-    # 公共 prompt 片段
+    DIRECTION_QUESTIONS = {
+        'A': '16岁之前，没人逼你也会沉进去做的事是什么？或者你从小常被批评的"顽固缺点"是什么？',
+        'B': '成年后，什么事情你会觉得："这不是很明显吗？这也也要学？"但别人普遍觉得很难？',
+        'C': '什么事情做完后身体累，但精神极度亢奋？',
+        'D': '你强烈嫉妒过哪种人、哪种能力、哪种生活状态？',
+        'E': '别人通常为什么来找你？',
+        'F': '你最反复痛苦/受伤/执著的主题是什么？',
+        'G': '哪些事情你做得不错，但越做越空？',
+        'H': '哪些事情你没赚到钱，但一谈起来就眼睛发亮？'
+    }
+
+    # ============================================================
+    # System Prompt 模板
+    # ============================================================
+    # 这些模板定义了 AI 的行为规范，包括输出格式、提问风格、禁止事项等
+
+    # 四段式输出格式要求
     _OUTPUT_FORMAT = """【每轮输出格式 - 严格遵守】
 ---关键信号---（刚听到的关键信息，简要提炼）
 ---天赋假设---（当前初步天赋假设）
 ---HUMAN 3.0 判断---（四象限判断，可初步）
 ---下一题---（一次只问一个主问题）"""
 
+    # 提问风格要求
     _QUESTION_STYLE = """【提问方式】
 1. 一次只问一个主问题，不要一次抛多个
 2. 采用苏格拉底式深挖：为什么？具体例子？当时什么感觉？你到底做对了什么？
 3. 风格：温暖而犀利、不灌鸡汤、有共情但不纵容自我欺骗"""
 
+    # 禁止事项（防止 AI 偏离角色）
     _PROHIBITED = """【绝对禁止】
 - 讲你自己的故事、经历、案例
 - 编造"我曾经…""我记得…""有一次…"等虚构场景
 - 使用第一人称分享个人经验
 - 你的任务是分析用户并提问，不是展示你自己"""
 
+    # 报告生成的 Prompt
     _REPORT_PROMPT = """你是一位人类3.0天赋发掘测评师。现在访谈已结束，请根据之前的所有对话，输出最终的《个人天赋使用说明书+人类3.0发展诊断报告》。
 
 要求：
@@ -81,6 +158,7 @@ class AIService:
 
 请用Markdown格式输出，层次清晰。"""
 
+    # 8个方向的简要说明（注入到 System Prompt）
     _DIRECTIONS_GUIDE = """【8个必须覆盖的方向】
 A. 16岁之前没人逼你也会沉进去做的事，或从小常被批评的"顽固缺点"
 B. 成年后别人觉得很难但你觉得很自然的事——无意识胜任区
@@ -94,13 +172,35 @@ H. 没赚到钱但一谈起来眼睛发亮的事——真兴趣"""
     def get_system_prompt(self, round_num=0, max_rounds=20, is_report=False,
                           asked_questions=None, covered_directions=None,
                           current_direction=None, is_first_round=False):
-        """构建系统提示词——后端控制方向，AI只负责表达"""
+        """
+        构建系统提示词（System Prompt）
+
+        参数:
+            round_num: 当前轮数
+            max_rounds: 最大轮数
+            is_report: 是否是报告生成模式
+            asked_questions: 已问过的问题列表（防重复）
+            covered_directions: 已覆盖的方向列表
+            current_direction: 当前访谈方向（A-H）
+            is_first_round: 是否是第一轮
+
+        返回:
+            系统提示词字符串
+
+        说明:
+            System Prompt 是 AI 行为的核心控制机制
+            不同阶段（首轮/非首轮/报告）使用不同的 Prompt 模板
+            当前方向的描述和参考问题会动态注入到 Prompt 中
+        """
+        # 报告生成模式：使用专用的报告 Prompt
         if is_report:
             return self._REPORT_PROMPT
 
+        # 获取当前方向的描述和参考问题
         dir_desc = self.DIRECTION_DESCRIPTIONS.get(current_direction, '')
         dir_question = self.DIRECTION_QUESTIONS.get(current_direction, '')
 
+        # 首轮：完整的 Prompt，包含角色定义、核心理念、输出格式等
         if is_first_round:
             return f"""你现在不是普通聊天助手。
 你要扮演一位"深度天赋挖掘师 + HUMAN 3.0 发展诊断师"，综合以下视角：
@@ -159,9 +259,37 @@ H. 没赚到钱但一谈起来眼睛发亮的事——真兴趣"""
 
 {self._PROHIBITED}
 """
-    
+
     def parse_response(self, content):
-        """解析AI返回的四部分结构"""
+        """
+        解析 AI 返回的四段式结构
+
+        参数:
+            content: AI 的原始输出文本
+        返回:
+            解析后的结构化字典：
+            {
+                'signal': '关键信号内容',
+                'hypothesis': '天赋假设内容',
+                'judgment': 'HUMAN 3.0 判断内容',
+                'question': '问题内容',
+                'raw': 'AI 原始输出'
+            }
+
+        说明:
+            AI 的输出格式为：
+            ---关键信号---
+            分析内容
+            ---天赋假设---
+            假设内容
+            ---HUMAN 3.0 判断---
+            判断内容
+            ---下一题---
+            问题内容
+
+            使用正则表达式提取每个部分的内容
+            如果解析失败，将全部内容作为 question 返回
+        """
         result = {
             'signal': '',
             'hypothesis': '',
@@ -169,55 +297,108 @@ H. 没赚到钱但一谈起来眼睛发亮的事——真兴趣"""
             'question': '',
             'raw': content
         }
-        
+
+        # 定义四个部分的正则表达式模式
         patterns = {
             'signal': r'---关键信号---\s*\n?(.*?)(?=---天赋假设---|$)',
             'hypothesis': r'---天赋假设---\s*\n?(.*?)(?=---HUMAN 3\.0 判断---|$)',
             'judgment': r'---HUMAN 3\.0 判断---\s*\n?(.*?)(?=---下一题---|$)',
             'question': r'---下一题---\s*\n?(.*?)(?=$)'
         }
-        
+
+        # 逐个提取
         for key, pattern in patterns.items():
             match = re.search(pattern, content, re.DOTALL)
             if match:
                 result[key] = match.group(1).strip()
-        
-        # 如果没有解析到格式，把全部内容作为 question
+
+        # 如果没有解析到问题部分，把全部内容作为 question
         if not result['question']:
             result['question'] = content.strip()
-        
+
         return result
-    
+
     # 讲故事/编造经历的关键词拦截列表
+    # 如果 AI 输出中包含这些关键词，说明它开始讲自己的故事了，需要重试
     STORY_KEYWORDS = ['我记得', '当时我', '我曾经', '有一次']
 
     def _contains_story(self, text):
-        """检测 AI 输出是否开始讲自己的故事/案例"""
+        """
+        检测 AI 输出是否开始讲自己的故事/案例
+
+        参数:
+            text: AI 的输出文本
+        返回:
+            True 如果检测到讲故事的关键词
+
+        说明:
+            这是一个安全机制，防止 AI 偏离"分析用户并提问"的角色
+            如果检测到 AI 开始讲故事，会触发重试
+        """
         if not text:
             return False
         return any(kw in text for kw in self.STORY_KEYWORDS)
 
     def chat(self, messages, round_num=0, is_report=False, asked_questions=None,
              covered_directions=None, current_direction=None, is_first_round=False):
-        """调用AI API进行对话——后端控制方向"""
+        """
+        调用 AI API 进行对话
+
+        参数:
+            messages: 对话历史列表 [{"role": "user", "content": "..."}, ...]
+            round_num: 当前轮数
+            is_report: 是否是报告生成模式
+            asked_questions: 已问过的问题列表
+            covered_directions: 已覆盖的方向列表
+            current_direction: 当前访谈方向（A-H）
+            is_first_round: 是否是第一轮
+
+        返回:
+            成功时: {"type": "chat", "signal": "...", "hypothesis": "...", "judgment": "...", "question": "...", "raw": "..."}
+            报告时: {"type": "report", "content": "..."}
+            失败时: {"type": "error", "message": "..."}
+
+        处理流程:
+        1. 构建 System Prompt（根据当前轮数和方向）
+        2. 调用 AI API
+        3. 如果是报告模式，直接返回原始内容
+        4. 如果是对话模式，解析四段式结构
+        5. 检测是否讲故事，如果是则重试一次
+        6. 返回解析后的结构化数据
+        """
         client = self._get_client()
         model = current_app.config['AI_MODEL']
         max_rounds = current_app.config['MAX_QUESTIONS']
-        
+
         covered_directions = covered_directions or []
-        
+
+        # 构建 System Prompt
         system_prompt = self.get_system_prompt(
             round_num, max_rounds, is_report, asked_questions, covered_directions,
             current_direction=current_direction, is_first_round=is_first_round
         )
-        
+
+        # 组装完整的消息列表（System Prompt + 对话历史）
         full_messages = [{"role": "system", "content": system_prompt}] + messages
 
         logger.info("AI API 调用: %d 条消息, direction=%s, round=%d",
                      len(full_messages), current_direction, round_num)
 
         def _call_api(msgs, is_report=False):
-            """内部封装：调用 API 并解析"""
+            """
+            内部封装：调用 API 并处理响应
+
+            参数:
+                msgs: 完整的消息列表
+                is_report: 是否是报告模式
+            返回:
+                AI 的原始输出文本
+
+            说明:
+                - temperature=0.85: 适度的创造性，既不呆板也不太发散
+                - max_tokens: 报告模式用 8192，对话模式用 4000
+                - 检测 finish_reason: 如果报告被截断，添加警告信息
+            """
             resp = client.chat.completions.create(
                 model=model,
                 messages=msgs,
@@ -229,15 +410,17 @@ H. 没赚到钱但一谈起来眼睛发亮的事——真兴趣"""
             if is_report and resp.choices[0].finish_reason != 'stop':
                 content += '\n\n---\n\n> ⚠️ 报告内容较长，可能未完全生成。如需更完整的报告，建议重新测评或联系管理员。'
             return content
-        
+
         try:
             content = _call_api(full_messages, is_report=is_report)
-            
+
+            # 报告模式：直接返回原始内容
             if is_report:
                 return {"type": "report", "content": content}
-            
+
+            # 对话模式：解析四段式结构
             parsed = self.parse_response(content)
-            
+
             # 异常拦截：检测 AI 是否开始讲自己的故事
             if self._contains_story(parsed.get('raw', '')):
                 logger.warning("检测到 AI 讲故事，触发重试")
@@ -246,7 +429,7 @@ H. 没赚到钱但一谈起来眼睛发亮的事——真兴趣"""
                 ]
                 content = _call_api(retry_messages)
                 parsed = self.parse_response(content)
-            
+
             return {
                 "type": "chat",
                 **parsed
