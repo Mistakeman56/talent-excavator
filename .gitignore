@@ -8,6 +8,7 @@
 convert_to_word.py
 *.docx
 毕业设计报告.md
+需求规格说明书.md
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

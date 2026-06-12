@@ -215,9 +215,9 @@ def start_assessment():
     # 第一轮：获取AI开场白，方向固定为A（童年模式）
     result = ai_service.chat(
         [],                           # 空的对话历史
-        round_num=0,                  // 第0轮
-        current_direction='A',        // 方向A=童年模式
-        is_first_round=True           // 标记为第一轮
+        round_num=0,                  # 第0轮
+        current_direction='A',        # 方向A=童年模式
+        is_first_round=True           # 标记为第一轮
     )
 
     # 如果 AI 服务返回错误，删除刚创建的会话
@@ -239,8 +239,8 @@ def start_assessment():
     return jsonify({
         "success": True,
         "data": result,          # AI 解析后的结构化数据
-        "round": 1,              // 当前轮数
-        "can_report": False      // 至少需要 MIN_QUESTIONS 轮才能生成报告
+        "round": 1,              # 当前轮数
+        "can_report": False      # 至少需要 MIN_QUESTIONS 轮才能生成报告
     })
 
 
