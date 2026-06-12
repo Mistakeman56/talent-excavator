@@ -238,3 +238,81 @@ def reset():
         InterviewSession.query.filter_by(user_id=current_user.id).delete()
         db.session.commit()
     return jsonify({"success": True})
+
+
+@interview_bp.route('/api/interview/status')
+def interview_status():
+    """检查当前用户是否有未完成的访谈会话"""
+    if not current_user.is_authenticated:
+        return jsonify({"success": True, "has_active": False})
+
+    interview = InterviewSession.query.filter_by(
+        user_id=current_user.id
+    ).filter(
+        InterviewSession.report_content.is_(None)
+    ).first()
+
+    if not interview:
+        return jsonify({"success": True, "has_active": False})
+
+    messages = json.loads(interview.messages or '[]')
+    round_count = len([m for m in messages if m['role'] == 'assistant'])
+
+    if round_count == 0:
+        return jsonify({"success": True, "has_active": False})
+
+    min_q = current_app.config['MIN_QUESTIONS']
+    return jsonify({
+        "success": True,
+        "has_active": True,
+        "round": round_count,
+        "can_report": round_count >= min_q,
+        "updated_at": interview.updated_at.isoformat() if interview.updated_at else None
+    })
+
+
+@interview_bp.route('/api/interview/resume')
+def resume_interview():
+    """恢复未完成的访谈会话，返回完整对话历史"""
+    if not current_user.is_authenticated:
+        return jsonify({"success": False, "error": "未登录", "need_login": True})
+
+    interview = InterviewSession.query.filter_by(
+        user_id=current_user.id
+    ).filter(
+        InterviewSession.report_content.is_(None)
+    ).first()
+
+    if not interview:
+        return jsonify({"success": False, "error": "没有未完成的访谈"})
+
+    messages = json.loads(interview.messages or '[]')
+    round_count = len([m for m in messages if m['role'] == 'assistant'])
+
+    min_q = current_app.config['MIN_QUESTIONS']
+    suggest_at = current_app.config['SUGGEST_REPORT_AT']
+    max_q = current_app.config['MAX_QUESTIONS']
+
+    parsed_messages = []
+    for msg in messages:
+        if msg['role'] == 'assistant':
+            parsed = ai_service.parse_response(msg['content'])
+            parsed_messages.append({
+                'role': 'assistant',
+                'data': parsed,
+                'raw': msg['content']
+            })
+        elif msg['role'] == 'user':
+            parsed_messages.append({
+                'role': 'user',
+                'content': msg['content']
+            })
+
+    return jsonify({
+        "success": True,
+        "messages": parsed_messages,
+        "round": round_count,
+        "can_report": round_count >= min_q,
+        "suggest_report": round_count >= suggest_at,
+        "force_report": round_count >= max_q
+    })

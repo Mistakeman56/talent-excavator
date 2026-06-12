@@ -295,3 +295,28 @@ def delete_record(record_type, record_id):
     db.session.delete(record)
     db.session.commit()
     return jsonify({"success": True})
+
+
+@admin_bp.route('/api/admin/users/<int:user_id>/reset-password', methods=['POST'])
+@login_required
+@admin_required
+def reset_user_password(user_id):
+    """管理员重置用户密码"""
+    import random
+    import string
+
+    user = db.session.get(User, user_id)
+    if not user:
+        return jsonify({"success": False, "error": "用户不存在"}), 404
+    if user.is_admin:
+        return jsonify({"success": False, "error": "不能重置管理员密码"}), 400
+
+    new_password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+    user.set_password(new_password)
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "username": user.username,
+        "new_password": new_password
+    })

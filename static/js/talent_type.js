@@ -9,9 +9,28 @@
         dim4: '价值取向'
     };
 
+    const TT_STORAGE_KEY = 'tt_progress';
     let questions = [];
     let answers = {};
     let currentIndex = 0;
+
+    function saveProgress() {
+        const data = { answers, currentIndex, timestamp: Date.now() };
+        localStorage.setItem(TT_STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function loadSavedProgress() {
+        try {
+            const raw = localStorage.getItem(TT_STORAGE_KEY);
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function clearProgress() {
+        localStorage.removeItem(TT_STORAGE_KEY);
+    }
 
     // DOM
     const welcome = document.getElementById('ttWelcome');
@@ -67,14 +86,17 @@
             // 单击 = 选中（不跳转）
             btn.addEventListener('click', () => {
                 answers[q.id] = opt.key;
+                saveProgress();
                 renderQuestion();
             });
             // 双击 = 选中并跳到下一题（最后一题双击不跳转，留给用户手动提交）
             btn.addEventListener('dblclick', () => {
                 answers[q.id] = opt.key;
+                saveProgress();
                 renderQuestion();
                 if (currentIndex < questions.length - 1) {
                     currentIndex++;
+                    saveProgress();
                     renderQuestion();
                 }
             });
@@ -100,6 +122,7 @@
             return;
         }
         currentIndex++;
+        saveProgress();
         renderQuestion();
     }
 
@@ -107,6 +130,7 @@
     function goPrev() {
         if (currentIndex > 0) {
             currentIndex--;
+            saveProgress();
             renderQuestion();
         }
     }
@@ -124,6 +148,7 @@
             });
             const data = await resp.json();
             if (data.success) {
+                clearProgress();
                 window.location.href = '/talent-type/result/' + data.session_id;
             } else {
                 if (data.need_login) {
@@ -148,6 +173,16 @@
             await loadQuestions();
         }
         if (questions.length === 0) return;
+
+        const saved = loadSavedProgress();
+        if (saved && saved.answers && Object.keys(saved.answers).length > 0) {
+            const count = Object.keys(saved.answers).length;
+            if (confirm(`检测到上次未完成的答题进度（已答 ${count}/${questions.length} 题），是否继续？`)) {
+                answers = saved.answers;
+                currentIndex = Math.min(saved.currentIndex || 0, questions.length - 1);
+            }
+        }
+
         welcome.style.display = 'none';
         screen.style.display = 'block';
         renderQuestion();

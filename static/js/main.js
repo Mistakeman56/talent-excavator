@@ -4,7 +4,8 @@ const state = {
     isLoading: false,
     canReport: false,
     suggestReport: false,
-    forceReport: false
+    forceReport: false,
+    isResumed: false
 };
 
 // ===== DOM 元素 =====
@@ -15,6 +16,7 @@ const els = {
     progressFill: document.getElementById('progressFill'),
     userInput: document.getElementById('userInput'),
     btnStart: document.getElementById('btnStart'),
+    btnResume: document.getElementById('btnResume'),
     btnSend: document.getElementById('btnSend'),
     btnReport: document.getElementById('btnReport'),
     inputArea: document.getElementById('inputArea'),
@@ -142,6 +144,73 @@ function renderUserMessage(text) {
 }
 
 // ===== API 调用 =====
+async function checkInterviewStatus() {
+    try {
+        const res = await fetch('/api/interview/status');
+        const data = await res.json();
+        if (data.success && data.has_active) {
+            els.btnResume.style.display = 'inline-flex';
+            els.btnResume.querySelector('.resume-round').textContent = data.round;
+        }
+    } catch (err) {
+        // 静默失败
+    }
+}
+
+async function resumeInterview() {
+    if (els.chatOverlay) {
+        els.chatOverlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    showLoading('正在恢复上次访谈...');
+
+    try {
+        const res = await fetch('/api/interview/resume');
+        const data = await res.json();
+
+        if (!data.success) {
+            alert('恢复失败：' + data.error);
+            hideLoading();
+            return;
+        }
+
+        state.round = data.round;
+        state.canReport = data.can_report;
+        state.suggestReport = data.suggest_report;
+        state.forceReport = data.force_report;
+        state.isResumed = true;
+
+        updateProgress(data.round);
+
+        let assistantCount = 0;
+        data.messages.forEach(msg => {
+            if (msg.role === 'assistant') {
+                assistantCount++;
+                renderAIMessage(msg.data, assistantCount);
+            } else if (msg.role === 'user' && msg.content !== '开始访谈') {
+                renderUserMessage(msg.content);
+            }
+        });
+
+        if (data.can_report) {
+            els.reportActions.style.display = 'flex';
+        }
+        if (data.suggest_report) {
+            els.reportNotice.style.display = 'flex';
+        }
+        if (data.force_report) {
+            els.reportNotice.innerHTML = '<span>✦</span> 已达到最大对话轮数，请生成报告';
+            els.reportNotice.style.background = 'rgba(0,102,204,0.08)';
+        }
+
+    } catch (err) {
+        alert('网络错误：' + err.message);
+    } finally {
+        hideLoading();
+    }
+}
+
 async function apiStart() {
     // 检查登录状态
     try {
@@ -253,6 +322,10 @@ async function apiReport() {
 // ===== 事件绑定 =====
 els.btnStart.addEventListener('click', apiStart);
 
+if (els.btnResume) {
+    els.btnResume.addEventListener('click', resumeInterview);
+}
+
 els.btnSend.addEventListener('click', () => {
     const text = els.userInput.value.trim();
     if (!text || state.isLoading) return;
@@ -279,3 +352,6 @@ els.btnReport.addEventListener('click', () => {
 if (els.userInput) {
     els.userInput.focus();
 }
+
+// ===== 页面加载时检查是否有未完成的访谈 =====
+checkInterviewStatus();

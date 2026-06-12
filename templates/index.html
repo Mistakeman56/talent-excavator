@@ -15,6 +15,13 @@
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                 </svg>
             </button>
+            <button class="btn-resume" id="btnResume" style="display:none;">
+                <span>继续上次访谈（第 <span class="resume-round">0</span> 轮）</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="1 4 1 10 7 10"/>
+                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                </svg>
+            </button>
             <a href="{{ url_for('main.talent_type') }}" class="btn-secondary-pill">
                 <span>40 题快速测评</span>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -210,8 +217,36 @@
 </section>
 
 <!-- Human 词典 -->
-<section class="tile tile-light">
-    <div class="section-content">
+<section class="tile tile-light dict-wordcloud-section">
+    <!-- 背景装饰词云 -->
+    <div class="dict-wordcloud-bg">
+        <span class="dict-word" style="top: 8%; left: 5%; font-size: 28px; transform: rotate(-8deg);">心流</span>
+        <span class="dict-word" style="top: 15%; left: 72%; font-size: 18px; transform: rotate(5deg);">天赋映射</span>
+        <span class="dict-word" style="top: 25%; left: 28%; font-size: 22px; transform: rotate(-12deg);">无意识胜任区</span>
+        <span class="dict-word" style="top: 35%; left: 82%; font-size: 16px; transform: rotate(8deg);">认知象限</span>
+        <span class="dict-word" style="top: 45%; left: 12%; font-size: 24px; transform: rotate(-5deg);">血氧区</span>
+        <span class="dict-word" style="top: 55%; left: 58%; font-size: 20px; transform: rotate(10deg);">纯粹兴趣</span>
+        <span class="dict-word" style="top: 65%; left: 35%; font-size: 26px; transform: rotate(-15deg);">HUMAN 3.0</span>
+        <span class="dict-word" style="top: 75%; left: 78%; font-size: 17px; transform: rotate(6deg);">价值场景</span>
+        <span class="dict-word" style="top: 85%; left: 18%; font-size: 21px; transform: rotate(-10deg);">伪擅长区</span>
+        <span class="dict-word" style="top: 12%; left: 45%; font-size: 19px; transform: rotate(12deg);">身体象限</span>
+        <span class="dict-word" style="top: 42%; left: 48%; font-size: 23px; transform: rotate(-8deg);">精神象限</span>
+        <span class="dict-word" style="top: 72%; left: 52%; font-size: 15px; transform: rotate(15deg);">职业象限</span>
+        <span class="dict-word" style="top: 28%; left: 88%; font-size: 20px; transform: rotate(-6deg);">容器环境</span>
+        <span class="dict-word" style="top: 58%; left: 8%; font-size: 25px; transform: rotate(8deg);">高光时刻分析</span>
+        <span class="dict-word" style="top: 82%; left: 62%; font-size: 18px; transform: rotate(-12deg);">阴影功能区</span>
+        <span class="dict-word" style="top: 18%; left: 18%; font-size: 22px; transform: rotate(5deg);">认知运算型</span>
+        <span class="dict-word" style="top: 48%; left: 72%; font-size: 16px; transform: rotate(-10deg);">创造表达型</span>
+        <span class="dict-word" style="top: 68%; left: 25%; font-size: 24px; transform: rotate(12deg);">社交协同型</span>
+        <span class="dict-word" style="top: 88%; left: 42%; font-size: 19px; transform: rotate(-8deg);">系统驱动型</span>
+        <span class="dict-word" style="top: 32%; left: 62%; font-size: 21px; transform: rotate(6deg);">身体感知型</span>
+        <span class="dict-word" style="top: 52%; left: 92%; font-size: 17px; transform: rotate(-15deg);">盖洛普优势</span>
+        <span class="dict-word" style="top: 78%; left: 8%; font-size: 23px; transform: rotate(10deg);">最小可行验证</span>
+        <span class="dict-word" style="top: 22%; left: 38%; font-size: 15px; transform: rotate(-6deg);">环境重设计</span>
+        <span class="dict-word" style="top: 62%; left: 85%; font-size: 20px; transform: rotate(8deg);">数字断食</span>
+        <span class="dict-word" style="top: 92%; left: 28%; font-size: 18px; transform: rotate(-12deg);">思维外包</span>
+    </div>
+    <div class="section-content" style="position: relative; z-index: 1;">
         <h2 class="section-headline">Human 词典</h2>
         <p class="section-tagline">项目核心概念速查手册，涵盖天赋类型、HUMAN 3.0 框架与评估术语</p>
         <div style="text-align: center; margin-top: var(--space-lg);">

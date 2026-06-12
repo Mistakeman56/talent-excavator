@@ -146,3 +146,52 @@ def get_scale_detail(session_id):
         'talent_type': sc.talent_type,
         'created_at': sc.created_at.isoformat() if sc.created_at else None
     })
+
+
+@history_bp.route('/api/history/interview/<int:interview_id>/export')
+@login_required
+def export_interview(interview_id):
+    """导出访谈对话为 Markdown"""
+    from flask import make_response
+
+    iv = InterviewSession.query.filter_by(id=interview_id, user_id=current_user.id).first()
+    if not iv:
+        return jsonify({'success': False, 'error': '记录不存在'}), 404
+
+    messages = safe_json_loads(iv.messages, [])
+    lines = ['# AI 深度访谈对话记录\n']
+    lines.append(f'生成时间：{iv.created_at.strftime("%Y年%m月%d日 %H:%M") if iv.created_at else "未知"}\n')
+    lines.append('---\n')
+
+    round_num = 0
+    for msg in messages:
+        if msg.get('role') == 'user':
+            if msg.get('content') != '开始访谈':
+                lines.append(f'## 你的回答\n{msg["content"]}\n')
+        elif msg.get('role') == 'assistant':
+            round_num += 1
+            content = msg.get('content', '')
+            parts = {}
+            for label in ['关键信号', '天赋假设', 'HUMAN 3.0 判断']:
+                marker = f'---{label}---'
+                if marker in content:
+                    start = content.index(marker) + len(marker)
+                    end_marker = '---'
+                    next_marker = content.find('---', start)
+                    if next_marker != -1:
+                        parts[label] = content[start:next_marker].strip()
+
+            question = content
+            if '---下一题---' in content:
+                question = content.split('---下一题---')[-1].strip()
+
+            lines.append(f'## 第 {round_num} 轮\n')
+            for label, text in parts.items():
+                lines.append(f'**{label}**：{text}\n')
+            lines.append(f'**AI 提问**：{question}\n')
+
+    md_content = '\n'.join(lines)
+    response = make_response(md_content)
+    response.headers['Content-Type'] = 'text/markdown; charset=utf-8'
+    response.headers['Content-Disposition'] = f'attachment; filename=interview_{interview_id}.md'
+    return response

@@ -17,9 +17,10 @@
         <p style="color: rgba(255,255,255,0.9); font-size: 1.1rem; margin-top: 0.5rem;">
             {% if group_type == 'C' %}天赋核心在于「想」——理解复杂系统、发现底层模式、追问本质{% elif group_type == 'R' %}天赋核心在于「连接」——深度共情、网络编织、关系创造{% elif group_type == 'B' %}天赋核心在于「做」——用双手和身体去感知世界、改变世界{% elif group_type == 'S' %}天赋核心在于「推动」——在混乱中建立秩序、带领大家往前走{% endif %}
         </p>
-        <div style="display: flex; gap: 2rem; margin-top: 1.5rem; color: white; font-size: 0.95rem;">
+        <div style="display: flex; gap: 2rem; margin-top: 1.5rem; color: white; font-size: 0.95rem; align-items: center;">
             <span>共 <strong>18</strong> 种类型</span>
             <span>3 种能量模式 × 2 种驱动来源 × 3 种兴趣指向</span>
+            <a href="/type-compare" style="color: rgba(255,255,255,0.9); text-decoration: none; background: rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; margin-left: auto;">对比两种类型</a>
         </div>
     </div>
 </section>
@@ -124,7 +125,7 @@
                  onclick="openDetail('${type.code}')">
                 <div class="catalog-card-header">
                     <span class="catalog-code">${type.code}</span>
-                    ${type.has_detail ? '<span class="catalog-badge">详细报告</span>' : ''}
+                    ${type.has_detail ? '<span class="catalog-badge">详细信息</span>' : ''}
                 </div>
                 <h3 class="catalog-name">${escapeHtml(type.name)}</h3>
                 <p class="catalog-tagline">${escapeHtml(type.tagline)}</p>
@@ -190,7 +191,7 @@
                 </div>
             `;
         } else {
-            html += `<div class="catalog-detail-no-report"><p>该类型暂无详细报告，可通过 <a href="/talent-type" style="color: ${group.color};">40题测评</a> 获取专属解读。</p></div>`;
+            html += `<div class="catalog-detail-no-report"><p>该类型暂无详细信息，可通过 <a href="/talent-type" style="color: ${group.color};">40题测评</a> 获取专属解读。</p></div>`;
         }
 
         body.innerHTML = html;

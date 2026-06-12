@@ -146,3 +146,42 @@ def type_catalog_body():
 def type_catalog_systemic():
     """系统引领型图鉴页面"""
     return render_template('type_catalog_group.html', group_type='S')
+
+
+@talent_type_bp.route('/type-compare')
+def type_compare_page():
+    """天赋类型对比页面"""
+    return render_template('type_compare.html')
+
+
+@talent_type_bp.route('/api/talent-type/compare')
+def compare_types():
+    """对比两种天赋类型"""
+    code1 = request.args.get('code1', '').upper()
+    code2 = request.args.get('code2', '').upper()
+
+    valid_codes = set(TYPE_NAMES.keys())
+    if code1 not in valid_codes:
+        return jsonify({'success': False, 'error': f'无效的类型代码: {code1}'}), 400
+    if code2 not in valid_codes:
+        return jsonify({'success': False, 'error': f'无效的类型代码: {code2}'}), 400
+
+    def get_type_info(code):
+        name_info = TYPE_NAMES.get(code, {})
+        detail = DETAILED_REPORTS.get(code)
+        return {
+            'code': code,
+            'name': name_info.get('name', '未知类型'),
+            'tagline': name_info.get('tagline', ''),
+            'dim1': {'code': code[0], 'name': TYPE_DIM1[code[0]]['name'], 'desc': TYPE_DIM1[code[0]]['desc']},
+            'dim2': {'code': code[1], 'name': TYPE_DIM2[code[1]]['name'], 'desc': TYPE_DIM2[code[1]]['desc']},
+            'dim3': {'code': code[2], 'name': TYPE_DIM3[code[2]]['name'], 'desc': TYPE_DIM3[code[2]]['desc']},
+            'dim4': {'code': code[3], 'name': TYPE_DIM4[code[3]]['name'], 'desc': TYPE_DIM4[code[3]]['desc']},
+            'has_detail': detail is not None
+        }
+
+    return jsonify({
+        'success': True,
+        'type1': get_type_info(code1),
+        'type2': get_type_info(code2)
+    })

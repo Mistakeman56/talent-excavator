@@ -97,6 +97,7 @@
                     ${item.subtitle ? `<p class="history-subtitle">${escapeHtml(item.subtitle)}</p>` : ''}
                     <div class="history-actions">
                         <button class="history-btn" onclick="viewRecord('${item.type}', '${item.id}', '${item.session_id || ''}')">查看结果</button>
+                        ${item.type === 'interview' ? '<button class="history-btn" style="background:transparent;color:var(--primary);border:1px solid var(--primary);" onclick="exportInterview(' + item.id + ')">导出对话</button>' : ''}
                     </div>
                 </div>
             `;
@@ -429,6 +430,10 @@
     window.closeReportModal = function() {
         document.getElementById('reportModal').style.display = 'none';
         document.body.style.overflow = '';
+    };
+
+    window.exportInterview = function(id) {
+        window.location.href = '/api/history/interview/' + id + '/export';
     };
 
     function formatDate(iso) {

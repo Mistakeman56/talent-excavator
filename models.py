@@ -83,6 +83,7 @@ class InterviewSession(db.Model):
     stage = db.Column(db.Integer, default=0)              # 当前方向索引 0-7（对应A-H）
     answers = db.Column(db.Text, default='{}')            # JSON，结构化存储各方向用户回答
     report_content = db.Column(db.Text)                   # 最终生成的报告Markdown
+    share_token = db.Column(db.String(64), unique=True, nullable=True)  # 分享链接 token
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 

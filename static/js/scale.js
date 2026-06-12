@@ -7,6 +7,32 @@ const scaleState = {
     isTransitioning: false  // 防止快速点击导致跳转混乱
 };
 
+const SCALE_STORAGE_KEY = 'scale_progress';
+
+// ===== 进度保存/恢复 =====
+function saveProgress() {
+    const data = {
+        answers: scaleState.answers,
+        currentIndex: scaleState.currentIndex,
+        timestamp: Date.now()
+    };
+    localStorage.setItem(SCALE_STORAGE_KEY, JSON.stringify(data));
+}
+
+function loadSavedProgress() {
+    try {
+        const raw = localStorage.getItem(SCALE_STORAGE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+    } catch (e) {
+        return null;
+    }
+}
+
+function clearProgress() {
+    localStorage.removeItem(SCALE_STORAGE_KEY);
+}
+
 // ===== DOM 元素 =====
 const els = {
     welcomeScreen: document.getElementById('scaleWelcome'),
@@ -34,6 +60,7 @@ async function initScale() {
         }
         
         scaleState.scaleData = data.data;
+        scaleState.questions = [];
         
         // 将题目扁平化为数组
         let index = 0;
@@ -112,6 +139,7 @@ function selectOption(questionId, value) {
     if (scaleState.isTransitioning) return;
 
     scaleState.answers[questionId] = value;
+    saveProgress();
 
     // 更新UI
     const items = els.optionsList.querySelectorAll('.option-item');
@@ -124,6 +152,7 @@ function selectOption(questionId, value) {
         scaleState.isTransitioning = true;
         setTimeout(() => {
             scaleState.currentIndex++;
+            saveProgress();
             renderQuestion(scaleState.currentIndex);
             scaleState.isTransitioning = false;
         }, 250);
@@ -191,6 +220,7 @@ async function submitScale() {
         }
 
         // 跳转到结果页
+        clearProgress();
         window.location.href = '/scale/result?session_id=' + data.session_id;
 
     } catch (err) {
@@ -203,5 +233,15 @@ async function submitScale() {
 els.btnStart.addEventListener('click', () => {
     els.welcomeScreen.style.display = 'none';
     els.scaleScreen.style.display = 'flex';
-    initScale();
+    initScale().then(() => {
+        const saved = loadSavedProgress();
+        if (saved && saved.answers && Object.keys(saved.answers).length > 0) {
+            const count = Object.keys(saved.answers).length;
+            if (confirm(`检测到上次未完成的答题进度（已答 ${count} 题），是否继续？`)) {
+                scaleState.answers = saved.answers;
+                scaleState.currentIndex = Math.min(saved.currentIndex || 0, scaleState.questions.length - 1);
+                renderQuestion(scaleState.currentIndex);
+            }
+        }
+    });
 });

@@ -240,6 +240,7 @@ async function loadUsers(page) {
             <td>${u.created_at}</td>
             <td>${u.assessment_count}</td>
             <td>
+                <button class="btn-table-action btn-reset-pw" data-id="${u.id}" data-name="${escapeHtml(u.username)}">重置密码</button>
                 <button class="btn-table-action btn-danger btn-delete-user" data-id="${u.id}" data-name="${escapeHtml(u.username)}">删除</button>
             </td>
         </tr>
@@ -249,6 +250,13 @@ async function loadUsers(page) {
     tbody.querySelectorAll('.btn-delete-user').forEach(btn => {
         btn.addEventListener('click', function() {
             deleteUser(parseInt(this.dataset.id), this.dataset.name);
+        });
+    });
+
+    // 绑定重置密码按钮事件
+    tbody.querySelectorAll('.btn-reset-pw').forEach(btn => {
+        btn.addEventListener('click', function() {
+            resetPassword(parseInt(this.dataset.id), this.dataset.name);
         });
     });
 
@@ -324,6 +332,17 @@ async function deleteUser(id, username) {
         loadStats();
     } else {
         alert(data.error || '删除失败');
+    }
+}
+
+async function resetPassword(id, username) {
+    if (!confirm(`确定重置用户「${username}」的密码？`)) return;
+    const res = await fetch(`/api/admin/users/${id}/reset-password`, { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+        alert(`用户 ${data.username} 的新密码为：\n\n${data.new_password}\n\n请妥善保存并告知用户。`);
+    } else {
+        alert(data.error || '重置失败');
     }
 }
 

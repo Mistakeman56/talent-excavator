@@ -31,7 +31,7 @@ def load_user(user_id):
     return db.session.get(User, int(user_id))
 
 # 注册 Blueprint
-from routes import main_bp, interview_bp, scale_bp, dictionary_bp, talent_type_bp, history_bp, admin_bp
+from routes import main_bp, interview_bp, scale_bp, dictionary_bp, talent_type_bp, history_bp, admin_bp, profile_bp, user_bp
 from routes.auth import auth_bp
 from routes.admin import is_admin
 
@@ -43,6 +43,8 @@ app.register_blueprint(talent_type_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(history_bp)
 app.register_blueprint(admin_bp)
+app.register_blueprint(profile_bp)
+app.register_blueprint(user_bp)
 
 # 注入 is_admin 到 Jinja2 模板
 app.jinja_env.globals['is_admin'] = is_admin
@@ -124,6 +126,8 @@ def track_visit():
         module = 'talent_type'
     elif path.startswith('/dictionary'):
         module = 'dictionary'
+    elif path.startswith('/profile'):
+        module = 'profile'
 
     _visit_buffer.append({
         'path': path,
@@ -150,6 +154,13 @@ with app.app_context():
             with db.engine.connect() as conn:
                 conn.execute(text(f"ALTER TABLE {tbl} ADD COLUMN user_id INTEGER"))
                 conn.commit()
+
+    # 兼容性处理：为旧 interview_sessions 表添加 share_token 列
+    iv_cols = [c['name'] for c in inspector.get_columns('interview_sessions')]
+    if 'share_token' not in iv_cols:
+        with db.engine.connect() as conn:
+            conn.execute(text("ALTER TABLE interview_sessions ADD COLUMN share_token VARCHAR(64)"))
+            conn.commit()
 
     # 兼容性处理：为旧 users 表添加 is_admin 列
     user_cols = [c['name'] for c in inspector.get_columns('users')]
