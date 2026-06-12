@@ -7,6 +7,7 @@
 # 本地工具和文档产物
 convert_to_word.py
 *.docx
+毕业设计报告.md
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
