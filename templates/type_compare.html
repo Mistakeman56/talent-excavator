@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}天赋类型对比{% endblock %}
+
+{% block content %}
+{% include '_nav.html' %}
+
+<header class="page-hero">
+    <h1>天赋类型对比</h1>
+    <p>选择两种天赋类型，查看四维度异同</p>
+</header>
+
+<main class="compare-container">
+    <div class="compare-selector">
+        <select id="selectType1"></select>
+        <span class="compare-vs">VS</span>
+        <select id="selectType2"></select>
+    </div>
+
+    <div id="compareResult" class="compare-result" style="display:none;"></div>
+    <div id="comparePlaceholder" style="text-align:center; padding:3rem; color:var(--body-muted);">
+        <p>请选择两种不同的天赋类型进行对比</p>
+    </div>
+</main>
+
+{% include '_footer.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+<script>
+(function() {
+    var allTypes = [];
+    var select1 = document.getElementById('selectType1');
+    var select2 = document.getElementById('selectType2');
+    var resultEl = document.getElementById('compareResult');
+    var placeholderEl = document.getElementById('comparePlaceholder');
+
+    async function loadTypes() {
+        try {
+            var res = await fetch('/api/talent-type/catalog');
+            var data = await res.json();
+            if (data.success) {
+                allTypes = data.types;
+                var options = '<option value="">选择类型...</option>';
+                allTypes.forEach(function(t) {
+                    options += '<option value="' + t.code + '">' + t.code + ' ' + escapeHtml(t.name) + '</option>';
+                });
+                select1.innerHTML = options;
+                select2.innerHTML = options;
+                if (allTypes.length >= 2) {
+                    select1.value = allTypes[0].code;
+                    select2.value = allTypes[1].code;
+                    doCompare();
+                }
+            }
+        } catch (e) {}
+    }
+
+    async function doCompare() {
+        var c1 = select1.value;
+        var c2 = select2.value;
+        if (!c1 || !c2 || c1 === c2) {
+            resultEl.style.display = 'none';
+            placeholderEl.style.display = 'block';
+            return;
+        }
+        try {
+            var res = await fetch('/api/talent-type/compare?code1=' + c1 + '&code2=' + c2);
+            var data = await res.json();
+            if (data.success) {
+                renderCompare(data.type1, data.type2);
+            }
+        } catch (e) {}
+    }
+
+    function renderCompare(t1, t2) {
+        placeholderEl.style.display = 'none';
+        resultEl.style.display = 'grid';
+
+        function renderSide(t) {
+            var dims = [t.dim1, t.dim2, t.dim3, t.dim4];
+            var dimsHtml = dims.map(function(d) {
+                return '<div class="compare-dim">' +
+                    '<div class="compare-dim-label">' + escapeHtml(d.name) + '（' + escapeHtml(d.code) + '）</div>' +
+                    '<div class="compare-dim-desc">' + escapeHtml(d.desc) + '</div>' +
+                    '</div>';
+            }).join('');
+
+            return '<div class="compare-side">' +
+                '<div class="compare-side-code">' + escapeHtml(t.code) + '</div>' +
+                '<div class="compare-side-name">' + escapeHtml(t.name) + '</div>' +
+                '<div class="compare-side-tagline">' + escapeHtml(t.tagline) + '</div>' +
+                '<div class="compare-dims">' + dimsHtml + '</div>' +
+                '</div>';
+        }
+
+        resultEl.innerHTML = renderSide(t1) + renderSide(t2);
+    }
+
+    select1.addEventListener('change', doCompare);
+    select2.addEventListener('change', doCompare);
+    loadTypes();
+})();
+</script>
+{% endblock %}

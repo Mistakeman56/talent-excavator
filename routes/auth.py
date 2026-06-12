@@ -1,8 +1,20 @@
+from urllib.parse import urlparse
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from models import db, User
 
 auth_bp = Blueprint('auth', __name__)
+
+
+def _safe_redirect(target):
+    """验证重定向目标，防止开放重定向攻击"""
+    if not target:
+        return url_for('main.index')
+    parsed = urlparse(target)
+    # 仅允许相对路径（同源重定向）
+    if parsed.netloc or parsed.scheme:
+        return url_for('main.index')
+    return target
 
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
@@ -46,7 +58,7 @@ def register():
 
         # 自动登录
         login_user(user)
-        next_page = request.args.get('next') or url_for('main.index')
+        next_page = _safe_redirect(request.args.get('next'))
         return redirect(next_page)
 
     return render_template('register.html')
@@ -69,7 +81,10 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user and user.check_password(password):
             login_user(user)
-            next_page = request.args.get('next') or url_for('main.index')
+            # 管理员直接跳转到管理后台
+            if user.is_admin:
+                return redirect(url_for('admin.dashboard'))
+            next_page = _safe_redirect(request.args.get('next'))
             return redirect(next_page)
         else:
             flash('用户名或密码错误', 'error')
@@ -78,10 +93,10 @@ def login():
     return render_template('login.html')
 
 
-@auth_bp.route('/logout')
+@auth_bp.route('/logout', methods=['POST'])
 @login_required
 def logout():
-    """用户登出"""
+    """用户登出（仅接受 POST，防止 CSRF 登出）"""
     logout_user()
     return redirect(url_for('main.index'))
 

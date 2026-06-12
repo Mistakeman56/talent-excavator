@@ -1,151 +1,324 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="app-container">
-    <!-- 顶部栏 -->
-    <header class="app-header">
-        <div class="brand">
-            <span class="brand-icon">◈</span>
-            <h1>个人天赋发掘测评系统</h1>
-        </div>
-        <div class="header-right">
-            {% if current_user.is_authenticated %}
-            <div class="user-menu">
-                <span class="username">{{ current_user.username }}</span>
-                <div class="dropdown">
-                    <a href="{{ url_for('auth.logout') }}">退出登录</a>
-                </div>
-            </div>
-            {% else %}
-            <div class="auth-links">
-                <a href="{{ url_for('auth.login') }}">登录</a>
-                <span class="auth-divider">/</span>
-                <a href="{{ url_for('auth.register') }}">注册</a>
-            </div>
-            {% endif %}
-        </div>
-    </header>
+{% include '_nav.html' %}
 
-    <!-- 主内容区 -->
-    <main class="main-content">
-        <!-- 欢迎页 -->
-        <div class="welcome-screen" id="welcomeScreen">
-            <div class="welcome-card">
-                <div class="welcome-icon">◈</div>
-                <h2>找到你的底层天赋</h2>
-                <p class="welcome-subtitle">人类3.0发展诊断 · 深度天赋访谈</p>
-                <div class="welcome-divider"></div>
-                <div class="welcome-desc">
-                    <p>这不是测试题，也不是快速贴标签。</p>
-                    <p>我们会通过一轮轮深度问题，逐步挖出你真正的底层天赋，</p>
-                    <p>同时看清：你现在的生活结构，究竟是在放大它，还是在压住它。</p>
-                </div>
-                <div class="welcome-features">
-                    <div class="feature-item">
-                        <span class="feature-num">01</span>
-                        <span>8~15轮深度对话</span>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-num">02</span>
-                        <span>四维度诊断分析</span>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-num">03</span>
-                        <span>个性化天赋报告</span>
-                    </div>
-                </div>
-                <button class="btn-start" id="btnStart">
-                    <span>开始AI深度访谈</span>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
-                </button>
-                
-                <div class="nav-entries">
-                    <a href="{{ url_for('main.talent_type') }}" class="nav-card">
-                        <div class="nav-icon">🧬</div>
-                        <div class="nav-info">
-                            <h3>天赋类型学测评</h3>
-                            <p>40题快速锁定天赋原型 · Human 3.0 快速版 · 无需登录</p>
-                        </div>
-                        <span class="nav-arrow">›</span>
-                    </a>
-                    <a href="{{ url_for('scale.scale_page') }}" class="nav-card">
-                        <div class="nav-icon">📊</div>
-                        <div class="nav-info">
-                            <h3>天赋维度筛查量表</h3>
-                            <p>20题标准化测评，快速识别你的5大天赋维度</p>
-                        </div>
-                        <span class="nav-arrow">›</span>
-                    </a>
-                    <a href="{{ url_for('dictionary.dictionary') }}" class="nav-card">
-                        <div class="nav-icon">📖</div>
-                        <div class="nav-info">
-                            <h3>Human词典</h3>
-                            <p>核心概念速查手册：天赋类型、HUMAN3.0概念、评估术语</p>
-                        </div>
-                        <span class="nav-arrow">›</span>
-                    </a>
-                </div>
+<!-- Hero Tile -->
+<section class="tile tile-parchment hero-tile">
+    <div class="section-content">
+        <h1 class="hero-headline">发现你的底层天赋</h1>
+        <p class="hero-tagline">人类 3.0 发展诊断 · 基于 AI 深度访谈与标准化量表的人才识别系统</p>
+        <div class="hero-cta-group">
+            <button class="btn-primary" id="btnStart">
+                <span>开始 AI 深度访谈</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </button>
+            <button class="btn-resume" id="btnResume" style="display:none;">
+                <span>继续上次访谈（第 <span class="resume-round">0</span> 轮）</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="1 4 1 10 7 10"/>
+                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                </svg>
+            </button>
+            <a href="{{ url_for('main.talent_type') }}" class="btn-secondary-pill">
+                <span>40 题快速测评</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- AI 访谈 -->
+<section class="tile tile-light">
+    <div class="section-content">
+        <h2 class="section-headline">AI 深度访谈</h2>
+        <p class="section-tagline">8~20 轮渐进式对话，像人类学家一样挖掘你被遮蔽的底层天赋</p>
+        <div class="feature-grid-2">
+            <div class="promo-card">
+                <div class="card-icon">◈</div>
+                <h3>八维深度覆盖</h3>
+                <p>童年模式、无意识胜任区、能量审计、嫉妒与压抑、社会可见优势、深层痛苦、伪擅长区、真实兴趣 —— 八个方向全面扫描。</p>
+                <a href="{{ url_for('main.index') }}" class="card-cta" id="cardCtaInterview">开始访谈 ›</a>
+            </div>
+            <div class="promo-card">
+                <div class="card-icon">◈</div>
+                <h3>结构化诊断报告</h3>
+                <p>完成后生成 14 章节 Markdown 报告：天赋识别、遮蔽原因、能量审计、职业映射、四象限现状、30天/90天演进建议。</p>
+                <a href="{{ url_for('main.index') }}" class="card-cta" id="cardCtaReport">了解更多 ›</a>
             </div>
         </div>
+    </div>
+</section>
 
-        <!-- 对话区 -->
-        <div class="chat-screen" id="chatScreen" style="display:none;">
-            <!-- Sticky 进度条 -->
-            <div class="chat-header" id="chatHeader" style="display:none;">
-                <div class="message-avatar ai">AI</div>
-                <span class="round-badge">第 <strong id="roundNum">0</strong> 轮</span>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
+<!-- 量表 -->
+<section class="tile tile-parchment">
+    <div class="section-content">
+        <h2 class="section-headline">天赋维度筛查量表</h2>
+        <p class="section-tagline">20 题标准化测评，像体检一样量化你的五大天赋维度</p>
+        <div class="feature-grid-2">
+            <div class="promo-card">
+                <div class="card-icon">📊</div>
+                <h3>一级量表 · 五维雷达</h3>
+                <p>认知洞察型、创造表达型、社交连接型、系统推动型、身体感知型 —— 20 题锁定你的 Top 维度，可视化雷达图呈现。</p>
+                <a href="{{ url_for('scale.scale_page') }}" class="card-cta">去测评 ›</a>
             </div>
+            <div class="promo-card">
+                <div class="card-icon">🎯</div>
+                <h3>二级量表 · 精准锁定</h3>
+                <p>针对 Top 维度深入 10 题，在"系统架构师/模式侦探/本质追问者"等 15 个子类型中，精准定位你的天赋 subtype。</p>
+                <a href="{{ url_for('scale.scale_page') }}" class="card-cta">去测评 ›</a>
+            </div>
+        </div>
+    </div>
+</section>
 
-            <div class="chat-history" id="chatHistory">
-                <!-- 消息会动态插入这里 -->
+<!-- 天赋类型学 -->
+<section class="tile tile-light">
+    <div class="section-content">
+        <h2 class="section-headline">天赋类型学测评</h2>
+        <p class="section-tagline">40 道情境迫选题，5 分钟获得你的 4 字母天赋代码与专属解读</p>
+        <div class="feature-grid">
+            <div class="promo-card">
+                <div class="card-icon">🧬</div>
+                <h3>72 种天赋类型</h3>
+                <p>4（天赋形态）× 3（能量模式）× 2（驱动来源）× 3（兴趣指向）= 72 种完整组合，每种配有专属中文名称与标语。</p>
             </div>
-            
-            <div class="input-area" id="inputArea">
-                <div class="report-notice" id="reportNotice" style="display:none;">
-                    <span>✦</span> 已收集足够信息，可以生成报告了
-                </div>
-                <div class="input-box">
-                    <textarea 
-                        id="userInput" 
-                        placeholder="请输入你的回答..." 
-                        rows="3"
-                    ></textarea>
-                    <div class="input-actions">
-                        <span class="input-hint">按 Enter 发送，Shift+Enter 换行</span>
-                        <button class="btn-send" id="btnSend">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                <div class="report-actions" id="reportActions" style="display:none;">
-                    <button class="btn-report" id="btnReport">
+            <div class="promo-card">
+                <div class="card-icon">📈</div>
+                <h3>四维度得分可视化</h3>
+                <p>天赋形态、能量模式、驱动来源、兴趣指向 —— 四维度条形图直观展示你的天赋结构。</p>
+            </div>
+            <div class="promo-card">
+                <div class="card-icon">🔗</div>
+                <h3>一键深入 AI 访谈</h3>
+                <p>量表给出快照，AI 访谈帮你剥开 —— 结果页一键跳转深度对话，延续 Human 3.0 探索。</p>
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: var(--space-xl);">
+            <a href="{{ url_for('main.talent_type') }}" class="btn-primary">开始 40 题测评</a>
+        </div>
+    </div>
+</section>
+
+<!-- 72种人格图鉴 -->
+<section class="tile tile-parchment type-catalog-section">
+<!-- 背景装饰字母（72种人格类型词云） -->
+<div class="type-letters-bg">
+    <!-- C 认知洞察型（蓝色系） -->
+    <span class="letter letter-c" style="top: 8%; left: 3%; font-size: 28px; transform: rotate(-12deg);">CDAM</span>
+    <span class="letter letter-c" style="top: 22%; left: 78%; font-size: 18px; transform: rotate(8deg);">CDAC</span>
+    <span class="letter letter-c" style="top: 55%; left: 88%; font-size: 24px; transform: rotate(-5deg);">CDAP</span>
+    <span class="letter letter-c" style="top: 72%; left: 12%; font-size: 16px; transform: rotate(15deg);">CDHM</span>
+    <span class="letter letter-c" style="top: 38%; left: 92%; font-size: 20px; transform: rotate(-8deg);">CDHC</span>
+    <span class="letter letter-c" style="top: 85%; left: 65%; font-size: 22px; transform: rotate(10deg);">CDHP</span>
+    <span class="letter letter-c" style="top: 15%; left: 35%; font-size: 19px; transform: rotate(-18deg);">CRAM</span>
+    <span class="letter letter-c" style="top: 48%; left: 5%; font-size: 26px; transform: rotate(6deg);">CRAC</span>
+    <span class="letter letter-c" style="top: 68%; left: 45%; font-size: 15px; transform: rotate(-3deg);">CRAP</span>
+    <span class="letter letter-c" style="top: 5%; left: 55%; font-size: 21px; transform: rotate(12deg);">CRHM</span>
+    <span class="letter letter-c" style="top: 90%; left: 28%; font-size: 17px; transform: rotate(-10deg);">CRHC</span>
+    <span class="letter letter-c" style="top: 32%; left: 18%; font-size: 23px; transform: rotate(5deg);">CRHP</span>
+    <span class="letter letter-c" style="top: 42%; left: 68%; font-size: 20px; transform: rotate(-15deg);">CVAM</span>
+    <span class="letter letter-c" style="top: 18%; left: 62%; font-size: 25px; transform: rotate(8deg);">CVAC</span>
+    <span class="letter letter-c" style="top: 78%; left: 82%; font-size: 16px; transform: rotate(-6deg);">CVAP</span>
+    <span class="letter letter-c" style="top: 62%; left: 28%; font-size: 19px; transform: rotate(14deg);">CVHM</span>
+    <span class="letter letter-c" style="top: 28%; left: 48%; font-size: 22px; transform: rotate(-9deg);">CVHC</span>
+    <span class="letter letter-c" style="top: 82%; left: 48%; font-size: 18px; transform: rotate(7deg);">CVHP</span>
+    
+    <!-- R 关系创造型（绿色系） -->
+    <span class="letter letter-r" style="top: 12%; left: 15%; font-size: 24px; transform: rotate(10deg);">RDAM</span>
+    <span class="letter letter-r" style="top: 45%; left: 35%; font-size: 18px; transform: rotate(-12deg);">RDAC</span>
+    <span class="letter letter-r" style="top: 75%; left: 55%; font-size: 26px; transform: rotate(5deg);">RDAP</span>
+    <span class="letter letter-r" style="top: 28%; left: 72%; font-size: 16px; transform: rotate(-8deg);">RDHM</span>
+    <span class="letter letter-r" style="top: 58%; left: 8%; font-size: 22px; transform: rotate(15deg);">RDHC</span>
+    <span class="letter letter-r" style="top: 88%; left: 78%; font-size: 20px; transform: rotate(-6deg);">RDHP</span>
+    <span class="letter letter-r" style="top: 35%; left: 52%; font-size: 19px; transform: rotate(8deg);">RRAM</span>
+    <span class="letter letter-r" style="top: 65%; left: 72%; font-size: 25px; transform: rotate(-15deg);">RRAC</span>
+    <span class="letter letter-r" style="top: 8%; left: 88%; font-size: 17px; transform: rotate(12deg);">RRAP</span>
+    <span class="letter letter-r" style="top: 52%; left: 42%; font-size: 21px; transform: rotate(-5deg);">RRHM</span>
+    <span class="letter letter-r" style="top: 92%; left: 35%; font-size: 23px; transform: rotate(10deg);">RRHC</span>
+    <span class="letter letter-r" style="top: 18%; left: 28%; font-size: 16px; transform: rotate(-18deg);">RRHP</span>
+    <span class="letter letter-r" style="top: 42%; left: 82%; font-size: 20px; transform: rotate(6deg);">RVAM</span>
+    <span class="letter letter-r" style="top: 72%; left: 22%; font-size: 24px; transform: rotate(-10deg);">RVAC</span>
+    <span class="letter letter-r" style="top: 22%; left: 42%; font-size: 18px; transform: rotate(14deg);">RVAP</span>
+    <span class="letter letter-r" style="top: 82%; left: 55%; font-size: 22px; transform: rotate(-8deg);">RVHM</span>
+    <span class="letter letter-r" style="top: 48%; left: 18%; font-size: 19px; transform: rotate(5deg);">RVHC</span>
+    <span class="letter letter-r" style="top: 62%; left: 92%; font-size: 15px; transform: rotate(-12deg);">RVHP</span>
+    
+    <!-- B 身体实践型（黄色系） -->
+    <span class="letter letter-b" style="top: 15%; left: 48%; font-size: 22px; transform: rotate(8deg);">BDAM</span>
+    <span class="letter letter-b" style="top: 52%; left: 62%; font-size: 18px; transform: rotate(-15deg);">BDAC</span>
+    <span class="letter letter-b" style="top: 78%; left: 8%; font-size: 25px; transform: rotate(12deg);">BDAP</span>
+    <span class="letter letter-b" style="top: 32%; left: 82%; font-size: 16px; transform: rotate(-6deg);">BDHM</span>
+    <span class="letter letter-b" style="top: 65%; left: 35%; font-size: 20px; transform: rotate(10deg);">BDHC</span>
+    <span class="letter letter-b" style="top: 8%; left: 72%; font-size: 23px; transform: rotate(-12deg);">BDHP</span>
+    <span class="letter letter-b" style="top: 42%; left: 12%; font-size: 19px; transform: rotate(5deg);">BRAM</span>
+    <span class="letter letter-b" style="top: 85%; left: 42%; font-size: 26px; transform: rotate(-8deg);">BRAC</span>
+    <span class="letter letter-b" style="top: 22%; left: 58%; font-size: 17px; transform: rotate(15deg);">BRAP</span>
+    <span class="letter letter-b" style="top: 55%; left: 78%; font-size: 21px; transform: rotate(-10deg);">BRHM</span>
+    <span class="letter letter-b" style="top: 92%; left: 18%; font-size: 24px; transform: rotate(6deg);">BRHC</span>
+    <span class="letter letter-b" style="top: 38%; left: 28%; font-size: 18px; transform: rotate(-18deg);">BRHP</span>
+    <span class="letter letter-b" style="top: 72%; left: 68%; font-size: 20px; transform: rotate(12deg);">BVAM</span>
+    <span class="letter letter-b" style="top: 12%; left: 22%; font-size: 22px; transform: rotate(-5deg);">BVAC</span>
+    <span class="letter letter-b" style="top: 48%; left: 92%; font-size: 16px; transform: rotate(8deg);">BVAP</span>
+    <span class="letter letter-b" style="top: 82%; left: 72%; font-size: 19px; transform: rotate(-12deg);">BVHM</span>
+    <span class="letter letter-b" style="top: 28%; left: 8%; font-size: 25px; transform: rotate(10deg);">BVHC</span>
+    <span class="letter letter-b" style="top: 58%; left: 52%; font-size: 21px; transform: rotate(-8deg);">BVHP</span>
+    
+    <!-- S 系统引领型（紫色系） -->
+    <span class="letter letter-s" style="top: 18%; left: 65%; font-size: 20px; transform: rotate(12deg);">SDAM</span>
+    <span class="letter letter-s" style="top: 45%; left: 22%; font-size: 24px; transform: rotate(-8deg);">SDAC</span>
+    <span class="letter letter-s" style="top: 72%; left: 42%; font-size: 16px; transform: rotate(5deg);">SDAP</span>
+    <span class="letter letter-s" style="top: 35%; left: 92%; font-size: 22px; transform: rotate(-15deg);">SDHM</span>
+    <span class="letter letter-s" style="top: 62%; left: 5%; font-size: 19px; transform: rotate(10deg);">SDHC</span>
+    <span class="letter letter-s" style="top: 88%; left: 88%; font-size: 25px; transform: rotate(-6deg);">SDHP</span>
+    <span class="letter letter-s" style="top: 8%; left: 42%; font-size: 18px; transform: rotate(8deg);">SRAM</span>
+    <span class="letter letter-s" style="top: 55%; left: 28%; font-size: 21px; transform: rotate(-12deg);">SRAC</span>
+    <span class="letter letter-s" style="top: 82%; left: 15%; font-size: 23px; transform: rotate(15deg);">SRAP</span>
+    <span class="letter letter-s" style="top: 25%; left: 85%; font-size: 17px; transform: rotate(-10deg);">SRHM</span>
+    <span class="letter letter-s" style="top: 92%; left: 52%; font-size: 20px; transform: rotate(6deg);">SRHC</span>
+    <span class="letter letter-s" style="top: 42%; left: 58%; font-size: 26px; transform: rotate(-18deg);">SRHP</span>
+    <span class="letter letter-s" style="top: 68%; left: 82%; font-size: 19px; transform: rotate(12deg);">SVAM</span>
+    <span class="letter letter-s" style="top: 12%; left: 8%; font-size: 22px; transform: rotate(-5deg);">SVAC</span>
+    <span class="letter letter-s" style="top: 48%; left: 72%; font-size: 18px; transform: rotate(8deg);">SVAP</span>
+    <span class="letter letter-s" style="top: 78%; left: 58%; font-size: 24px; transform: rotate(-12deg);">SVHM</span>
+    <span class="letter letter-s" style="top: 32%; left: 35%; font-size: 16px; transform: rotate(10deg);">SVHC</span>
+    <span class="letter letter-s" style="top: 58%; left: 15%; font-size: 21px; transform: rotate(-8deg);">SVHP</span>
+</div>
+    <div class="section-content" style="position: relative; z-index: 1;">
+        <h2 class="section-headline">72 种人格图鉴</h2>
+        <p class="section-tagline">探索完整的人格类型谱系，了解每种天赋的独特画像</p>
+        <div class="type-preview-grid">
+            <a href="/type-catalog/cognitive" class="type-preview-card type-preview-c" style="text-decoration: none;">
+                <div class="type-preview-icon">🧠</div>
+                <h3>认知洞察型</h3>
+                <p>18 种类型</p>
+            </a>
+            <a href="/type-catalog/relational" class="type-preview-card type-preview-r" style="text-decoration: none;">
+                <div class="type-preview-icon">💚</div>
+                <h3>关系创造型</h3>
+                <p>18 种类型</p>
+            </a>
+            <a href="/type-catalog/body" class="type-preview-card type-preview-b" style="text-decoration: none;">
+                <div class="type-preview-icon">⚡</div>
+                <h3>身体实践型</h3>
+                <p>18 种类型</p>
+            </a>
+            <a href="/type-catalog/systemic" class="type-preview-card type-preview-s" style="text-decoration: none;">
+                <div class="type-preview-icon">👑</div>
+                <h3>系统引领型</h3>
+                <p>18 种类型</p>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Human 词典 -->
+<section class="tile tile-light dict-wordcloud-section">
+    <!-- 背景装饰词云 -->
+    <div class="dict-wordcloud-bg">
+        <span class="dict-word" style="top: 8%; left: 5%; font-size: 28px; transform: rotate(-8deg);">心流</span>
+        <span class="dict-word" style="top: 15%; left: 72%; font-size: 18px; transform: rotate(5deg);">天赋映射</span>
+        <span class="dict-word" style="top: 25%; left: 28%; font-size: 22px; transform: rotate(-12deg);">无意识胜任区</span>
+        <span class="dict-word" style="top: 35%; left: 82%; font-size: 16px; transform: rotate(8deg);">认知象限</span>
+        <span class="dict-word" style="top: 45%; left: 12%; font-size: 24px; transform: rotate(-5deg);">血氧区</span>
+        <span class="dict-word" style="top: 55%; left: 58%; font-size: 20px; transform: rotate(10deg);">纯粹兴趣</span>
+        <span class="dict-word" style="top: 65%; left: 35%; font-size: 26px; transform: rotate(-15deg);">HUMAN 3.0</span>
+        <span class="dict-word" style="top: 75%; left: 78%; font-size: 17px; transform: rotate(6deg);">价值场景</span>
+        <span class="dict-word" style="top: 85%; left: 18%; font-size: 21px; transform: rotate(-10deg);">伪擅长区</span>
+        <span class="dict-word" style="top: 12%; left: 45%; font-size: 19px; transform: rotate(12deg);">身体象限</span>
+        <span class="dict-word" style="top: 42%; left: 48%; font-size: 23px; transform: rotate(-8deg);">精神象限</span>
+        <span class="dict-word" style="top: 72%; left: 52%; font-size: 15px; transform: rotate(15deg);">职业象限</span>
+        <span class="dict-word" style="top: 28%; left: 88%; font-size: 20px; transform: rotate(-6deg);">容器环境</span>
+        <span class="dict-word" style="top: 58%; left: 8%; font-size: 25px; transform: rotate(8deg);">高光时刻分析</span>
+        <span class="dict-word" style="top: 82%; left: 62%; font-size: 18px; transform: rotate(-12deg);">阴影功能区</span>
+        <span class="dict-word" style="top: 18%; left: 18%; font-size: 22px; transform: rotate(5deg);">认知运算型</span>
+        <span class="dict-word" style="top: 48%; left: 72%; font-size: 16px; transform: rotate(-10deg);">创造表达型</span>
+        <span class="dict-word" style="top: 68%; left: 25%; font-size: 24px; transform: rotate(12deg);">社交协同型</span>
+        <span class="dict-word" style="top: 88%; left: 42%; font-size: 19px; transform: rotate(-8deg);">系统驱动型</span>
+        <span class="dict-word" style="top: 32%; left: 62%; font-size: 21px; transform: rotate(6deg);">身体感知型</span>
+        <span class="dict-word" style="top: 52%; left: 92%; font-size: 17px; transform: rotate(-15deg);">盖洛普优势</span>
+        <span class="dict-word" style="top: 78%; left: 8%; font-size: 23px; transform: rotate(10deg);">最小可行验证</span>
+        <span class="dict-word" style="top: 22%; left: 38%; font-size: 15px; transform: rotate(-6deg);">环境重设计</span>
+        <span class="dict-word" style="top: 62%; left: 85%; font-size: 20px; transform: rotate(8deg);">数字断食</span>
+        <span class="dict-word" style="top: 92%; left: 28%; font-size: 18px; transform: rotate(-12deg);">思维外包</span>
+    </div>
+    <div class="section-content" style="position: relative; z-index: 1;">
+        <h2 class="section-headline">Human 词典</h2>
+        <p class="section-tagline">项目核心概念速查手册，涵盖天赋类型、HUMAN 3.0 框架与评估术语</p>
+        <div style="text-align: center; margin-top: var(--space-lg);">
+            <a href="{{ url_for('dictionary.dictionary') }}" class="btn-secondary-pill">浏览词典</a>
+        </div>
+    </div>
+</section>
+
+{% include '_footer.html' %}
+
+<!-- 对话浮层（原有功能保留） -->
+<div class="chat-overlay" id="chatOverlay" style="display:none;">
+    <div class="chat-overlay-backdrop" onclick="closeChat()"></div>
+    <div class="chat-overlay-panel">
+        <div class="chat-overlay-header">
+            <span class="round-badge">第 <strong id="roundNum">0</strong> 轮</span>
+            <div class="progress-bar" style="flex:1; margin: 0 var(--space-md);">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <button class="btn-icon-circular" onclick="closeChat()" title="关闭">✕</button>
+        </div>
+        <div class="chat-overlay-history" id="chatHistory"></div>
+        <div class="chat-overlay-input" id="inputArea">
+            <div class="report-notice" id="reportNotice" style="display:none;">
+                <span>◈</span> 已收集足够信息，可以生成报告了
+            </div>
+            <div class="input-box">
+                <textarea id="userInput" placeholder="请输入你的回答..." rows="3"></textarea>
+                <div class="input-actions">
+                    <span class="input-hint">按 Enter 发送，Shift+Enter 换行</span>
+                    <button class="btn-send" id="btnSend">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                            <polyline points="14 2 14 8 20 8"/>
-                            <line x1="16" y1="13" x2="8" y2="13"/>
-                            <line x1="16" y1="17" x2="8" y2="17"/>
-                            <polyline points="10 9 9 9 8 9"/>
+                            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
                         </svg>
-                        <span>生成天赋报告</span>
                     </button>
                 </div>
             </div>
+            <div class="report-actions" id="reportActions" style="display:none;">
+                <button class="btn-report" id="btnReport">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                    <span>生成天赋报告</span>
+                </button>
+            </div>
         </div>
-    </main>
-
-    <footer class="app-footer">
-        <p>个人天赋发掘测评系统 · 毕业设计项目</p>
-    </footer>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/utils.js') }}"></script>
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+function closeChat() {
+    document.getElementById('chatOverlay').style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+// 让卡片上的 CTA 也能触发开始
+['cardCtaInterview','cardCtaReport'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) {
+        el.addEventListener('click', function(e){
+            e.preventDefault();
+            document.getElementById('btnStart').click();
+        });
+    }
+});
+</script>
 {% endblock %}

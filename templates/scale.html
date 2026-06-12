@@ -3,18 +3,19 @@
 {% block title %}天赋维度筛查量表{% endblock %}
 
 {% block content %}
-<div class="app-container">
-    <header class="app-header">
-        <div class="brand">
-            <span class="brand-icon">◈</span>
-            <h1>天赋维度筛查量表</h1>
-        </div>
-        <a href="{{ url_for('main.index') }}" class="btn-back" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;">
-            ← 返回AI访谈
-        </a>
-    </header>
+{% include '_nav.html' %}
 
-    <main class="main-content">
+<!-- 页面标题区 -->
+<section class="page-hero">
+    <div class="section-content">
+        <h1>天赋维度筛查量表</h1>
+        <p>标准化量表 · 20 题 · 约 5 分钟</p>
+    </div>
+</section>
+
+<!-- 主内容 -->
+<section class="tile tile-light" style="padding-top: 32px;">
+    <div class="section-content-narrow">
         <!-- 欢迎页 -->
         <div class="welcome-screen" id="scaleWelcome">
             <div class="welcome-card">
@@ -63,11 +64,9 @@
             <div class="question-card" id="questionCard">
                 <div class="question-number" id="questionNumber">第 1 题</div>
                 <h3 class="question-text" id="questionText">加载中...</h3>
-                
                 <div class="options-list" id="optionsList">
                     <!-- 选项动态生成 -->
                 </div>
-                
                 <div class="scale-nav">
                     <button class="btn-nav" id="btnPrev" style="visibility: hidden;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -90,12 +89,10 @@
             <div class="loading-spinner"></div>
             <p class="loading-text">正在分析你的天赋维度...</p>
         </div>
-    </main>
+    </div>
+</section>
 
-    <footer class="app-footer">
-        <p>个人天赋发掘测评系统 · 毕业设计项目</p>
-    </footer>
-</div>
+{% include '_footer.html' %}
 {% endblock %}
 
 {% block extra_js %}

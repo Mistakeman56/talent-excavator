@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}个人设置{% endblock %}
+
+{% block content %}
+{% include '_nav.html' %}
+
+<header class="page-hero">
+    <h1>个人设置</h1>
+    <p>管理你的账号信息</p>
+</header>
+
+<main class="app-container">
+    <div id="userStats" class="settings-stats"></div>
+
+    <div class="settings-card">
+        <h3>修改用户名</h3>
+        <div class="settings-form">
+            <div class="form-group">
+                <label>当前用户名</label>
+                <input type="text" id="currentUsername" disabled>
+            </div>
+            <div class="form-group">
+                <label>新用户名</label>
+                <input type="text" id="newUsername" placeholder="3-20个字符">
+            </div>
+            <button class="btn-primary" style="font-size:14px; padding:10px 20px;" onclick="changeUsername()">修改用户名</button>
+        </div>
+    </div>
+
+    <div class="settings-card">
+        <h3>修改密码</h3>
+        <div class="settings-form">
+            <div class="form-group">
+                <label>当前密码</label>
+                <input type="password" id="oldPassword" placeholder="输入当前密码">
+            </div>
+            <div class="form-group">
+                <label>新密码</label>
+                <input type="password" id="newPassword" placeholder="至少6位">
+            </div>
+            <div class="form-group">
+                <label>确认新密码</label>
+                <input type="password" id="confirmPassword" placeholder="再次输入新密码">
+            </div>
+            <button class="btn-primary" style="font-size:14px; padding:10px 20px;" onclick="changePassword()">修改密码</button>
+        </div>
+    </div>
+
+    <div class="settings-card settings-danger">
+        <h3>危险操作</h3>
+        <p>注销账号将删除你的所有数据，此操作不可恢复。</p>
+        <button class="btn-danger-action" onclick="deleteAccount()">注销账号</button>
+    </div>
+</main>
+
+{% include '_footer.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+<script>
+async function loadStats() {
+    try {
+        var res = await fetch('/api/user/stats');
+        var data = await res.json();
+        if (data.success) {
+            document.getElementById('currentUsername').value = data.username;
+            document.getElementById('userStats').innerHTML =
+                '<div class="stats-grid">' +
+                '<div class="stat-item"><div class="stat-num">' + data.stats.interview + '</div><div class="stat-label">AI 访谈</div></div>' +
+                '<div class="stat-item"><div class="stat-num">' + data.stats.scale + '</div><div class="stat-label">量表测评</div></div>' +
+                '<div class="stat-item"><div class="stat-num">' + data.stats.talent_type + '</div><div class="stat-label">类型学测评</div></div>' +
+                '<div class="stat-item"><div class="stat-num">' + data.created_at + '</div><div class="stat-label">注册时间</div></div>' +
+                '</div>';
+        }
+    } catch (e) {}
+}
+
+async function changeUsername() {
+    var username = document.getElementById('newUsername').value.trim();
+    if (!username) { alert('请输入新用户名'); return; }
+    try {
+        var res = await fetch('/api/user/change-username', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({username: username})
+        });
+        var data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            document.getElementById('currentUsername').value = data.username;
+            document.getElementById('newUsername').value = '';
+        } else {
+            alert(data.error);
+        }
+    } catch (e) { alert('网络错误'); }
+}
+
+async function changePassword() {
+    var old = document.getElementById('oldPassword').value;
+    var np = document.getElementById('newPassword').value;
+    var cp = document.getElementById('confirmPassword').value;
+    if (!old || !np || !cp) { alert('请填写完整'); return; }
+    try {
+        var res = await fetch('/api/user/change-password', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({old_password: old, new_password: np, confirm_password: cp})
+        });
+        var data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            document.getElementById('oldPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        } else {
+            alert(data.error);
+        }
+    } catch (e) { alert('网络错误'); }
+}
+
+async function deleteAccount() {
+    if (!confirm('确定要注销账号吗？所有数据将被永久删除，不可恢复！')) return;
+    if (!confirm('再次确认：你真的要注销吗？')) return;
+    try {
+        var res = await fetch('/api/user/delete-account', {method: 'DELETE'});
+        var data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            window.location.href = '/';
+        } else {
+            alert(data.error);
+        }
+    } catch (e) { alert('网络错误'); }
+}
+
+loadStats();
+</script>
+{% endblock %}

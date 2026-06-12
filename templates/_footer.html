@@ -1,0 +1,43 @@
+<!-- Footer -->
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h4>测评</h4>
+                <ul>
+                    <li><a href="{{ url_for('main.index') }}">AI 深度访谈</a></li>
+                    <li><a href="{{ url_for('scale.scale_page') }}">天赋维度量表</a></li>
+                    <li><a href="{{ url_for('main.talent_type') }}">天赋类型学</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>资源</h4>
+                <ul>
+                    <li><a href="{{ url_for('dictionary.dictionary') }}">Human 词典</a></li>
+                    <li><a href="{{ url_for('main.talent_type') }}">72 型全表</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>账户</h4>
+                <ul>
+                    {% if current_user.is_authenticated %}
+                    <li><form method="POST" action="{{ url_for('auth.logout') }}" style="display:inline;"><button type="submit" class="nav-logout-btn">退出登录</button></form></li>
+                    {% else %}
+                    <li><a href="{{ url_for('auth.login') }}">登录</a></li>
+                    <li><a href="{{ url_for('auth.register') }}">注册</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>关于</h4>
+                <ul>
+                    <li><a>毕业设计项目</a></li>
+                    <li><a>基于 Flask + AI</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>个人天赋发掘测评系统 · 毕业设计项目</p>
+        </div>
+    </div>
+</footer>

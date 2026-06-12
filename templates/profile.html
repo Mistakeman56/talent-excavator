@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}个人天赋档案{% endblock %}
+
+{% block content %}
+{% include '_nav.html' %}
+
+<header class="page-hero">
+    <h1>个人天赋档案</h1>
+    <p>整合所有测评结果，生成你的专属天赋画像</p>
+</header>
+
+<main class="app-container">
+    <div id="profileLoading" class="loading-overlay" style="display:flex;">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">正在加载天赋档案...</div>
+    </div>
+
+    <div id="profileContent" style="display:none;">
+        <div id="profileEmpty" style="display:none;">
+            <div class="welcome-card" style="text-align:center; padding: 3rem;">
+                <div class="welcome-icon">◈</div>
+                <h2>还没有测评数据</h2>
+                <p class="welcome-desc">完成至少一项测评后，即可查看你的天赋档案</p>
+                <div class="nav-entries" style="margin-top: 2rem;">
+                    <a href="{{ url_for('main.index') }}" class="nav-card">
+                        <span class="nav-icon">🎙️</span>
+                        <div class="nav-info">
+                            <h3>AI 深度访谈</h3>
+                            <p>8~20 轮对话挖掘底层天赋</p>
+                        </div>
+                        <span class="nav-arrow">›</span>
+                    </a>
+                    <a href="{{ url_for('scale.scale_page') }}" class="nav-card">
+                        <span class="nav-icon">📊</span>
+                        <div class="nav-info">
+                            <h3>天赋维度量表</h3>
+                            <p>20 题标准化五维筛查</p>
+                        </div>
+                        <span class="nav-arrow">›</span>
+                    </a>
+                    <a href="{{ url_for('main.talent_type') }}" class="nav-card">
+                        <span class="nav-icon">🧬</span>
+                        <div class="nav-info">
+                            <h3>天赋类型学</h3>
+                            <p>40 题获得 4 字母天赋代码</p>
+                        </div>
+                        <span class="nav-arrow">›</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div id="profileMain" style="display:none;">
+            <div class="profile-summary-card" id="profileSummaryCard"></div>
+
+            <div class="profile-grid">
+                <div class="profile-section" id="profileInterview"></div>
+                <div class="profile-section" id="profileScale"></div>
+                <div class="profile-section" id="profileTalentType"></div>
+            </div>
+
+            <div class="profile-validation" id="profileValidation"></div>
+        </div>
+    </div>
+</main>
+
+{% include '_footer.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+{% endblock %}

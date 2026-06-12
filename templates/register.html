@@ -3,25 +3,20 @@
 {% block title %}注册{% endblock %}
 
 {% block content %}
-<div class="app-container">
-    <header class="app-header">
-        <div class="brand">
-            <span class="brand-icon">◈</span>
-            <h1>个人天赋发掘测评系统</h1>
-        </div>
-        <a href="{{ url_for('main.index') }}" class="btn-back" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;">
-            ← 返回首页
-        </a>
-    </header>
+{% include '_nav.html' %}
 
-    <main class="main-content">
+<!-- 页面标题区 -->
+<section class="page-hero">
+    <div class="section-content">
+        <h1>创建账号</h1>
+        <p>注册后即可开始你的天赋测评</p>
+    </div>
+</section>
+
+<!-- 主内容 -->
+<section class="tile tile-light" style="padding-top: 32px;">
+    <div class="section-content-narrow">
         <div class="auth-card">
-            <div class="auth-header">
-                <div class="welcome-icon">◈</div>
-                <h2>创建账号</h2>
-                <p class="auth-subtitle">注册后即可开始你的天赋测评</p>
-            </div>
-
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
@@ -50,10 +45,8 @@
                 <p>已有账号？<a href="{{ url_for('auth.login', next=request.args.get('next')) }}">立即登录</a></p>
             </div>
         </div>
-    </main>
+    </div>
+</section>
 
-    <footer class="app-footer">
-        <p>个人天赋发掘测评系统 · 毕业设计项目</p>
-    </footer>
-</div>
+{% include '_footer.html' %}
 {% endblock %}

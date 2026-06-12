@@ -1,0 +1,32 @@
+<!-- 全局导航 -->
+<nav class="global-nav">
+    <div class="global-nav-inner">
+        <a href="{{ url_for('admin.dashboard') if is_admin() else url_for('main.index') }}" class="nav-brand">◈ Talent</a>
+        <ul class="global-nav-links">
+            {% if current_user.is_authenticated and is_admin() %}
+            <!-- 管理员导航 -->
+            <li><a href="{{ url_for('admin.dashboard') }}">管理后台</a></li>
+            <li><button id="themeToggle" class="nav-theme-btn" title="切换深色模式"></button></li>
+            <li><form method="POST" action="{{ url_for('auth.logout') }}" style="display:inline;"><button type="submit" class="nav-logout-btn">退出</button></form></li>
+            {% elif current_user.is_authenticated %}
+            <!-- 普通用户导航 -->
+            <li><a href="{{ url_for('main.index') }}">AI 访谈</a></li>
+            <li><a href="{{ url_for('scale.scale_page') }}">量表</a></li>
+            <li><a href="{{ url_for('main.talent_type') }}">类型学</a></li>
+            <li><a href="{{ url_for('profile.profile_page') }}">档案</a></li>
+            <li><a href="{{ url_for('dictionary.dictionary') }}">词典</a></li>
+            <li><a href="{{ url_for('history.history_page') }}">历史</a></li>
+            <li><button id="themeToggle" class="nav-theme-btn" title="切换深色模式"></button></li>
+            <li><form method="POST" action="{{ url_for('auth.logout') }}" style="display:inline;"><button type="submit" class="nav-logout-btn">退出</button></form></li>
+            {% else %}
+            <!-- 未登录导航 -->
+            <li><a href="{{ url_for('main.index') }}">AI 访谈</a></li>
+            <li><a href="{{ url_for('scale.scale_page') }}">量表</a></li>
+            <li><a href="{{ url_for('main.talent_type') }}">类型学</a></li>
+            <li><a href="{{ url_for('dictionary.dictionary') }}">词典</a></li>
+            <li><button id="themeToggle" class="nav-theme-btn" title="切换深色模式"></button></li>
+            <li><a href="{{ url_for('auth.login') }}" class="nav-cta">登录</a></li>
+            {% endif %}
+        </ul>
+    </div>
+</nav>

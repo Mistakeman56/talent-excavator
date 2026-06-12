@@ -2,10 +2,6 @@
 
 {% block title %}量表结果 - 天赋维度分析{% endblock %}
 
-{% block extra_css %}
-<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-{% endblock %}
-
 {% block content %}
 <div class="app-container">
     <header class="app-header">
@@ -82,5 +78,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script src="{{ url_for('static', filename='js/utils.js') }}"></script>
 <script src="{{ url_for('static', filename='js/scale_result.js') }}"></script>
 {% endblock %}

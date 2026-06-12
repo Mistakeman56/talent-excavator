@@ -93,10 +93,10 @@
                     <div class="dim-card-icon">${DIM_ICONS[dimKey]}</div>
                     <div>
                         <div class="dim-card-label">${DIM_LABELS[dimKey]}</div>
-                        <div class="dim-card-name">${dim.code} · ${dim.info.name}</div>
+                        <div class="dim-card-name">${escapeHtml(dim.code)} · ${escapeHtml(dim.info.name)}</div>
                     </div>
                 </div>
-                <div class="dim-card-desc">${dim.info.desc}</div>
+                <div class="dim-card-desc">${escapeHtml(dim.info.desc)}</div>
                 <div class="dim-score-bar">
                     <span class="dim-score-label">${DIM_HIGH_LABELS[dimKey]}</span>
                     <div class="dim-score-track">
@@ -112,22 +112,22 @@
         const reportEl = document.getElementById('reportSection');
         reportEl.innerHTML = `
             <h3>核心优势</h3>
-            <div class="report-text">${report.strength.replace(/\n/g, '<br>')}</div>
+            <div class="report-text">${escapeHtml(report.strength).replace(/\n/g, '<br>')}</div>
             <div style="margin-top:1.25rem;">
                 <h3>⚠️ 需要注意</h3>
-                <div class="report-text">${report.watch_out.replace(/\n/g, '<br>')}</div>
+                <div class="report-text">${escapeHtml(report.watch_out).replace(/\n/g, '<br>')}</div>
             </div>
             <div style="margin-top:1.25rem;">
                 <h3>最适合的环境</h3>
-                <div class="report-text">${report.best_environment.replace(/\n/g, '<br>')}</div>
+                <div class="report-text">${escapeHtml(report.best_environment).replace(/\n/g, '<br>')}</div>
             </div>
             <div style="margin-top:1.25rem;">
                 <h3>Human 3.0 洞察</h3>
-                <div class="report-text">${report.human30_insight.replace(/\n/g, '<br>')}</div>
+                <div class="report-text">${escapeHtml(report.human30_insight).replace(/\n/g, '<br>')}</div>
             </div>
             <div style="margin-top:1.25rem;">
                 <h3>发展建议</h3>
-                <div class="report-text">${report.development_advice.replace(/\n/g, '<br>')}</div>
+                <div class="report-text">${escapeHtml(report.development_advice).replace(/\n/g, '<br>')}</div>
             </div>
         `;
 

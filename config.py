@@ -10,7 +10,16 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY')
     if not SECRET_KEY:
         raise ValueError('SECRET_KEY 环境变量未设置。请复制 .env.example 为 .env 并填写密钥。')
-    
+
+    # 数据库配置
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///talent_assessment.db'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # 服务器配置
+    HOST = os.getenv('FLASK_HOST', '0.0.0.0')
+    PORT = int(os.getenv('FLASK_PORT', '5001'))
+    DEBUG = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
+
     # 测评流程配置
     MIN_QUESTIONS = 8          # 最少答题数才能生成报告
     SUGGEST_REPORT_AT = 12     # 建议生成报告的轮数
@@ -29,7 +38,7 @@ class Config:
             raise ValueError('DEEPSEEK_API_KEY 环境变量未设置。请复制 .env.example 为 .env 并填写密钥。')
         AI_BASE_URL = 'https://api.deepseek.com/v1'
         AI_MODEL = 'deepseek-v4-flash'  # 或 'deepseek-v4-pro'（推理更深但贵12倍）
-    else:
+    elif _PROVIDER == 'kimi':
         # Kimi (Moonshot) 配置
         # 优点: 上下文窗口大(128k), 中文语料丰富
         # 缺点: 对长system prompt末尾指令遵循度一般, 容易"自主发挥"
@@ -38,3 +47,5 @@ class Config:
             raise ValueError('KIMI_API_KEY 环境变量未设置。请复制 .env.example 为 .env 并填写密钥。')
         AI_BASE_URL = 'https://api.moonshot.cn/v1'
         AI_MODEL = 'moonshot-v1-128k'
+    else:
+        raise ValueError(f'不支持的 PROVIDER 值: {_PROVIDER}，请设置为 "deepseek" 或 "kimi"')

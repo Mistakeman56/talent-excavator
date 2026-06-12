@@ -3,28 +3,29 @@
 {% block title %}Human词典{% endblock %}
 
 {% block content %}
-<div class="app-container">
-    <header class="app-header">
-        <div class="brand">
-            <span class="brand-icon">◈</span>
-            <h1>Human词典</h1>
-        </div>
-        <a href="{{ url_for('main.index') }}" class="btn-back" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;">
-            ← 返回首页
-        </a>
-    </header>
+{% include '_nav.html' %}
 
-    <main class="main-content">
+<!-- 页面标题区 -->
+<section class="page-hero">
+    <div class="section-content">
+        <h1>Human 词典</h1>
+        <p>核心概念速查手册，涵盖天赋类型、HUMAN 3.0 框架与评估术语</p>
+    </div>
+</section>
+
+<!-- 主内容 -->
+<section class="tile tile-light" style="padding-top: 32px;">
+    <div class="section-content">
         <!-- 搜索区 -->
         <div class="dict-search-section">
             <div class="search-box">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-muted); flex-shrink: 0;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--body-muted); flex-shrink: 0;">
                     <circle cx="11" cy="11" r="8"/>
                     <path d="m21 21-4.35-4.35"/>
                 </svg>
                 <input type="text" id="searchInput" placeholder="搜索词条、概念、定义..." autocomplete="off">
             </div>
-            
+
             <div class="category-tags" id="categoryTags">
                 <button class="tag active" data-category="">全部</button>
                 <!-- 动态生成分类标签 -->
@@ -38,29 +39,28 @@
 
         <!-- 空状态 -->
         <div class="dict-empty" id="dictEmpty" style="display:none;">
-            <div class="welcome-icon" style="font-size: 40px; margin-bottom: 12px;">🔍</div>
+            <div style="font-size: 40px; margin-bottom: 12px; color: var(--body-muted);">🔍</div>
             <p>没有找到匹配的词条</p>
-            <p style="font-size: 0.85rem; color: var(--text-muted);">试试其他关键词或分类</p>
-        </div>
-    </main>
-
-    <!-- 词条详情弹窗 -->
-    <div class="dict-modal" id="dictModal" style="display:none;">
-        <div class="dict-modal-overlay" onclick="closeModal()"></div>
-        <div class="dict-modal-content">
-            <button class="dict-modal-close" onclick="closeModal()">✕</button>
-            <div class="dict-modal-body" id="modalBody">
-                <!-- 动态生成 -->
-            </div>
+            <p style="font-size: 0.85rem; color: var(--body-muted);">试试其他关键词或分类</p>
         </div>
     </div>
+</section>
 
-    <footer class="app-footer">
-        <p>个人天赋发掘测评系统 · 毕业设计项目</p>
-    </footer>
+<!-- 词条详情弹窗 -->
+<div class="dict-modal" id="dictModal" style="display:none;">
+    <div class="dict-modal-overlay" onclick="closeModal()"></div>
+    <div class="dict-modal-content">
+        <button class="dict-modal-close" onclick="closeModal()">✕</button>
+        <div class="dict-modal-body" id="modalBody">
+            <!-- 动态生成 -->
+        </div>
+    </div>
 </div>
+
+{% include '_footer.html' %}
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/utils.js') }}"></script>
 <script src="{{ url_for('static', filename='js/dictionary.js') }}"></script>
 {% endblock %}

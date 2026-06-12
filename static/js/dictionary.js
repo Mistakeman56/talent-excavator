@@ -42,7 +42,7 @@ function renderCategories() {
     let html = '<button class="tag active" data-category="">全部</button>';
     
     for (const cat of dictState.categories) {
-        html += `<button class="tag" data-category="${cat}">${cat}</button>`;
+        html += `<button class="tag" data-category="${escapeHtml(cat)}">${escapeHtml(cat)}</button>`;
     }
     
     els.categoryTags.innerHTML = html;
@@ -84,11 +84,11 @@ function renderEntries(entriesToRender) {
         html += `
             <div class="dict-card" onclick="openModal(${entry.id})">
                 <div class="dict-card-header">
-                    <h4 class="dict-term">${entry.term}</h4>
-                    <span class="dict-cat-badge">${entry.category}</span>
+                    <h4 class="dict-term">${escapeHtml(entry.term)}</h4>
+                    <span class="dict-cat-badge">${escapeHtml(entry.category)}</span>
                 </div>
-                <p class="dict-definition">${truncate(entry.definition, 100)}</p>
-                ${entry.related_terms ? `<div class="dict-related">相关：${entry.related_terms}</div>` : ''}
+                <p class="dict-definition">${escapeHtml(truncate(entry.definition, 100))}</p>
+                ${entry.related_terms ? `<div class="dict-related">相关：${escapeHtml(entry.related_terms)}</div>` : ''}
             </div>
         `;
     }
@@ -130,23 +130,23 @@ function openModal(entryId) {
     if (!entry) return;
     
     els.modalBody.innerHTML = `
-        <div class="dict-modal-cat">${entry.category}</div>
-        <h2 class="dict-modal-title">${entry.term}</h2>
+        <div class="dict-modal-cat">${escapeHtml(entry.category)}</div>
+        <h2 class="dict-modal-title">${escapeHtml(entry.term)}</h2>
         <div class="dict-modal-section">
             <h5>定义</h5>
-            <p>${entry.definition}</p>
+            <p>${escapeHtml(entry.definition)}</p>
         </div>
         ${entry.example ? `
         <div class="dict-modal-section">
             <h5>例子</h5>
-            <p class="dict-modal-example">${entry.example}</p>
+            <p class="dict-modal-example">${escapeHtml(entry.example)}</p>
         </div>
         ` : ''}
         ${entry.related_terms ? `
         <div class="dict-modal-section">
             <h5>相关概念</h5>
             <div class="dict-modal-related">
-                ${entry.related_terms.split(',').map(t => `<span class="related-tag">${t.trim()}</span>`).join('')}
+                ${entry.related_terms.split(',').map(t => `<span class="related-tag">${escapeHtml(t.trim())}</span>`).join('')}
             </div>
         </div>
         ` : ''}

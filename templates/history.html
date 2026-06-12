@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}测评历史{% endblock %}
+
+{% block content %}
+{% include '_nav.html' %}
+
+<!-- 页面标题区 -->
+<section class="page-hero">
+    <div class="section-content">
+        <h1>测评历史</h1>
+        <p>你完成的每一次探索，都会在这里留下足迹</p>
+    </div>
+</section>
+
+<!-- 主内容 -->
+<section class="tile tile-light" style="padding-top: 32px; min-height: 60vh;">
+    <div class="section-content-narrow">
+        <!-- 筛选标签 -->
+        <div class="category-tags" id="filterTags" style="margin-bottom: 32px;">
+            <button class="tag active" data-filter="all">全部 <span class="tag-count" id="countAll">0</span></button>
+            <button class="tag" data-filter="interview">AI 访谈 <span class="tag-count" id="countInterview">0</span></button>
+            <button class="tag" data-filter="scale">量表 <span class="tag-count" id="countScale">0</span></button>
+            <button class="tag" data-filter="talent_type">类型学 <span class="tag-count" id="countTalentType">0</span></button>
+        </div>
+
+        <!-- 视图切换 -->
+        <div class="history-view-toggle" id="viewToggle">
+            <button class="view-toggle-btn active" data-view="list">列表视图</button>
+            <button class="view-toggle-btn" data-view="compare">对比视图</button>
+        </div>
+
+        <!-- 列表视图 -->
+        <div id="listView">
+            <!-- 历史列表 -->
+            <div class="history-list" id="historyList">
+                <!-- 动态生成 -->
+            </div>
+
+            <!-- 空状态 -->
+            <div class="history-empty" id="historyEmpty" style="display:none;">
+                <div style="font-size: 40px; margin-bottom: 12px; color: var(--body-muted);">📋</div>
+                <p>暂无测评记录</p>
+                <p style="font-size: 0.85rem; color: var(--body-muted); margin-top: 8px;">完成一次测评后，结果会自动出现在这里</p>
+                <div style="margin-top: 24px;">
+                    <a href="{{ url_for('main.index') }}" class="btn-primary">开始 AI 访谈</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 对比视图 -->
+        <div id="compareView" style="display: none;">
+            <div class="compare-header">
+                <div class="compare-select-all">
+                    <input type="checkbox" id="selectAll" onchange="selectAllRecords()">
+                    <label for="selectAll">全选</label>
+                </div>
+                <div class="compare-actions">
+                    <button class="compare-btn" id="compareBtn" disabled onclick="renderCompareView()">开始对比</button>
+                </div>
+            </div>
+
+            <!-- 时间线 -->
+            <div class="compare-timeline" id="compareTimeline">
+                <!-- 动态生成 -->
+            </div>
+
+            <!-- 图表区域 -->
+            <div class="compare-charts" id="compareCharts">
+                <!-- 动态生成 -->
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 报告弹窗（AI 访谈） -->
+<div class="dict-modal" id="reportModal" style="display:none;">
+    <div class="dict-modal-overlay" onclick="closeReportModal()"></div>
+    <div class="dict-modal-content" style="max-width: 800px;">
+        <button class="dict-modal-close" onclick="closeReportModal()">✕</button>
+        <div class="dict-modal-body">
+            <div id="reportModalBody">
+                <!-- 动态生成 -->
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include '_footer.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/history.js') }}"></script>
+{% endblock %}
