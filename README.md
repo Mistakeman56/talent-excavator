@@ -25,6 +25,7 @@
 - 后端强制控制 **8 个访谈方向**（A-H），确保覆盖全面
 - 每轮输出包含：**关键信号提取**、**天赋假设更新**、**HUMAN 3.0 四象限判断**、**下一道深度问题**
 - 达到 8 轮后可生成 **14 章节 Markdown 报告**
+- **访谈中断恢复**：关闭浏览器后可从上次中断处继续，历史对话完整保留
 
 | 方向 | 主题 | 核心问题 |
 |:----:|:-----|:---------|
@@ -79,6 +80,32 @@
 
 - 项目核心概念速查手册，涵盖天赋类型、HUMAN 3.0 框架、评估术语
 - 支持分类筛选与关键词搜索，点击词条查看详细定义、例子与相关概念
+
+### 🎯 个人天赋档案
+
+- **跨测评交叉验证**：整合 AI 访谈、量表、类型学三种测评结果
+- **天赋名片**：展示类型代码、核心天赋、量表 Top 维度
+- **三栏并排**：AI 访谈摘要 | 量表雷达图 | 类型学维度详情
+- **交叉验证报告**：自动比对三种测评结果，标记互相验证和有分歧的维度
+
+### 👤 用户个人中心
+
+- **个人统计**：查看 AI 访谈、量表、类型学的完成次数
+- **修改用户名**：支持修改用户名（唯一性校验）
+- **修改密码**：验证旧密码后设置新密码
+- **账号注销**：删除账号及所有相关数据（管理员不可注销）
+
+### 📊 报告导出与分享
+
+- **分享链接**：生成带 token 的公开链接，无需登录即可查看报告
+- **Markdown 导出**：下载报告为 Markdown 文件
+- **打印 / 保存 PDF**：浏览器原生打印功能
+
+### 🌙 深色模式
+
+- **一键切换**：导航栏主题切换按钮
+- **自动记忆**：localStorage 保存用户偏好
+- **跟随系统**：首次访问自动检测系统主题偏好
 
 ### 👤 管理后台
 
@@ -342,39 +369,46 @@ python app.py
 │   └── ai_service.py           # AI 服务封装：Prompt 构建、API 调用、四段式解析
 ├── routes/                     # Flask Blueprint 路由
 │   ├── auth.py                 # 用户认证（注册 / 登录 / 登出）
-│   ├── interview.py            # AI 访谈 API（开始 / 聊天 / 报告 / 重置）
+│   ├── interview.py            # AI 访谈 API（开始 / 聊天 / 报告 / 重置 / 恢复）
 │   ├── scale.py                # 量表 API（题目 / 提交 / 二级量表 / 结果查询）
-│   ├── talent_type.py          # 天赋类型学 API（题目 / 提交 / 查询结果 / 图鉴）
+│   ├── talent_type.py          # 天赋类型学 API（题目 / 提交 / 查询结果 / 图鉴 / 对比）
 │   ├── dictionary.py           # 词典 API（列表 / 筛选 / 详情 / 导入）
-│   ├── history.py              # 历史记录 API（汇总 / 详情）
-│   ├── admin.py                # 管理后台 API（统计 / 用户 / 记录）
-│   └── main.py                 # 主页、报告展示页
+│   ├── history.py              # 历史记录 API（汇总 / 详情 / 导出）
+│   ├── admin.py                # 管理后台 API（统计 / 用户 / 记录 / 重置密码）
+│   ├── profile.py              # 个人天赋档案（跨测评交叉分析）
+│   ├── user.py                 # 用户个人中心（改密码 / 改用户名 / 注销）
+│   └── main.py                 # 主页、报告展示页、分享链接
 ├── templates/                  # Jinja2 模板
 │   ├── base.html               # 基础模板
-│   ├── _nav.html               # 导航栏片段（区分管理员/普通用户）
+│   ├── _nav.html               # 导航栏片段（区分管理员/普通用户，含主题切换）
 │   ├── _footer.html            # Footer 片段
 │   ├── index.html              # 首页（带彩色词云背景）
 │   ├── talent_type.html        # 天赋类型学测评页
 │   ├── talent_type_result.html # 天赋类型学结果页
 │   ├── type_catalog_group.html # 72种人格图鉴（按类型分组）
+│   ├── type_compare.html       # 两种类型对比页
 │   ├── scale.html / scale_result.html
 │   ├── dictionary.html
 │   ├── history.html
-│   ├── report.html
+│   ├── report.html             # 报告展示页（支持分享和导出）
+│   ├── profile.html            # 个人天赋档案页
+│   ├── user_settings.html      # 用户个人设置页
 │   ├── admin.html              # 管理后台
 │   ├── login.html / register.html
 │   └── errors/                 # 错误页面（404、500）
 ├── static/
-│   ├── css/style.css           # 全局样式（Apple Design System 风格）
+│   ├── css/style.css           # 全局样式（Apple Design System 风格，支持深色模式）
 │   └── js/                     # 各页面交互逻辑
 │       ├── utils.js            # 公共工具函数（escapeHtml 等）
-│       ├── main.js             # AI 访谈页
-│       ├── talent_type.js      # 天赋类型学答题页
+│       ├── theme.js            # 深色模式切换逻辑
+│       ├── main.js             # AI 访谈页（支持中断恢复）
+│       ├── talent_type.js      # 天赋类型学答题页（支持进度保存）
 │       ├── talent_type_result.js # 天赋类型学结果页
-│       ├── scale.js            # 量表测评页
+│       ├── scale.js            # 量表测评页（支持进度保存）
 │       ├── scale_result.js     # 量表结果页
 │       ├── dictionary.js       # 词典页
-│       └── history.js          # 历史记录页
+│       ├── history.js          # 历史记录页（支持对比和导出）
+│       └── profile.js          # 个人天赋档案页
 └── instance/                   # SQLite 数据库（运行时生成，已加入 .gitignore）
 ```
 
@@ -418,6 +452,9 @@ AI_MODEL = 'deepseek-v4-flash'
 - **天赋类型学 72 型全表**：40 道迫选题覆盖 8 个 Human 3.0 方向，每个组合配有专属中文名称与详细信息
 - **72种人格图鉴**：按四大类型分组展示，每个类型有独立主题色页面
 - **管理后台**：数据统计、用户管理、测评记录管理、人格类型分布图表
+- **72种类型对比**：选择两种天赋类型，四维度并排对比，查看异同点
+- **历史记录对比**：选择多条测评记录进行对比分析，可视化展示变化趋势
+- **答题进度保存**：量表和类型学答题进度自动保存到 localStorage，中断后可恢复
 
 ---
 
