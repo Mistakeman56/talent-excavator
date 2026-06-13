@@ -33,6 +33,7 @@
     setTheme(getPreferredTheme());
 
     document.addEventListener('DOMContentLoaded', function () {
+        updateToggleIcon(document.documentElement.getAttribute('data-theme') || 'light');
         const btn = document.getElementById('themeToggle');
         if (btn) {
             btn.addEventListener('click', function () {
