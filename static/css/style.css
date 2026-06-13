@@ -242,19 +242,51 @@ body {
 .nav-logout-btn:hover { opacity: 1; }
 
 .nav-theme-btn {
-    background: none;
+    background: rgba(255, 255, 255, 0.1);
     border: none;
-    padding: 4px;
+    width: 32px;
+    height: 32px;
     margin: 0;
     cursor: pointer;
     color: var(--on-dark);
-    opacity: 0.7;
+    opacity: 0.85;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: opacity var(--transition-fast);
+    border-radius: 50%;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
 }
-.nav-theme-btn:hover { opacity: 1; }
+.nav-theme-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.nav-theme-btn:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.18);
+    transform: scale(1.1);
+}
+.nav-theme-btn:hover::before {
+    opacity: 1;
+}
+.nav-theme-btn:active {
+    transform: scale(0.95);
+}
+.nav-theme-btn svg {
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.nav-theme-btn:hover svg {
+    transform: rotate(15deg);
+}
+[data-theme="dark"] .nav-theme-btn:hover svg {
+    transform: rotate(-15deg);
+}
 
 /* Footer 中的退出按钮 */
 .site-footer .nav-logout-btn {
