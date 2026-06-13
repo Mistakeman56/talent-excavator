@@ -79,7 +79,7 @@ def stats():
 def get_users():
     """用户列表（分页）"""
     page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 20, type=int)
+    per_page = min(request.args.get('per_page', 20, type=int), 100)
 
     pagination = User.query.order_by(User.created_at.desc()).paginate(
         page=page, per_page=per_page, error_out=False
@@ -158,7 +158,7 @@ def delete_user(user_id):
 def get_records():
     """测评记录列表（分页+类型筛选）"""
     page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 20, type=int)
+    per_page = min(request.args.get('per_page', 20, type=int), 100)
     record_type = request.args.get('type', '')
 
     # 收集所有记录（使用 JOIN 避免 N+1 查询）

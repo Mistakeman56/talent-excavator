@@ -45,6 +45,7 @@ from flask import Blueprint, request, jsonify, render_template
 from flask_login import current_user
 from models import db, TalentTypeResult
 from talent_type_data import ALL_QUESTIONS, calculate_type_code, TYPE_NAMES, DETAILED_REPORTS, TYPE_DIM1, TYPE_DIM2, TYPE_DIM3, TYPE_DIM4
+from utils import api_error, ERR_NOT_LOGGED_IN
 
 talent_type_bp = Blueprint('talent_type', __name__)
 
@@ -162,9 +163,17 @@ def get_questions():
         ]
     }
     """
+    sanitized = []
+    for q in ALL_QUESTIONS:
+        sanitized.append({
+            'id': q['id'],
+            'dimension': q.get('dimension', ''),
+            'text': q['text'],
+            'options': [{'key': o['key'], 'text': o['text']} for o in q['options']]
+        })
     return jsonify({
         'success': True,
-        'questions': ALL_QUESTIONS
+        'questions': sanitized
     })
 
 
@@ -204,9 +213,9 @@ def submit_answers():
     }
     """
     if not current_user.is_authenticated:
-        return jsonify({"success": False, "error": "未登录", "need_login": True})
+        return api_error(ERR_NOT_LOGGED_IN, "请先登录")
 
-    data = request.get_json()
+    data = request.get_json(silent=True)
     if not data or 'answers' not in data:
         return jsonify({'success': False, 'error': '缺少答题数据'}), 400
 
@@ -271,7 +280,7 @@ def get_result(session_id):
     }
     """
     if not current_user.is_authenticated:
-        return jsonify({"success": False, "error": "未登录", "need_login": True})
+        return api_error(ERR_NOT_LOGGED_IN, "请先登录")
 
     result = TalentTypeResult.query.filter_by(
         session_id=session_id,

@@ -52,11 +52,11 @@
         <div id="compareView" style="display: none;">
             <div class="compare-header">
                 <div class="compare-select-all">
-                    <input type="checkbox" id="selectAll" onchange="selectAllRecords()">
+                    <input type="checkbox" id="selectAll">
                     <label for="selectAll">全选</label>
                 </div>
                 <div class="compare-actions">
-                    <button class="compare-btn" id="compareBtn" disabled onclick="renderCompareView()">开始对比</button>
+                    <button class="compare-btn" id="compareBtn" disabled>开始对比</button>
                 </div>
             </div>
 
@@ -75,9 +75,9 @@
 
 <!-- 报告弹窗（AI 访谈） -->
 <div class="dict-modal" id="reportModal" style="display:none;">
-    <div class="dict-modal-overlay" onclick="closeReportModal()"></div>
+    <div class="dict-modal-overlay" id="reportModalOverlay"></div>
     <div class="dict-modal-content" style="max-width: 800px;">
-        <button class="dict-modal-close" onclick="closeReportModal()">✕</button>
+        <button class="dict-modal-close" id="reportModalClose">✕</button>
         <div class="dict-modal-body">
             <div id="reportModalBody">
                 <!-- 动态生成 -->

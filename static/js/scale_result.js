@@ -17,9 +17,9 @@ if (!sessionId) {
     `;
 } else {
     // 从服务端获取结果
-    fetch(`/api/scale/result/${sessionId}`)
-        .then(res => res.json())
+    apiFetch(`/api/scale/result/${sessionId}`)
         .then(data => {
+            if (!data) return; // 已跳转登录页
             if (data.success) {
                 resultData = data;
                 if (resultData.scores) {
@@ -230,7 +230,7 @@ function startSecondaryScale(data) {
                 <div class="options-list">
                     ${[1,2,3,4,5].map(v => `
                         <div class="option-item ${answers[q.id] === v ? 'selected' : ''}" 
-                             onclick="window.selectSecondary(${v})">
+                             data-value="${v}">
                             <span class="option-value">${v}</span>
                             <span class="option-label">${v === 1 ? '完全不像' : v === 2 ? '不太像' : v === 3 ? '一般' : v === 4 ? '比较像' : '非常像我'}</span>
                         </div>
@@ -238,6 +238,13 @@ function startSecondaryScale(data) {
                 </div>
             </div>
         `;
+
+        // 绑定事件委托
+        container.querySelectorAll('.option-item').forEach(option => {
+            option.addEventListener('click', function() {
+                window.selectSecondary(parseInt(this.dataset.value));
+            });
+        });
     }
     
     window.selectSecondary = async function(value) {
