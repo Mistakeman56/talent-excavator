@@ -41,6 +41,7 @@ AI 提供商切换：
 import re
 import logging
 from openai import OpenAI
+import openai
 from flask import current_app
 
 logger = logging.getLogger(__name__)
@@ -74,7 +75,8 @@ class AIService:
         if self.client is None:
             self.client = OpenAI(
                 api_key=current_app.config['AI_API_KEY'],
-                base_url=current_app.config['AI_BASE_URL']
+                base_url=current_app.config['AI_BASE_URL'],
+                timeout=120.0
             )
         return self.client
 
@@ -84,7 +86,8 @@ class AIService:
     # 每个方向有三个组成部分：
     # 1. DIRECTION_DESCRIPTIONS: 方向描述（注入到 System Prompt）
     # 2. DIRECTION_QUESTIONS: 参考问题（引导 AI 在该方向内提问）
-    # 3. INTERVIEW_FLOW: 方向遍历顺序（定义在 route 中）
+    # 3. INTERVIEW_FLOW: 方向遍历顺序（按 A-H 循环）
+    INTERVIEW_FLOW = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
 
     DIRECTION_DESCRIPTIONS = {
         'A': '【A-童年/顽固缺点】16岁之前没人逼你也会沉进去做的事，或从小常被批评的"顽固缺点"',
@@ -434,6 +437,15 @@ H. 没赚到钱但一谈起来眼睛发亮的事——真兴趣"""
                 "type": "chat",
                 **parsed
             }
+        except openai.APITimeoutError:
+            logger.error("AI API 调用超时")
+            return {"type": "error", "message": "AI 服务响应超时，请稍后重试"}
+        except openai.RateLimitError:
+            logger.error("AI API 速率限制")
+            return {"type": "error", "message": "AI 服务繁忙，请稍后重试"}
+        except openai.APIError as e:
+            logger.error("AI API 错误: %s", str(e))
+            return {"type": "error", "message": "AI 服务异常，请稍后重试"}
         except Exception as e:
             logger.error("AI API 调用失败: %s", str(e))
             return {"type": "error", "message": "AI 服务暂时不可用，请稍后重试"}

@@ -129,7 +129,9 @@ def change_password():
     - 新密码需要长度校验
     - 新密码需要二次确认
     """
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'success': False, 'error': '请求格式错误'}), 400
     old_password = data.get('old_password', '')
     new_password = data.get('new_password', '')
     confirm_password = data.get('confirm_password', '')
@@ -181,7 +183,9 @@ def change_username():
     - 用户名需要唯一性校验
     - 不能修改为与当前用户名相同的值
     """
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'success': False, 'error': '请求格式错误'}), 400
     new_username = data.get('username', '').strip()
 
     # 参数校验
