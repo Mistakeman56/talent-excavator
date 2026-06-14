@@ -83,6 +83,59 @@
     </div>
 </section>
 
+<!-- AI 配置 -->
+<section class="tile tile-light">
+    <div class="section-content">
+        <h2 class="section-headline">AI 服务配置</h2>
+        <p class="section-tagline" style="margin-bottom: var(--space-lg);">配置 DeepSeek / Kimi API 密钥，首次部署时可在此直接设置</p>
+
+        <div class="admin-config-grid">
+            <div class="admin-config-card">
+                <h3>当前状态</h3>
+                <div class="config-status" id="configStatus">
+                    <div class="config-row">
+                        <span class="config-label">当前提供商</span>
+                        <span class="config-value" id="currentProvider">--</span>
+                    </div>
+                    <div class="config-row">
+                        <span class="config-label">DeepSeek 密钥</span>
+                        <span class="config-value" id="deepseekKeyStatus">--</span>
+                    </div>
+                    <div class="config-row">
+                        <span class="config-label">Kimi 密钥</span>
+                        <span class="config-value" id="kimiKeyStatus">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-config-card">
+                <h3>修改配置</h3>
+                <div class="config-form">
+                    <div class="form-group">
+                        <label>AI 提供商</label>
+                        <select id="configProvider" class="config-select">
+                            <option value="deepseek">DeepSeek（推荐，指令遵循度好）</option>
+                            <option value="kimi">Kimi / Moonshot（上下文窗口大）</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>DeepSeek API Key</label>
+                        <input type="password" id="configDeepseekKey" placeholder="留空表示不修改">
+                        <small>申请地址：<a href="https://platform.deepseek.com/" target="_blank">platform.deepseek.com</a></small>
+                    </div>
+                    <div class="form-group">
+                        <label>Kimi API Key</label>
+                        <input type="password" id="configKimiKey" placeholder="留空表示不修改">
+                        <small>申请地址：<a href="https://platform.moonshot.cn/" target="_blank">platform.moonshot.cn</a></small>
+                    </div>
+                    <button class="btn-primary" onclick="saveAIConfig()">保存配置</button>
+                    <div id="configMessage" class="config-message" style="display:none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- 72种人格类型分布 -->
 <section class="tile tile-parchment">
     <div class="section-content">
@@ -175,6 +228,8 @@ function renderModuleChart(counts) {
     const labels = keys.map(k => MODULE_NAMES[k] || k);
     const values = keys.map(k => counts[k]);
     const colors = keys.map(k => MODULE_COLORS[k] || '#8e8e93');
+    const textColor = getChartTextColor();
+    const gridColor = getChartGridColor();
 
     new Chart(document.getElementById('moduleChart'), {
         type: 'bar',
@@ -188,8 +243,8 @@ function renderModuleChart(counts) {
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
             scales: {
-                x: { grid: { display: false }, ticks: { color: '#86868b' } },
-                y: { grid: { display: false }, ticks: { color: '#1d1d1f', font: { size: 13 } } }
+                x: { grid: { display: false }, ticks: { color: textColor } },
+                y: { grid: { display: false }, ticks: { color: textColor, font: { size: 13 } } }
             }
         }
     });
@@ -199,6 +254,8 @@ function renderModuleChart(counts) {
 function renderTrendChart(trend) {
     const labels = trend.map(t => t.date);
     const values = trend.map(t => t.count);
+    const textColor = getChartTextColor();
+    const gridColor = getChartGridColor();
 
     new Chart(document.getElementById('trendChart'), {
         type: 'line',
@@ -219,8 +276,8 @@ function renderTrendChart(trend) {
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
             scales: {
-                x: { grid: { display: false }, ticks: { color: '#86868b' } },
-                y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#86868b' }, beginAtZero: true }
+                x: { grid: { display: false }, ticks: { color: textColor } },
+                y: { grid: { color: gridColor }, ticks: { color: textColor }, beginAtZero: true }
             }
         }
     });
@@ -394,6 +451,8 @@ async function loadTalentTypeStats() {
                 return `hsl(${hue}, 70%, 55%)`;
             });
 
+            const textColor = getChartTextColor();
+            const gridColor = getChartGridColor();
             new Chart(document.getElementById('typeDistributionChart'), {
                 type: 'bar',
                 data: {
@@ -421,8 +480,8 @@ async function loadTalentTypeStats() {
                         }
                     },
                     scales: {
-                        x: { grid: { display: false }, ticks: { color: '#86868b', font: { size: 11 } } },
-                        y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#86868b' }, beginAtZero: true }
+                        x: { grid: { display: false }, ticks: { color: textColor, font: { size: 11 } } },
+                        y: { grid: { color: gridColor }, ticks: { color: textColor }, beginAtZero: true }
                     }
                 }
             });
@@ -442,14 +501,21 @@ async function loadTalentTypeStats() {
                         data: [dim1Counts.C, dim1Counts.R, dim1Counts.B, dim1Counts.S],
                         backgroundColor: ['#0066cc', '#34c759', '#ff9500', '#af52de'],
                         borderWidth: 2,
-                        borderColor: '#fff'
+                        borderColor: isDarkMode() ? '#1d1d1f' : '#fff'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true } }
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 16,
+                                usePointStyle: true,
+                                color: getChartTextColor()
+                            }
+                        }
                     }
                 }
             });
@@ -459,10 +525,67 @@ async function loadTalentTypeStats() {
     }
 }
 
+// AI 配置管理
+async function loadAIConfig() {
+    try {
+        const res = await fetch('/api/admin/ai-config');
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('currentProvider').textContent =
+                data.provider === 'deepseek' ? 'DeepSeek' : 'Kimi / Moonshot';
+            document.getElementById('deepseekKeyStatus').textContent =
+                data.deepseek_key_length > 0 ? data.deepseek_key_masked : '未配置';
+            document.getElementById('kimiKeyStatus').textContent =
+                data.kimi_key_length > 0 ? data.kimi_key_masked : '未配置';
+            document.getElementById('configProvider').value = data.provider;
+        }
+    } catch (err) {
+        console.error('加载 AI 配置失败:', err);
+    }
+}
+
+async function saveAIConfig() {
+    const provider = document.getElementById('configProvider').value;
+    const deepseekKey = document.getElementById('configDeepseekKey').value;
+    const kimiKey = document.getElementById('configKimiKey').value;
+    const msgEl = document.getElementById('configMessage');
+
+    const body = { provider };
+    if (deepseekKey) body.deepseek_key = deepseekKey;
+    if (kimiKey) body.kimi_key = kimiKey;
+
+    try {
+        const res = await fetch('/api/admin/ai-config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        msgEl.style.display = 'block';
+        if (data.success) {
+            msgEl.className = 'config-message success';
+            msgEl.textContent = data.message;
+            document.getElementById('configDeepseekKey').value = '';
+            document.getElementById('configKimiKey').value = '';
+            loadAIConfig();
+        } else {
+            msgEl.className = 'config-message error';
+            msgEl.textContent = data.error;
+        }
+        setTimeout(() => { msgEl.style.display = 'none'; }, 5000);
+    } catch (err) {
+        msgEl.style.display = 'block';
+        msgEl.className = 'config-message error';
+        msgEl.textContent = '网络错误，请重试';
+        setTimeout(() => { msgEl.style.display = 'none'; }, 3000);
+    }
+}
+
 // 初始化
 loadStats();
 loadUsers(1);
 loadRecords(1);
 loadTalentTypeStats();
+loadAIConfig();
 </script>
 {% endblock %}

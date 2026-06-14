@@ -74,6 +74,7 @@ function renderRadarChart() {
     
     const values = dimensions.map(d => scores[d.key]?.score || 0);
     
+    const textColor = getChartTextColor();
     const option = {
         color: ['#0066cc'],
         radar: {
@@ -81,17 +82,17 @@ function renderRadarChart() {
             shape: 'polygon',
             splitNumber: 5,
             axisName: {
-                color: '#9ca3af',
+                color: textColor,
                 fontSize: 14
             },
             splitLine: {
-                lineStyle: { color: 'rgba(212, 168, 83, 0.2)' }
+                lineStyle: { color: isDarkMode() ? 'rgba(255,255,255,0.08)' : 'rgba(212, 168, 83, 0.2)' }
             },
             splitArea: {
-                areaStyle: { color: ['transparent', 'rgba(0, 102, 204, 0.05)'] }
+                areaStyle: { color: isDarkMode() ? ['transparent', 'rgba(0, 102, 204, 0.03)'] : ['transparent', 'rgba(0, 102, 204, 0.05)'] }
             },
             axisLine: {
-                lineStyle: { color: 'rgba(0, 102, 204, 0.3)' }
+                lineStyle: { color: isDarkMode() ? 'rgba(255,255,255,0.15)' : 'rgba(0, 102, 204, 0.3)' }
             }
         },
         series: [{

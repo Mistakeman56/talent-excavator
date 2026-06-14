@@ -268,6 +268,8 @@
             compareChart.destroy();
         }
 
+        const textColor = getChartTextColor();
+        const gridColor = getChartGridColor();
         compareChart = new Chart(ctx, {
             type: 'radar',
             data: {
@@ -287,7 +289,18 @@
                         beginAtZero: true,
                         max: 100,
                         ticks: {
-                            stepSize: 20
+                            stepSize: 20,
+                            color: textColor,
+                            backdropColor: 'transparent'
+                        },
+                        grid: {
+                            color: gridColor
+                        },
+                        angleLines: {
+                            color: gridColor
+                        },
+                        pointLabels: {
+                            color: textColor
                         }
                     }
                 }
@@ -338,6 +351,8 @@
             compareChart.destroy();
         }
 
+        const textColor = getChartTextColor();
+        const gridColor = getChartGridColor();
         compareChart = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -353,11 +368,23 @@
                     }
                 },
                 scales: {
+                    x: {
+                        ticks: {
+                            color: textColor
+                        },
+                        grid: {
+                            color: gridColor
+                        }
+                    },
                     y: {
                         beginAtZero: true,
                         max: 100,
                         ticks: {
-                            stepSize: 20
+                            stepSize: 20,
+                            color: textColor
+                        },
+                        grid: {
+                            color: gridColor
                         }
                     }
                 }

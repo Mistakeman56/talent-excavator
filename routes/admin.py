@@ -4,6 +4,7 @@ from functools import wraps
 from datetime import datetime, timedelta, timezone
 from models import db, User, InterviewSession, ScaleResult, TalentTypeResult, VisitLog
 import json
+import os
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -319,4 +320,121 @@ def reset_user_password(user_id):
         "success": True,
         "username": user.username,
         "new_password": new_password
+    })
+
+
+def mask_api_key(key):
+    """掩码 API 密钥，只显示前8位和后4位"""
+    if not key or len(key) < 12:
+        return '***'
+    return key[:8] + '****' + key[-4:]
+
+
+def get_env_path():
+    """获取 .env 文件路径"""
+    return os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
+
+
+def read_env_file():
+    """读取 .env 文件内容为字典"""
+    env_path = get_env_path()
+    env_dict = {}
+    if os.path.exists(env_path):
+        with open(env_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, _, value = line.partition('=')
+                    env_dict[key.strip()] = value.strip()
+    return env_dict
+
+
+def write_env_file(env_dict):
+    """将字典写入 .env 文件"""
+    env_path = get_env_path()
+    lines = []
+    if os.path.exists(env_path):
+        with open(env_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                stripped = line.strip()
+                if stripped and not stripped.startswith('#') and '=' in stripped:
+                    key = stripped.split('=', 1)[0].strip()
+                    if key in env_dict:
+                        lines.append(f'{key}={env_dict[key]}\n')
+                        del env_dict[key]
+                    else:
+                        lines.append(line)
+                else:
+                    lines.append(line)
+    # 追加新增的键
+    for key, value in env_dict.items():
+        lines.append(f'{key}={value}\n')
+    with open(env_path, 'w', encoding='utf-8') as f:
+        f.writelines(lines)
+
+
+@admin_bp.route('/api/admin/ai-config')
+@login_required
+@admin_required
+def get_ai_config():
+    """获取当前 AI 配置（密钥掩码）"""
+    provider = os.environ.get('PROVIDER', 'deepseek').lower()
+    deepseek_key = os.environ.get('DEEPSEEK_API_KEY', '')
+    kimi_key = os.environ.get('KIMI_API_KEY', '')
+
+    return jsonify({
+        "success": True,
+        "provider": provider,
+        "deepseek_key_masked": mask_api_key(deepseek_key),
+        "kimi_key_masked": mask_api_key(kimi_key),
+        "deepseek_key_length": len(deepseek_key) if deepseek_key else 0,
+        "kimi_key_length": len(kimi_key) if kimi_key else 0
+    })
+
+
+@admin_bp.route('/api/admin/ai-config', methods=['POST'])
+@login_required
+@admin_required
+def save_ai_config():
+    """保存 AI 配置到 .env 文件并更新环境变量"""
+    data = request.get_json()
+    if not data:
+        return jsonify({"success": False, "error": "无效的请求数据"}), 400
+
+    provider = data.get('provider', '').strip().lower()
+    deepseek_key = data.get('deepseek_key', '').strip()
+    kimi_key = data.get('kimi_key', '').strip()
+
+    # 验证 provider
+    if provider and provider not in ('deepseek', 'kimi'):
+        return jsonify({"success": False, "error": "提供商必须为 deepseek 或 kimi"}), 400
+
+    # 读取现有 .env
+    env_dict = read_env_file()
+
+    # 更新配置
+    if provider:
+        env_dict['PROVIDER'] = provider
+        os.environ['PROVIDER'] = provider
+
+    if deepseek_key:
+        env_dict['DEEPSEEK_API_KEY'] = deepseek_key
+        os.environ['DEEPSEEK_API_KEY'] = deepseek_key
+
+    if kimi_key:
+        env_dict['KIMI_API_KEY'] = kimi_key
+        os.environ['KIMI_API_KEY'] = kimi_key
+
+    # 写入 .env 文件
+    try:
+        write_env_file(env_dict)
+    except Exception as e:
+        return jsonify({"success": False, "error": f"写入配置文件失败: {str(e)}"}), 500
+
+    return jsonify({
+        "success": True,
+        "message": "配置已保存。注意：部分配置需要重启服务才能完全生效。",
+        "provider": os.environ.get('PROVIDER', 'deepseek'),
+        "deepseek_key_masked": mask_api_key(os.environ.get('DEEPSEEK_API_KEY', '')),
+        "kimi_key_masked": mask_api_key(os.environ.get('KIMI_API_KEY', ''))
     })

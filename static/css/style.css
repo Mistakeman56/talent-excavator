@@ -2958,6 +2958,14 @@ textarea::placeholder {
   border: 1px solid var(--hairline);
 }
 
+.admin-chart-title {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: var(--space-md);
+}
+
 .chart-title {
   font-family: var(--font-display);
   font-size: 1.125rem;
@@ -3023,6 +3031,107 @@ textarea::placeholder {
 .page-info {
   font-size: 0.875rem;
   color: var(--body-muted);
+}
+
+.admin-config-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-lg);
+}
+
+.admin-config-card {
+  background: var(--canvas);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  border: 1px solid var(--hairline);
+}
+
+.admin-config-card h3 {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: var(--space-md);
+}
+
+.config-status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.config-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-xs) 0;
+  border-bottom: 1px solid var(--divider-soft);
+}
+
+.config-label {
+  font-size: 0.9rem;
+  color: var(--body-muted);
+}
+
+.config-value {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ink);
+  font-family: monospace;
+}
+
+.config-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.config-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  background: var(--canvas-parchment);
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-family: var(--font-body);
+}
+
+.config-form input[type="password"] {
+  border-radius: var(--radius-md);
+}
+
+.config-form small {
+  font-size: 0.8rem;
+  color: var(--body-muted);
+}
+
+.config-form small a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.config-form small a:hover {
+  text-decoration: underline;
+}
+
+.config-message {
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  margin-top: var(--space-xs);
+}
+
+.config-message.success {
+  background: rgba(52, 199, 89, 0.1);
+  color: #34c759;
+  border: 1px solid rgba(52, 199, 89, 0.2);
+}
+
+.config-message.error {
+  background: rgba(255, 59, 48, 0.1);
+  color: #ff3b30;
+  border: 1px solid rgba(255, 59, 48, 0.2);
 }
 
 .btn-table-action {
@@ -3302,6 +3411,10 @@ textarea::placeholder {
   }
 
   .admin-charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-config-grid {
     grid-template-columns: 1fr;
   }
 

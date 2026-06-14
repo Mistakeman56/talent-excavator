@@ -171,12 +171,20 @@
         radarDiv.style.height = '220px';
         container.insertBefore(radarDiv, container.firstChild);
 
+        const textColor = getChartTextColor();
         const chart = echarts.init(radarDiv);
         chart.setOption({
             radar: {
                 indicator: dims.map(d => ({ name: d.name, max: 5 })),
                 radius: '65%',
-                splitArea: { areaStyle: { color: ['rgba(0,102,204,0.02)', 'rgba(0,102,204,0.04)'] } }
+                axisName: {
+                    color: textColor,
+                    fontSize: 12
+                },
+                splitLine: {
+                    lineStyle: { color: isDarkMode() ? 'rgba(255,255,255,0.08)' : 'rgba(0,102,204,0.1)' }
+                },
+                splitArea: { areaStyle: { color: isDarkMode() ? ['rgba(255,255,255,0.02)', 'rgba(255,255,255,0.04)'] : ['rgba(0,102,204,0.02)', 'rgba(0,102,204,0.04)'] } }
             },
             series: [{
                 type: 'radar',

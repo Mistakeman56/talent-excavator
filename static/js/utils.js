@@ -28,3 +28,27 @@ async function apiFetch(url, options = {}) {
     }
     return data;
 }
+
+/**
+ * 检测当前是否为暗黑模式
+ * @returns {boolean}
+ */
+function isDarkMode() {
+    return document.documentElement.getAttribute('data-theme') === 'dark';
+}
+
+/**
+ * 获取图表文字颜色（根据主题自适应）
+ * @returns {string}
+ */
+function getChartTextColor() {
+    return isDarkMode() ? '#a1a1a6' : '#86868b';
+}
+
+/**
+ * 获取图表网格线颜色（根据主题自适应）
+ * @returns {string}
+ */
+function getChartGridColor() {
+    return isDarkMode() ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)';
+}
