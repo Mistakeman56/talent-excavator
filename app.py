@@ -139,6 +139,7 @@ import threading
 _visit_buffer = []           # 内存缓冲区，存储待写入的访问记录
 _visit_lock = threading.Lock()  # 线程锁，防止多线程同时修改缓冲区导致数据错乱
 _VISIT_FLUSH_SIZE = 50       # 批量写入阈值：累积 50 条后 flush 到数据库
+_VISIT_MAX_SIZE = 1000       # 缓冲区最大容量，超出时丢弃最旧记录防止内存溢出
 
 
 def _flush_visit_buffer():
@@ -167,9 +168,12 @@ def _flush_visit_buffer():
             db.session.commit()
     except Exception:
         db.session.rollback()
-        # 失败时将数据放回缓冲区等待重试
+        # 失败时将数据放回缓冲区等待重试，但限制最大容量
         with _visit_lock:
-            _visit_buffer.extend(batch)
+            if len(_visit_buffer) + len(batch) <= _VISIT_MAX_SIZE:
+                _visit_buffer.extend(batch)
+            else:
+                logging.warning("访问日志缓冲区已满，丢弃 %d 条记录", len(batch))
 
 
 # 应用关闭时 flush 缓冲区，确保不丢失数据
@@ -262,16 +266,18 @@ def track_visit():
     elif path.startswith('/profile'):
         module = 'profile'
 
-    # 将访问记录添加到缓冲区
-    _visit_buffer.append({
-        'path': path,
-        'module': module,
-        'user_id': current_user.id if current_user.is_authenticated else None,
-        'ip_address': request.remote_addr
-    })
+    # 将访问记录添加到缓冲区（加锁保证线程安全）
+    with _visit_lock:
+        _visit_buffer.append({
+            'path': path,
+            'module': module,
+            'user_id': current_user.id if current_user.is_authenticated else None,
+            'ip_address': request.remote_addr
+        })
+        should_flush = len(_visit_buffer) >= _VISIT_FLUSH_SIZE
 
-    # 累积到阈值后批量写入
-    if len(_visit_buffer) >= _VISIT_FLUSH_SIZE:
+    # 累积到阈值后批量写入（锁外执行，避免阻塞其他请求）
+    if should_flush:
         _flush_visit_buffer()
 
 # ============================================================
@@ -328,15 +334,16 @@ with app.app_context():
     # ----------------------------------------------------------
     # 确保默认管理员账号存在
     # ----------------------------------------------------------
-    # 管理员账号：op，密码：323328
+    # 管理员账号：op，密码从环境变量读取（默认 323328）
     # 如果账号不存在则创建，如果存在但不是管理员则升级为管理员
     from models import User
     from werkzeug.security import generate_password_hash
+    admin_password = os.environ.get('ADMIN_PASSWORD', '323328')
     op_user = User.query.filter_by(username='op').first()
     if not op_user:
         op_user = User(
             username='op',
-            password_hash=generate_password_hash('323328'),
+            password_hash=generate_password_hash(admin_password),
             is_admin=True
         )
         db.session.add(op_user)

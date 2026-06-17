@@ -278,7 +278,9 @@ def chat():
         return jsonify({"success": False, "error": "未登录", "need_login": True})
 
     # 获取用户输入
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"success": False, "error": "请求格式错误，请发送 JSON 数据"}), 400
     user_answer = data.get('message', '').strip()
 
     if not user_answer:

@@ -103,9 +103,10 @@
 
 ### 🌙 深色模式
 
-- **一键切换**：导航栏主题切换按钮
+- **一键切换**：导航栏圆形主题按钮（太阳/月亮图标），带悬停动画和点击反馈
 - **自动记忆**：localStorage 保存用户偏好
 - **跟随系统**：首次访问自动检测系统主题偏好
+- **图表自适应**：雷达图、柱状图、饼图等所有图表均适配暗色模式
 
 ### 👤 管理后台
 
@@ -113,9 +114,10 @@
 - 登录后直接进入管理后台，导航栏只显示管理功能
 - 功能模块：
   - **数据统计**：总用户数、今日新增、访问量、模块访问分布
-  - **用户管理**：查看用户列表、删除用户
+  - **用户管理**：查看用户列表、删除用户、重置密码
   - **测评记录管理**：查看所有测评记录（AI访谈、量表、类型学），支持筛选
   - **72种人格类型分布**：柱状图展示 Top 15 类型，饼图展示四大类型分布
+  - **AI 配置管理**：在后台直接切换 AI 提供商（DeepSeek / Kimi）和修改 API 密钥，无需手动编辑 `.env` 文件
 
 ---
 
@@ -309,7 +311,6 @@ source .venv/bin/activate        # macOS / Linux
 
 ```bash
 pip install -r requirements.txt
-pip install flask-login
 ```
 
 ### 4. 配置环境变量
@@ -360,11 +361,22 @@ python app.py
 ├── app.py                      # Flask 应用入口：初始化扩展、注册 Blueprint、自动建表
 ├── config.py                   # 配置中心：环境变量读取、AI 提供商切换、测评参数
 ├── models.py                   # SQLAlchemy 数据模型
+├── utils.py                    # 统一业务错误码与 API 响应辅助函数
 ├── scale_data.py               # 量表题目数据（常量字典）
 ├── talent_type_data.py         # 天赋类型学数据：40 题、计分逻辑、72 型名称与详细信息
 ├── dictionary_data.py          # Human 词典种子数据（常量列表）
+├── gunicorn.conf.py            # Gunicorn 生产部署配置
 ├── requirements.txt            # Python 依赖
 ├── .env.example                # 环境变量模板
+├── deploy/                     # 部署配置
+│   └── talent-app.service      # systemd 服务文件
+├── docs/                       # 项目文档
+│   ├── 安装说明.md             # 详细安装部署指南
+│   ├── 使用说明.md             # 功能使用手册
+│   ├── AGENTS.md               # AI 编程助手参考文档
+│   ├── 项目学习手册.md         # 项目学习与理解指南
+│   ├── 需求规格说明书.md       # 需求分析文档
+│   └── 毕业设计报告.md         # 毕业设计论文
 ├── services/
 │   └── ai_service.py           # AI 服务封装：Prompt 构建、API 调用、四段式解析
 ├── routes/                     # Flask Blueprint 路由
@@ -374,7 +386,7 @@ python app.py
 │   ├── talent_type.py          # 天赋类型学 API（题目 / 提交 / 查询结果 / 图鉴 / 对比）
 │   ├── dictionary.py           # 词典 API（列表 / 筛选 / 详情 / 导入）
 │   ├── history.py              # 历史记录 API（汇总 / 详情 / 导出）
-│   ├── admin.py                # 管理后台 API（统计 / 用户 / 记录 / 重置密码）
+│   ├── admin.py                # 管理后台 API（统计 / 用户 / 记录 / 重置密码 / AI 配置）
 │   ├── profile.py              # 个人天赋档案（跨测评交叉分析）
 │   ├── user.py                 # 用户个人中心（改密码 / 改用户名 / 注销）
 │   └── main.py                 # 主页、报告展示页、分享链接
@@ -393,13 +405,13 @@ python app.py
 │   ├── report.html             # 报告展示页（支持分享和导出）
 │   ├── profile.html            # 个人天赋档案页
 │   ├── user_settings.html      # 用户个人设置页
-│   ├── admin.html              # 管理后台
+│   ├── admin.html              # 管理后台（含 AI 配置管理）
 │   ├── login.html / register.html
 │   └── errors/                 # 错误页面（404、500）
 ├── static/
 │   ├── css/style.css           # 全局样式（Apple Design System 风格，支持深色模式）
 │   └── js/                     # 各页面交互逻辑
-│       ├── utils.js            # 公共工具函数（escapeHtml 等）
+│       ├── utils.js            # 公共工具函数（escapeHtml、apiFetch）
 │       ├── theme.js            # 深色模式切换逻辑
 │       ├── main.js             # AI 访谈页（支持中断恢复）
 │       ├── talent_type.js      # 天赋类型学答题页（支持进度保存）
@@ -446,12 +458,14 @@ AI_MODEL = 'deepseek-v4-flash'
 - **四段式输出解析**：AI 每轮回复强制分为「关键信号 / 天赋假设 / HUMAN 3.0 判断 / 下一题」，结构化提取信息
 - **用户登录系统**：基于 Flask-Login 的认证体系，所有测评功能需登录后使用
 - **服务端会话持久化**：AI 访谈数据存储在 SQLite 中（对话历史、阶段、答案、报告），不依赖客户端 Cookie
+- **统一鉴权与错误码**：`utils.py` 定义统一业务错误码（1001=未登录等），所有 API 返回格式一致的 JSON 错误响应
+- **前端统一 API 调用**：`apiFetch()` 公共函数自动处理未登录错误，检测到 1001 错误码自动跳转登录页
 - **XSS 防护**：所有 innerHTML 插入点均使用 `escapeHtml()` 消毒，Markdown 渲染使用 DOMPurify
 - **访问追踪**：内存缓冲 + 批量写入（50条/次），通过 `threading.Lock` 保证线程安全
 - **全局错误处理**：404 和 500 错误有专门页面，API 返回统一 JSON 格式
 - **天赋类型学 72 型全表**：40 道迫选题覆盖 8 个 Human 3.0 方向，每个组合配有专属中文名称与详细信息
 - **72种人格图鉴**：按四大类型分组展示，每个类型有独立主题色页面
-- **管理后台**：数据统计、用户管理、测评记录管理、人格类型分布图表
+- **管理后台**：数据统计、用户管理、测评记录管理、人格类型分布图表、AI 配置管理
 - **72种类型对比**：选择两种天赋类型，四维度并排对比，查看异同点
 - **历史记录对比**：选择多条测评记录进行对比分析，可视化展示变化趋势
 - **答题进度保存**：量表和类型学答题进度自动保存到 localStorage，中断后可恢复
@@ -461,10 +475,12 @@ AI_MODEL = 'deepseek-v4-flash'
 ## 🔒 安全特性
 
 - **环境变量强制校验**：API 密钥未设置时启动即失败
+- **统一鉴权**：所有 API 端点使用统一的错误码体系（1001=未登录），前端自动处理跳转
 - **XSS 防护**：所有 `innerHTML` 插入点使用 `escapeHtml()` 消毒
 - **DOMPurify**：Markdown 渲染输出经过 DOMPurify 消毒
 - **答案校验**：量表提交有服务端校验（题目 ID 和分数范围）
 - **管理员权限**：基于 `is_admin` 字段的权限控制
+- **内联事件消除**：所有事件绑定使用 `addEventListener` + 事件委托，消除 XSS 注入面
 
 ---
 

@@ -35,10 +35,11 @@ routes/scale.py — 天赋维度量表路由模块
 """
 
 from flask import Blueprint, render_template, request, jsonify
-from flask_login import current_user
+from flask_login import current_user, login_required
 from models import db, ScaleResult
 import uuid
 import json
+from utils import api_error, ERR_NOT_LOGGED_IN
 
 scale_bp = Blueprint('scale', __name__)
 
@@ -59,12 +60,13 @@ def scale_page():
 
 
 @scale_bp.route('/scale/result')
+@login_required
 def scale_result_page():
     """
     量表结果页面
 
     路由: GET /scale/result?session_id=xxx
-    需要登录: 否
+    需要登录: 是
 
     说明:
         渲染量表结果页面模板
@@ -168,12 +170,14 @@ def submit_scale():
     """
     # 检查登录状态
     if not current_user.is_authenticated:
-        return jsonify({"success": False, "error": "未登录", "need_login": True})
+        return api_error(ERR_NOT_LOGGED_IN, "请先登录")
 
     from scale_data import PRIMARY_SCALE
 
     # 获取用户提交的答案
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"success": False, "error": "请求格式错误"}), 400
     answers = data.get('answers', {})
 
     if not answers:
@@ -303,7 +307,9 @@ def get_secondary_questions():
     """
     from scale_data import SECONDARY_SCALE
 
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"success": False, "error": "请求格式错误"}), 400
     dimension = data.get('dimension')
 
     if not dimension or dimension not in SECONDARY_SCALE:
@@ -324,23 +330,16 @@ def get_scale_result(session_id):
     获取量表结果
 
     路由: GET /api/scale/result/<session_id>
-    需要登录: 否
+    需要登录: 是
 
     说明:
-        根据session_id查询量表结果
+        根据session_id查询量表结果（仅限当前用户的数据）
         用于结果页面加载时获取数据
-
-    返回数据:
-    {
-        "success": true,
-        "session_id": "uuid-string",
-        "scale_type": "primary",
-        "scores": {...},
-        "top_dimensions": [...],
-        "talent_type": null  // 一级量表没有talent_type
-    }
     """
-    result = ScaleResult.query.filter_by(session_id=session_id).first()
+    if not current_user.is_authenticated:
+        return api_error(ERR_NOT_LOGGED_IN, "请先登录")
+
+    result = ScaleResult.query.filter_by(session_id=session_id, user_id=current_user.id).first()
     if not result:
         return jsonify({"success": False, "error": "结果不存在"}), 404
 
@@ -390,12 +389,14 @@ def submit_secondary_scale():
     """
     # 检查登录状态
     if not current_user.is_authenticated:
-        return jsonify({"success": False, "error": "未登录", "need_login": True})
+        return api_error(ERR_NOT_LOGGED_IN, "请先登录")
 
     from scale_data import SECONDARY_SCALE
 
     # 获取请求数据
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"success": False, "error": "请求格式错误"}), 400
     dimension = data.get('dimension')
     answers = data.get('answers', {})
 

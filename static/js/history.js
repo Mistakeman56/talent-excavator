@@ -31,10 +31,28 @@
         toggleView();
     });
 
+    // 全选复选框事件绑定
+    document.getElementById('selectAll').addEventListener('change', function() {
+        selectAllRecords();
+    });
+
+    // 开始对比按钮事件绑定
+    document.getElementById('compareBtn').addEventListener('click', function() {
+        renderCompareView();
+    });
+
+    // 报告弹窗关闭事件绑定
+    document.getElementById('reportModalOverlay').addEventListener('click', function() {
+        closeReportModal();
+    });
+    document.getElementById('reportModalClose').addEventListener('click', function() {
+        closeReportModal();
+    });
+
     async function loadHistory() {
         try {
-            const res = await fetch('/api/history');
-            const data = await res.json();
+            const data = await apiFetch('/api/history');
+            if (!data) return; // 已跳转登录页
             if (!data.success) {
                 showEmpty('加载失败，请刷新重试');
                 return;
@@ -88,7 +106,7 @@
             const isSelected = selectedRecords.has(item.id);
             html += `
                 <div class="history-card" data-type="${item.type}" data-id="${item.id}">
-                    <input type="checkbox" class="history-card-checkbox" data-id="${item.id}" ${isSelected ? 'checked' : ''} onchange="toggleRecordSelection(${item.id}, this.checked)">
+                    <input type="checkbox" class="history-card-checkbox" data-id="${item.id}" ${isSelected ? 'checked' : ''}>
                     <div class="history-card-meta">
                         <span class="history-type-badge">${typeIcon} ${item.type_label}</span>
                         <span class="history-date">${dateStr}</span>
@@ -96,13 +114,30 @@
                     <h3 class="history-title">${escapeHtml(item.title)}</h3>
                     ${item.subtitle ? `<p class="history-subtitle">${escapeHtml(item.subtitle)}</p>` : ''}
                     <div class="history-actions">
-                        <button class="history-btn" onclick="viewRecord('${item.type}', '${item.id}', '${item.session_id || ''}')">查看结果</button>
-                        ${item.type === 'interview' ? '<button class="history-btn" style="background:transparent;color:var(--primary);border:1px solid var(--primary);" onclick="exportInterview(' + item.id + ')">导出对话</button>' : ''}
+                        <button class="history-btn" data-action="view" data-type="${item.type}" data-id="${item.id}" data-session-id="${item.session_id || ''}">查看结果</button>
+                        ${item.type === 'interview' ? '<button class="history-btn" style="background:transparent;color:var(--primary);border:1px solid var(--primary);" data-action="export" data-id="' + item.id + '">导出对话</button>' : ''}
                     </div>
                 </div>
             `;
         });
         container.innerHTML = html;
+
+        // 绑定事件委托
+        container.querySelectorAll('.history-card-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                toggleRecordSelection(parseInt(this.dataset.id), this.checked);
+            });
+        });
+        container.querySelectorAll('[data-action="view"]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                viewRecord(this.dataset.type, this.dataset.id, this.dataset.sessionId || '');
+            });
+        });
+        container.querySelectorAll('[data-action="export"]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                exportInterview(parseInt(this.dataset.id));
+            });
+        });
     }
 
     window.renderCompareView = function() {
@@ -233,6 +268,8 @@
             compareChart.destroy();
         }
 
+        const textColor = getChartTextColor();
+        const gridColor = getChartGridColor();
         compareChart = new Chart(ctx, {
             type: 'radar',
             data: {
@@ -252,7 +289,18 @@
                         beginAtZero: true,
                         max: 100,
                         ticks: {
-                            stepSize: 20
+                            stepSize: 20,
+                            color: textColor,
+                            backdropColor: 'transparent'
+                        },
+                        grid: {
+                            color: gridColor
+                        },
+                        angleLines: {
+                            color: gridColor
+                        },
+                        pointLabels: {
+                            color: textColor
                         }
                     }
                 }
@@ -303,6 +351,8 @@
             compareChart.destroy();
         }
 
+        const textColor = getChartTextColor();
+        const gridColor = getChartGridColor();
         compareChart = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -318,11 +368,23 @@
                     }
                 },
                 scales: {
+                    x: {
+                        ticks: {
+                            color: textColor
+                        },
+                        grid: {
+                            color: gridColor
+                        }
+                    },
                     y: {
                         beginAtZero: true,
                         max: 100,
                         ticks: {
-                            stepSize: 20
+                            stepSize: 20,
+                            color: textColor
+                        },
+                        grid: {
+                            color: gridColor
                         }
                     }
                 }
@@ -387,8 +449,8 @@
         }
         if (type === 'scale' && sessionId) {
             try {
-                const res = await fetch('/api/history/scale/' + sessionId);
-                const data = await res.json();
+                const data = await apiFetch('/api/history/scale/' + sessionId);
+                if (!data) return; // 已跳转登录页
                 if (!data.success) {
                     alert('加载记录失败');
                     return;
@@ -402,8 +464,8 @@
         }
         if (type === 'interview') {
             try {
-                const res = await fetch('/api/history/interview/' + id);
-                const data = await res.json();
+                const data = await apiFetch('/api/history/interview/' + id);
+                if (!data) return; // 已跳转登录页
                 if (!data.success) {
                     alert('加载报告失败');
                     return;

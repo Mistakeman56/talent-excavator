@@ -4,5 +4,8 @@ flask-login>=0.6.3
 openai>=1.12.0
 python-dotenv>=1.0.0
 
+# 生产部署
+gunicorn>=22.0.0
+
 # 测试依赖
 pytest>=8.0.0

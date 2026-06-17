@@ -251,12 +251,13 @@ def talent_type():
 
 
 @main_bp.route('/talent-type/result/<session_id>')
+@login_required
 def talent_type_result(session_id):
     """
     天赋类型学测评结果页
 
     路由: GET /talent-type/result/<session_id>
-    需要登录: 否
+    需要登录: 是
 
     参数:
         session_id — 测评会话的UUID标识

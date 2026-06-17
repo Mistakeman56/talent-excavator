@@ -39,8 +39,8 @@
 
     async function loadResult() {
         try {
-            const resp = await fetch('/api/talent-type/result/' + sessionId);
-            const data = await resp.json();
+            const data = await apiFetch('/api/talent-type/result/' + sessionId);
+            if (!data) return; // 已跳转登录页
             if (!data.success) {
                 showError();
                 return;

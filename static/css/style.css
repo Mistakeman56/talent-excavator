@@ -242,19 +242,51 @@ body {
 .nav-logout-btn:hover { opacity: 1; }
 
 .nav-theme-btn {
-    background: none;
+    background: rgba(255, 255, 255, 0.1);
     border: none;
-    padding: 4px;
+    width: 32px;
+    height: 32px;
     margin: 0;
     cursor: pointer;
     color: var(--on-dark);
-    opacity: 0.7;
+    opacity: 0.85;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: opacity var(--transition-fast);
+    border-radius: 50%;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
 }
-.nav-theme-btn:hover { opacity: 1; }
+.nav-theme-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.nav-theme-btn:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.18);
+    transform: scale(1.1);
+}
+.nav-theme-btn:hover::before {
+    opacity: 1;
+}
+.nav-theme-btn:active {
+    transform: scale(0.95);
+}
+.nav-theme-btn svg {
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.nav-theme-btn:hover svg {
+    transform: rotate(15deg);
+}
+[data-theme="dark"] .nav-theme-btn:hover svg {
+    transform: rotate(-15deg);
+}
 
 /* Footer 中的退出按钮 */
 .site-footer .nav-logout-btn {
@@ -2926,6 +2958,14 @@ textarea::placeholder {
   border: 1px solid var(--hairline);
 }
 
+.admin-chart-title {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: var(--space-md);
+}
+
 .chart-title {
   font-family: var(--font-display);
   font-size: 1.125rem;
@@ -2991,6 +3031,107 @@ textarea::placeholder {
 .page-info {
   font-size: 0.875rem;
   color: var(--body-muted);
+}
+
+.admin-config-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-lg);
+}
+
+.admin-config-card {
+  background: var(--canvas);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  border: 1px solid var(--hairline);
+}
+
+.admin-config-card h3 {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: var(--space-md);
+}
+
+.config-status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.config-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-xs) 0;
+  border-bottom: 1px solid var(--divider-soft);
+}
+
+.config-label {
+  font-size: 0.9rem;
+  color: var(--body-muted);
+}
+
+.config-value {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ink);
+  font-family: monospace;
+}
+
+.config-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.config-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  background: var(--canvas-parchment);
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-family: var(--font-body);
+}
+
+.config-form input[type="password"] {
+  border-radius: var(--radius-md);
+}
+
+.config-form small {
+  font-size: 0.8rem;
+  color: var(--body-muted);
+}
+
+.config-form small a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.config-form small a:hover {
+  text-decoration: underline;
+}
+
+.config-message {
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  margin-top: var(--space-xs);
+}
+
+.config-message.success {
+  background: rgba(52, 199, 89, 0.1);
+  color: #34c759;
+  border: 1px solid rgba(52, 199, 89, 0.2);
+}
+
+.config-message.error {
+  background: rgba(255, 59, 48, 0.1);
+  color: #ff3b30;
+  border: 1px solid rgba(255, 59, 48, 0.2);
 }
 
 .btn-table-action {
@@ -3270,6 +3411,10 @@ textarea::placeholder {
   }
 
   .admin-charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-config-grid {
     grid-template-columns: 1fr;
   }
 

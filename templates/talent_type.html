@@ -39,7 +39,10 @@
                         <path d="M5 12h14M12 5l7 7-7 7"/>
                     </svg>
                 </button>
-                <div style="margin-top: 1rem;">
+                <div style="margin-top: 1rem; display: flex; gap: 1.5rem; justify-content: center;">
+                    <a href="{{ url_for('main.index') }}" class="tt-back-link" style="font-size: 0.9rem; opacity: 0.8;">
+                        ← 返回首页
+                    </a>
                     <a href="/type-catalog/cognitive" class="tt-back-link" style="font-size: 0.9rem; opacity: 0.8;">
                         📖 查看 72 种人格图鉴
                     </a>
